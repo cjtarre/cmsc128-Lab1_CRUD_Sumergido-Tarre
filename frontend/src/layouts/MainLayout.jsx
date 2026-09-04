@@ -1,20 +1,20 @@
-import { Outlet } from 'react-router-dom';
-import NavBar from '../components/navigation/NavBar';
-import Header from '../components/header/Header';
+import { Outlet } from "react-router-dom";
+import Header from "../components/header/Header";
+import Navbar from "../components/navigation/Navbar";
 
 function MainLayout() {
     return (
-        <>
-            <NavBar />
+        <div className="min-h-screen bg-[#f5faf7]">
+            <Header />
 
-            <div>
-                <Header />
-                <main>
+            <div className="flex">
+                <Navbar />
+
+                <main className="min-w-0 flex-1">
                     <Outlet />
                 </main>
             </div>
-            
-        </>
+        </div>
     );
 }
 
