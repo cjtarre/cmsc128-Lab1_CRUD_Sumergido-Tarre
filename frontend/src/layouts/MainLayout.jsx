@@ -10,7 +10,7 @@ function MainLayout() {
             <div className="flex">
                 <Navbar />
 
-                <main className="min-w-0 flex-1">
+                <main className="min-w-0 flex-1 p-6 lg:p-8">
                     <Outlet />
                 </main>
             </div>

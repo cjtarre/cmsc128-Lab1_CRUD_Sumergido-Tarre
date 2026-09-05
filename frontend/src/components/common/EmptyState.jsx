@@ -7,7 +7,7 @@ function EmptyState({
     onAction,
 }) {
     return (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-12 text-center">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-30 text-center">
             {/* Icon */}
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-green-500">
                 <ListTodo size={26} />

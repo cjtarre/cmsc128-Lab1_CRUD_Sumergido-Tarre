@@ -1,116 +1,101 @@
-import { useState } from "react";
 import {
     CalendarDays,
     CheckCircle,
     ChevronLeft,
     ChevronRight,
     ListTodo,
-    Sun,
+    LogOut,
 } from "lucide-react";
+import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+
+import ConfirmDialog from "../common/ConfirmDialog";
 
 function Navbar() {
     const [collapsed, setCollapsed] = useState(false);
+    const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
+    const navigate = useNavigate();
+
+    const navigationItems = [
+        {
+            to: "/dashboard",
+            label: "Dashboard",
+            icon: ListTodo,
+        },
+        {
+            to: "/calendar",
+            label: "Calendar",
+            icon: CalendarDays,
+        },
+        {
+            to: "/completed",
+            label: "Completed",
+            icon: CheckCircle,
+        },
+    ];
+
+    const handleConfirmLogout = () => {
+        setShowLogoutDialog(false);
+        navigate("/");
+    };
 
     return (
         <nav
-            className={`sticky top-16 h-[calc(100vh-4rem)] shrink-0 border-r border-slate-200 bg-white px-3 py-6 transition-all duration-100 ${
+            className={`sticky top-16 flex h-[calc(100vh-4rem)] shrink-0 flex-col border-r border-slate-200 bg-white px-3 py-6 transition-all duration-100 ${
                 collapsed ? "w-20" : "w-56"
             }`}
         >
             {/* Navigation Items */}
             <div className="space-y-1">
-                {/* Dashboard */}
-                <button
-                    type="button"
-                    title="Dashboard"
-                    className={`flex w-full items-center rounded-lg bg-green-50 py-2.5 text-sm font-medium text-green-600 transition ${
-                        collapsed
-                            ? "justify-center"
-                            : "gap-3 px-3"
-                    }`}
-                >
-                    <ListTodo size={18} />
+                {navigationItems.map((item) => {
+                    const Icon = item.icon;
 
-                    {!collapsed && <span>Dashboard</span>}
-                </button>
+                    return (
+                        <NavLink
+                            key={item.to}
+                            to={item.to}
+                            title={item.label}
+                            className={({ isActive }) =>
+                                `flex w-full items-center rounded-lg py-2.5 text-sm font-medium transition ${
+                                    collapsed
+                                        ? "justify-center"
+                                        : "gap-3 px-3"
+                                } ${
+                                    isActive
+                                        ? "bg-green-50 text-green-600"
+                                        : "text-slate-500 hover:bg-slate-50 hover:text-green-600"
+                                }`
+                            }
+                        >
+                            <Icon size={18} />
 
-                {/* Calendar */}
-                <button
-                    type="button"
-                    title="Calendar"
-                    className={`flex w-full items-center rounded-lg py-2.5 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-green-600 ${
-                        collapsed
-                            ? "justify-center"
-                            : "gap-3 px-3"
-                    }`}
-                >
-                    <CalendarDays size={18} />
-
-                    {!collapsed && <span>Calendar</span>}
-                </button>
-
-                {/* Today */}
-                <button
-                    type="button"
-                    title="Today"
-                    className={`flex w-full items-center rounded-lg py-2.5 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-green-600 ${
-                        collapsed
-                            ? "justify-center"
-                            : "gap-3 px-3"
-                    }`}
-                >
-                    <Sun size={18} />
-
-                    {!collapsed && <span>Today</span>}
-                </button>
-
-                {/* Completed */}
-                <button
-                    type="button"
-                    title="Completed"
-                    className={`flex w-full items-center rounded-lg py-2.5 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-green-600 ${
-                        collapsed
-                            ? "justify-center"
-                            : "gap-3 px-3"
-                    }`}
-                >
-                    <CheckCircle size={18} />
-
-                    {!collapsed && <span>Completed</span>}
-                </button>
+                            {!collapsed && (
+                                <span>{item.label}</span>
+                            )}
+                        </NavLink>
+                    );
+                })}
             </div>
 
-            {/* Tags */}
-            {!collapsed && (
-                <div className="mt-8">
-                    <h2 className="mb-3 px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        Tags
-                    </h2>
+            {/* Logout */}
+            <div className="mt-auto">
+                <button
+                    type="button"
+                    onClick={() => setShowLogoutDialog(true)}
+                    title="Logout"
+                    aria-label="Logout"
+                    className={`flex w-full items-center rounded-lg py-2.5 text-sm font-medium text-red-400 transition hover:bg-red-50 hover:text-red-500 ${
+                        collapsed
+                            ? "justify-center"
+                            : "gap-3 px-3"
+                    }`}
+                >
+                    <LogOut size={18} />
 
-                    <div className="space-y-1">
-                        <button
-                            type="button"
-                            className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition hover:bg-slate-50 hover:text-green-600"
-                        >
-                            School
-                        </button>
-
-                        <button
-                            type="button"
-                            className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition hover:bg-slate-50 hover:text-green-600"
-                        >
-                            Personal
-                        </button>
-
-                        <button
-                            type="button"
-                            className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-500 transition hover:bg-slate-50 hover:text-green-600"
-                        >
-                            Others
-                        </button>
-                    </div>
-                </div>
-            )}
+                    {!collapsed && <span>Logout</span>}
+                </button>
+            </div>
 
             {/* Collapse / Expand Button */}
             <button
@@ -134,6 +119,16 @@ function Navbar() {
                     <ChevronLeft size={14} />
                 )}
             </button>
+
+            {/* Logout Confirmation */}
+            <ConfirmDialog
+                isOpen={showLogoutDialog}
+                title="Log out?"
+                message="Are you sure you want to log out of your account?"
+                confirmText="Log out"
+                onConfirm={handleConfirmLogout}
+                onCancel={() => setShowLogoutDialog(false)}
+            />
         </nav>
     );
 }
