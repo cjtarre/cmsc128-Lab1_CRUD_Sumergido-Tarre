@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/tasks';
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+const API_URL = `${BASE_URL}/api/tasks`;
 
 export const taskService = {
     getTasks: async () => {
