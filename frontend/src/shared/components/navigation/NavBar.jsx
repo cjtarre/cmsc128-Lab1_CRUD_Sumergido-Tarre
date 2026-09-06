@@ -1,6 +1,5 @@
 import {
     CalendarDays,
-    CheckCircle,
     ChevronLeft,
     ChevronRight,
     ListTodo,
@@ -27,11 +26,6 @@ function Navbar() {
             to: "/calendar",
             label: "Calendar",
             icon: CalendarDays,
-        },
-        {
-            to: "/completed",
-            label: "Completed",
-            icon: CheckCircle,
         },
     ];
 

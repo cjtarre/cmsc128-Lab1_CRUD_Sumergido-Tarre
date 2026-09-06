@@ -18,7 +18,7 @@ function NotFound() {
                 </p>
 
                 <Link
-                    to="/"
+                    to="/dashboard"
                     className="mt-6 inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600"
                 >
                     <Home size={17} />
