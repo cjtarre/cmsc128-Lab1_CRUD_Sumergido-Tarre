@@ -1,19 +1,10 @@
 import { useState } from "react";
-import {
-    CalendarDays,
-    Check,
-    ChevronDown,
-} from "lucide-react";
+import { CalendarDays, Check, ChevronDown } from "lucide-react";
 
 import ActionButtons from "../crud/ActionButtons";
 import taskStyles from "../../styles/taskStyles";
 import { formatDueDate } from "../../utils/dateUtils";
-
-import {
-    STATUS,
-    priorityLabels,
-    tagLabels,
-} from "../../constants/taskOptions";
+import { STATUS, priorityLabels } from "../../constants/taskOptions";
 
 function TaskRow({
     title = "Untitled Task",
@@ -22,7 +13,8 @@ function TaskRow({
     priority = 0,
     dueDate = "",
     dueTime = "",
-    tag = 0,
+    tag = "",
+    tagId = null,
     onToggleComplete,
     onStatusChange,
     onEdit,
@@ -30,38 +22,29 @@ function TaskRow({
     onView,
 }) {
     const [isStatusOpen, setIsStatusOpen] = useState(false);
-
-    const isCompleted =
-        status === STATUS.COMPLETED;
+    const isCompleted = status === STATUS.COMPLETED;
 
     const statusOptions = [
-        {
-            value: STATUS.NOT_STARTED,
-            label: "Not Started",
-        },
-        {
-            value: STATUS.IN_PROGRESS,
-            label: "In Progress",
-        },
-        {
-            value: STATUS.COMPLETED,
-            label: "Completed",
-        },
+        { value: STATUS.NOT_STARTED, label: "Not Started" },
+        { value: STATUS.IN_PROGRESS, label: "In Progress" },
+        { value: STATUS.COMPLETED, label: "Completed" },
     ];
 
     const currentStatus =
-        statusOptions.find(
-            (option) => option.value === status
-        ) || statusOptions[0];
+        statusOptions.find((option) => option.value === status) ||
+        statusOptions[0];
 
-    const handleStatusChange = (newStatus) => {
-        onStatusChange(newStatus);
-        setIsStatusOpen(false);
-    };
+    const normalizedTagId =
+        tagId !== null && tagId !== undefined && tagId !== ""
+            ? Number(tagId)
+            : null;
+
+    const tagStyle =
+        taskStyles.tag[normalizedTagId] ||
+        "bg-slate-100 text-slate-500";
 
     return (
         <div className="grid grid-cols-[minmax(0,2.3fr)_1.3fr_0.8fr_1fr_0.8fr_0.8fr] items-center gap-4 px-4 py-4 transition-colors duration-150 hover:bg-slate-50/50">
-
             {/* Task */}
             <div className="flex min-w-0 items-start gap-3">
                 <button
@@ -78,9 +61,7 @@ function TaskRow({
                             : "border-slate-300 text-transparent hover:border-green-400 hover:bg-green-50"
                     }`}
                 >
-                    {isCompleted && (
-                        <Check size={13} />
-                    )}
+                    {isCompleted && <Check size={13} />}
                 </button>
 
                 <button
@@ -115,44 +96,30 @@ function TaskRow({
             {/* Due Date */}
             <div
                 className={`flex min-w-0 items-start gap-1.5 text-xs ${
-                    isCompleted
-                        ? "text-slate-300"
-                        : "text-slate-400"
+                    isCompleted ? "text-slate-300" : "text-slate-400"
                 }`}
             >
-                <CalendarDays
-                    size={14}
-                    className="mt-0.5 shrink-0"
-                />
+                <CalendarDays size={14} className="mt-0.5 shrink-0" />
 
                 <div className="min-w-0 truncate">
-                    {dueDate
-                        ? formatDueDate(dueDate)
-                        : "No due date"}
-
+                    {dueDate ? formatDueDate(dueDate) : "No due date"}
                     {dueTime && ` - ${dueTime}`}
                 </div>
             </div>
 
             {/* Priority */}
             <div>
-                {priority > 0 ? (
-                    <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
-                            isCompleted
-                                ? "bg-slate-100 text-slate-400"
-                                :priority > 0
-                                ? taskStyles.priority[priority]
-                                : "bg-slate-100 text-slate-400"
-                        }`}
-                    >
-                        {priorityLabels[priority] || "None"}
-                    </span>
-                ) : (
-                    <span className="inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide bg-slate-100 text-slate-400">
-                        None
-                    </span>
-                )}
+                <span
+                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                        isCompleted
+                            ? "bg-slate-100 text-slate-400"
+                            : priority > 0
+                            ? taskStyles.priority[priority]
+                            : "bg-slate-100 text-slate-400"
+                    }`}
+                >
+                    {priorityLabels[priority] || "None"}
+                </span>
             </div>
 
             {/* Status */}
@@ -161,9 +128,7 @@ function TaskRow({
                     type="button"
                     onClick={(event) => {
                         event.stopPropagation();
-                        setIsStatusOpen(
-                            (previous) => !previous
-                        );
+                        setIsStatusOpen((previous) => !previous);
                     }}
                     aria-haspopup="listbox"
                     aria-expanded={isStatusOpen}
@@ -183,45 +148,35 @@ function TaskRow({
                         size={8}
                         strokeWidth={2}
                         className={`transition-transform duration-200 ${
-                            isStatusOpen
-                                ? "rotate-180"
-                                : ""
+                            isStatusOpen ? "rotate-180" : ""
                         }`}
                     />
                 </button>
 
                 {isStatusOpen && (
-                    <div
-                        role="listbox"
-                        className="absolute left-0 top-full z-50 mt-1 min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
-                    >
-                        {statusOptions.map((option) => {
-                            const isSelected =
-                                option.value === status;
-
-                            return (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    role="option"
-                                    aria-selected={isSelected}
-                                    onClick={(event) => {
-                                        event.stopPropagation();
-                                        handleStatusChange(
-                                            option.value
-                                        );
-                                    }}
-                                    className={`block w-full rounded-md px-2 py-1 text-left font-medium transition ${
-                                        isSelected
-                                            ? "bg-green-50 text-green-600"
-                                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                                    }`}
-                                    style={{ fontSize: "12px", lineHeight: "1" }}
-                                >
-                                    {option.label}
-                                </button>
-                            );
-                        })}
+                    <div className="absolute left-0 top-full z-50 mt-1 min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
+                        {statusOptions.map((option) => (
+                            <button
+                                key={option.value}
+                                type="button"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onStatusChange(option.value);
+                                    setIsStatusOpen(false);
+                                }}
+                                className={`block w-full rounded-md px-2 py-1 text-left font-medium transition ${
+                                    option.value === status
+                                        ? "bg-green-50 text-green-600"
+                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                                }`}
+                                style={{
+                                    fontSize: "12px",
+                                    lineHeight: "1",
+                                }}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
                     </div>
                 )}
             </div>
@@ -230,11 +185,12 @@ function TaskRow({
             <div>
                 <span
                     className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                        taskStyles.tag[tag] ||
-                        "bg-slate-100 text-slate-500"
+                        isCompleted
+                            ? "bg-slate-100 text-slate-400"
+                            : tagStyle
                     }`}
                 >
-                    {tagLabels[tag] || "Others"}
+                    {tag || "General"}
                 </span>
             </div>
 

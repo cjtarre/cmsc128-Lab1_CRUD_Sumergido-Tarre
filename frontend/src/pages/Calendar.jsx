@@ -16,24 +16,11 @@ function Calendar() {
         month: "long",
     });
 
-    const daysInMonth = new Date(
-        year,
-        month + 1,
-        0
-    ).getDate();
-
-    const firstDayOfMonth = new Date(
-        year,
-        month,
-        1
-    ).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
 
     const calendarDays = useMemo(() => {
-        const days = [];
-
-        for (let i = 0; i < firstDayOfMonth; i++) {
-            days.push(null);
-        }
+        const days = Array(firstDayOfMonth).fill(null);
 
         for (let day = 1; day <= daysInMonth; day++) {
             days.push(day);
@@ -42,19 +29,15 @@ function Calendar() {
         return days;
     }, [firstDayOfMonth, daysInMonth]);
 
-    function previousMonth() {
+    const goToToday = () => setCurrentDate(new Date());
+
+    const previousMonth = () =>
         setCurrentDate(new Date(year, month - 1, 1));
-    }
 
-    function nextMonth() {
+    const nextMonth = () =>
         setCurrentDate(new Date(year, month + 1, 1));
-    }
 
-    function goToToday() {
-        setCurrentDate(new Date());
-    }
-
-    function getTasksForDay(day) {
+    const getTasksForDay = (day) => {
         if (!day) return [];
 
         const date = `${String(day).padStart(2, "0")}/${String(
@@ -62,23 +45,18 @@ function Calendar() {
         ).padStart(2, "0")}/${year}`;
 
         return tasks.filter((task) => task.dueDate === date);
-    }
+    };
 
-    function getPriorityStyle(priority) {
-        if (priority === 3) {
-            return "bg-red-50 text-red-600";
-        }
+    const getPriorityStyle = (priority) =>
+        ({
+            3: "bg-red-50 text-red-600",
+            2: "bg-yellow-50 text-yellow-600",
+            1: "bg-green-50 text-green-600",
+        }[priority] || "bg-slate-100 text-slate-400");
 
-        if (priority === 2) {
-            return "bg-yellow-50 text-yellow-600";
-        }
-
-        if (priority === 1) {
-            return "bg-green-50 text-green-600";
-        }
-
-        return "bg-slate-100 text-slate-400";
-    }
+    const today = new Date();
+    const isCurrentMonth =
+        month === today.getMonth() && year === today.getFullYear();
 
     return (
         <div className="px-8 py-8">
@@ -128,39 +106,41 @@ function Calendar() {
 
             {/* Calendar */}
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                {/* Weekdays */}
                 <div className="grid grid-cols-7 border-b border-slate-200">
-                    {[
-                        "Sun",
-                        "Mon",
-                        "Tue",
-                        "Wed",
-                        "Thu",
-                        "Fri",
-                        "Sat",
-                    ].map((day) => (
-                        <div
-                            key={day}
-                            className="border-r border-slate-200 px-3 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-400"
-                        >
-                            {day}
-                        </div>
-                    ))}
+                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                        (day) => (
+                            <div
+                                key={day}
+                                className="border-r border-slate-200 px-3 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-400"
+                            >
+                                {day}
+                            </div>
+                        )
+                    )}
                 </div>
 
-                {/* Days */}
                 <div className="grid grid-cols-7">
                     {calendarDays.map((day, index) => {
                         const dayTasks = getTasksForDay(day);
+                        const isToday =
+                            isCurrentMonth && day === today.getDate();
 
                         return (
                             <div
                                 key={index}
-                                className="min-h-32 border-b border-r border-slate-200 p-3"
+                                className={`min-h-32 border-b border-r border-slate-200 p-3 ${
+                                    isToday ? "bg-green-50/50" : ""
+                                }`}
                             >
                                 {day && (
                                     <>
-                                        <span className="text-sm font-medium text-slate-600">
+                                        <span
+                                            className={`text-sm font-medium ${
+                                                isToday
+                                                    ? "text-green-600"
+                                                    : "text-slate-600"
+                                            }`}
+                                        >
                                             {day}
                                         </span>
 
@@ -184,7 +164,9 @@ function Calendar() {
                                                     </p>
 
                                                     <p className="mt-0.5 opacity-70">
-                                                        {formatDueTime(task.dueTime)}
+                                                        {formatDueTime(
+                                                            task.dueTime
+                                                        )}
                                                     </p>
                                                 </div>
                                             ))}

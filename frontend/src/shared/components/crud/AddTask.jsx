@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
-import { PRIORITY, TAG } from "../../constants/taskOptions";
+import { PRIORITY } from "../../constants/taskOptions";
 import { validateTask } from "../../utils/validation";
+import { useTaskData } from "../../context/taskContext";
 
 const initialFormData = {
     title: "",
@@ -10,30 +11,28 @@ const initialFormData = {
     dueDate: "",
     dueTime: "",
     priority: PRIORITY.NONE,
-    tag: TAG.SCHOOL,
+    tag: "",
 };
 
 function AddTask({ isOpen, onClose, onSubmit }) {
+    const { availableTags } = useTaskData();
     const [formData, setFormData] = useState(initialFormData);
     const [errors, setErrors] = useState({});
 
     if (!isOpen) return null;
 
     const handleChange = ({ target }) => {
+        const value =
+            target.name === "priority"
+                ? Number(target.value)
+                : target.value;
+
         setFormData((previous) => ({
             ...previous,
-            [target.name]:
-                target.name === "priority" || target.name === "tag"
-                    ? Number(target.value)
-                    : target.value,
+            [target.name]: value,
         }));
 
         if (target.value.trim?.()) {
-            setErrors((previous) => ({
-                ...previous,
-                [target.name]: "",
-            }));
-        } else if (target.name === "dueDate" || target.name === "dueTime") {
             setErrors((previous) => ({
                 ...previous,
                 [target.name]: "",
@@ -48,10 +47,9 @@ function AddTask({ isOpen, onClose, onSubmit }) {
 
         if (Object.keys(validationErrors).length) {
             setErrors(validationErrors);
-
-            const firstError = Object.keys(validationErrors)[0];
-            document.querySelector(`[name="${firstError}"]`)?.focus();
-
+            document
+                .querySelector(`[name="${Object.keys(validationErrors)[0]}"]`)
+                ?.focus();
             return;
         }
 
@@ -90,12 +88,10 @@ function AddTask({ isOpen, onClose, onSubmit }) {
 
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-5 px-6 py-6">
-                        {/* Title */}
                         <div>
                             <label className="mb-2 block text-xs font-medium text-slate-600">
                                 Title <span className="text-red-400">*</span>
                             </label>
-
                             <input
                                 type="text"
                                 name="title"
@@ -108,7 +104,6 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                                         : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-green-100"
                                 }`}
                             />
-
                             {errors.title && (
                                 <p className="mt-1.5 text-xs text-red-500">
                                     {errors.title}
@@ -116,12 +111,10 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                             )}
                         </div>
 
-                        {/* Description */}
                         <div>
                             <label className="mb-2 block text-xs font-medium text-slate-600">
                                 Description
                             </label>
-
                             <textarea
                                 name="description"
                                 value={formData.description}
@@ -132,25 +125,18 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                             />
                         </div>
 
-                        {/* Date & Time */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="mb-2 block text-xs font-medium text-slate-600">
                                     Due Date <span className="text-red-400">*</span>
                                 </label>
-
                                 <input
                                     type="date"
                                     name="dueDate"
                                     value={formData.dueDate}
                                     onChange={handleChange}
-                                    className={`w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition ${
-                                        errors.dueDate
-                                            ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                                            : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-green-100"
-                                    }`}
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"
                                 />
-
                                 {errors.dueDate && (
                                     <p className="mt-1.5 text-xs text-red-500">
                                         {errors.dueDate}
@@ -162,19 +148,13 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                                 <label className="mb-2 block text-xs font-medium text-slate-600">
                                     Due Time <span className="text-red-400">*</span>
                                 </label>
-
                                 <input
                                     type="time"
                                     name="dueTime"
                                     value={formData.dueTime}
                                     onChange={handleChange}
-                                    className={`w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition ${
-                                        errors.dueTime
-                                            ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                                            : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-green-100"
-                                    }`}
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"
                                 />
-
                                 {errors.dueTime && (
                                     <p className="mt-1.5 text-xs text-red-500">
                                         {errors.dueTime}
@@ -183,13 +163,11 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                             </div>
                         </div>
 
-                        {/* Priority & Tag */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="mb-2 block text-xs font-medium text-slate-600">
                                     Priority
                                 </label>
-
                                 <select
                                     name="priority"
                                     value={formData.priority}
@@ -207,16 +185,21 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                                 <label className="mb-2 block text-xs font-medium text-slate-600">
                                     Tag
                                 </label>
-
                                 <select
                                     name="tag"
                                     value={formData.tag}
                                     onChange={handleChange}
                                     className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"
                                 >
-                                    <option value={TAG.SCHOOL}>School</option>
-                                    <option value={TAG.PERSONAL}>Personal</option>
-                                    <option value={TAG.OTHERS}>Others</option>
+                                    <option value="">Select a tag</option>
+                                    {availableTags.map((tag) => (
+                                        <option
+                                            key={tag.tag_id}
+                                            value={tag.tag_id}
+                                        >
+                                            {tag.tag_name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -230,7 +213,6 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                         >
                             Cancel
                         </button>
-
                         <button
                             type="submit"
                             className="rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-600"

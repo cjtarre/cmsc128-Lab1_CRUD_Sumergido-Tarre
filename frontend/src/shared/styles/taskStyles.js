@@ -6,10 +6,15 @@ const taskStyles = {
         3: "bg-red-50 text-red-500",
     },
 
+    status: {
+        0: "text-slate-500",
+        1: "text-amber-600",
+        2: "text-green-600",
+    },
+
     tag: {
-        0: "bg-blue-50 text-blue-600",
-        1: "bg-purple-50 text-purple-600",
-        2: "bg-orange-50 text-orange-600",
+        1: "bg-blue-50 text-blue-600",
+        2: "bg-purple-50 text-purple-600",
     },
 };
 

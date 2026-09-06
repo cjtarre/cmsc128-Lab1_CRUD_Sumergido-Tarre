@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 
 import useTasks from "../hooks/useTasks";
 import { useTaskData } from "../shared/context/taskContext";
 import { createTaskHandlers } from "../handlers/taskHandlers";
 import { getTaskCategory } from "../shared/utils/dateUtils";
+import { sortTasksByDueDate } from "../shared/utils/taskUtils";
 import { STATUS } from "../shared/constants/taskOptions";
 import emptyState from "../shared/constants/emptyState";
+import Pagination from "../shared/components/common/Pagination";
 
 import TaskFilter from "../shared/components/tasks/TaskFilter";
 import TaskTable from "../shared/components/tasks/TaskTable";
@@ -18,13 +20,15 @@ import EditTask from "../shared/components/crud/EditTask";
 import DeleteTask from "../shared/components/crud/DeleteTask";
 
 function Dashboard() {
-    const { tasks, setTasks, searchTerm } = useTaskData();
+    const { tasks, setTasks, searchTerm, loading } = useTaskData();
     const [filter, setFilter] = useState("all");
+    const [currentPage, setCurrentPage] = useState(1);
     const [selectedTask, setSelectedTask] = useState(null);
     const [taskToEdit, setTaskToEdit] = useState(null);
     const [taskToDelete, setTaskToDelete] = useState(null);
     const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
+    const tasksPerPage = 5;
     const currentEmptyState = emptyState[filter];
     const taskActions = useTasks(tasks, setTasks);
 
@@ -40,10 +44,14 @@ function Dashboard() {
         const search = (searchTerm || "").trim().toLowerCase();
         const title = task.title?.toLowerCase() || "";
         const description = task.description?.toLowerCase() || "";
+        const tag = task.tag?.toLowerCase() || "";
 
-        if (search && !title.includes(search) && !description.includes(search)) {
-            return false;
-        }
+        if (
+            search &&
+            !title.includes(search) &&
+            !description.includes(search) &&
+            !tag.includes(search)
+        ) return false;
 
         if (filter === "completed") return task.status === STATUS.COMPLETED;
         if (task.status === STATUS.COMPLETED) return false;
@@ -51,6 +59,25 @@ function Dashboard() {
 
         return getTaskCategory(task.dueDate) === filter;
     });
+
+    const sortedTasks = sortTasksByDueDate(filteredTasks);
+    const totalPages = Math.ceil(sortedTasks.length / tasksPerPage);
+    const paginatedTasks = sortedTasks.slice(
+        (currentPage - 1) * tasksPerPage,
+        currentPage * tasksPerPage
+    );
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setCurrentPage(1);
+    }, [filter, searchTerm]);
+
+    useEffect(() => {
+        if (totalPages > 0 && currentPage > totalPages) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
 
     return (
         <div className="space-y-8">
@@ -79,15 +106,32 @@ function Dashboard() {
                     <TaskFilter value={filter} onChange={setFilter} />
 
                     <div className="mt-6">
-                        {filteredTasks.length ? (
-                            <TaskTable
-                                tasks={filteredTasks}
-                                onToggleComplete={handlers.handleToggleComplete}
-                                onStatusChange={handlers.handleStatusChange}
-                                onEdit={handlers.handleEditTask}
-                                onDelete={handlers.handleDeleteTask}
-                                onView={handlers.handleViewTask}
-                            />
+                        {loading ? (
+                            <div className="flex min-h-[300px] items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm">
+                                <div className="flex items-center gap-3 text-sm text-slate-400">
+                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-green-500" />
+                                    Loading tasks...
+                                </div>
+                            </div>
+                        ) : filteredTasks.length ? (
+                            <>
+                                <TaskTable
+                                    tasks={paginatedTasks}
+                                    onToggleComplete={handlers.handleToggleComplete}
+                                    onStatusChange={handlers.handleStatusChange}
+                                    onEdit={handlers.handleEditTask}
+                                    onDelete={handlers.handleDeleteTask}
+                                    onView={handlers.handleViewTask}
+                                />
+
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    totalItems={sortedTasks.length}
+                                    itemsPerPage={tasksPerPage}
+                                    onPageChange={setCurrentPage}
+                                />
+                            </>
                         ) : (
                             <EmptyState
                                 title={currentEmptyState.title}

@@ -10,34 +10,21 @@ function TaskTable({
 }) {
     return (
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-            {/* Table Header */}
             <div className="grid grid-cols-[minmax(0,2.3fr)_1.3fr_0.8fr_1fr_0.8fr_0.8fr] items-center gap-4 border-b border-slate-200 bg-slate-50/70 px-4 py-3">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Task
-                </span>
-
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Due Date
-                </span>
-
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Priority
-                </span>
-
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Status
-                </span>
-
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Tag
-                </span>
+                {["Task", "Due Date", "Priority", "Status", "Tag"].map((label) => (
+                    <span
+                        key={label}
+                        className="text-[10px] font-semibold uppercase tracking-wider text-slate-400"
+                    >
+                        {label}
+                    </span>
+                ))}
 
                 <span className="text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                     Actions
                 </span>
             </div>
 
-            {/* Task Rows */}
             <div className="divide-y divide-slate-100">
                 {tasks.map((task) => (
                     <TaskRow
@@ -49,24 +36,14 @@ function TaskTable({
                         dueDate={task.dueDate}
                         dueTime={task.dueTime}
                         tag={task.tag}
-                        onToggleComplete={() =>
-                            onToggleComplete(task.id)
-                        }
+                        tagId={task.tagId}
+                        onToggleComplete={() => onToggleComplete(task.id)}
                         onStatusChange={(status) =>
-                            onStatusChange(
-                                task.id,
-                                status
-                            )
+                            onStatusChange(task.id, status)
                         }
-                        onEdit={() =>
-                            onEdit(task.id)
-                        }
-                        onDelete={() =>
-                            onDelete(task.id)
-                        }
-                        onView={() =>
-                            onView(task.id)
-                        }
+                        onEdit={() => onEdit(task.id)}
+                        onDelete={() => onDelete(task.id)}
+                        onView={() => onView(task.id)}
                     />
                 ))}
             </div>

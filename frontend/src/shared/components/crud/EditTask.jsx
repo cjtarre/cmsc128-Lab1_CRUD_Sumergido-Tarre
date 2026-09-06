@@ -1,18 +1,10 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
-import {
-    PRIORITY,
-    STATUS,
-    TAG,
-} from "../../constants/taskOptions";
-
-import {
-    convertToInputDate,
-    convertToInputTime,
-} from "../../utils/dateUtils";
-
+import { PRIORITY, STATUS } from "../../constants/taskOptions";
+import { convertToInputDate, convertToInputTime } from "../../utils/dateUtils";
 import { validateTask } from "../../utils/validation";
+import { useTaskData } from "../../context/taskContext";
 
 const emptyFormData = {
     title: "",
@@ -21,10 +13,11 @@ const emptyFormData = {
     dueTime: "",
     priority: PRIORITY.NONE,
     status: STATUS.NOT_STARTED,
-    tag: TAG.SCHOOL,
+    tag: "",
 };
 
 function EditTask({ task, isOpen, onClose, onSave }) {
+    const { availableTags } = useTaskData();
     const [formData, setFormData] = useState(emptyFormData);
     const [errors, setErrors] = useState({});
 
@@ -39,7 +32,7 @@ function EditTask({ task, isOpen, onClose, onSave }) {
             dueTime: convertToInputTime(task.dueTime),
             priority: task.priority ?? PRIORITY.NONE,
             status: task.status ?? STATUS.NOT_STARTED,
-            tag: task.tag ?? TAG.SCHOOL,
+            tag: task.tagId ?? "",
         });
 
         setErrors({});
@@ -49,9 +42,7 @@ function EditTask({ task, isOpen, onClose, onSave }) {
 
     const handleChange = ({ target }) => {
         const value =
-            target.name === "priority" ||
-            target.name === "status" ||
-            target.name === "tag"
+            target.name === "priority" || target.name === "status"
                 ? Number(target.value)
                 : target.value;
 
@@ -86,11 +77,6 @@ function EditTask({ task, isOpen, onClose, onSave }) {
         });
     };
 
-    const handleClose = () => {
-        setErrors({});
-        onClose();
-    };
-
     return (
         <div
             className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/25 px-4"
@@ -99,7 +85,6 @@ function EditTask({ task, isOpen, onClose, onSave }) {
             aria-labelledby="edit-task-title"
         >
             <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl">
-                {/* Header */}
                 <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
                     <div>
                         <h2
@@ -108,7 +93,6 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                         >
                             Edit Task
                         </h2>
-
                         <p className="mt-1 text-xs text-slate-400">
                             Update your task details.
                         </p>
@@ -116,23 +100,19 @@ function EditTask({ task, isOpen, onClose, onSave }) {
 
                     <button
                         type="button"
-                        onClick={handleClose}
-                        aria-label="Close edit task"
-                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-green-100"
+                        onClick={onClose}
+                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
                     >
                         <X size={18} />
                     </button>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-5 px-6 py-6">
-                        {/* Title */}
                         <div>
                             <label className="mb-2 block text-xs font-medium text-slate-600">
                                 Title <span className="text-red-400">*</span>
                             </label>
-
                             <input
                                 type="text"
                                 name="title"
@@ -145,7 +125,6 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                                         : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-green-100"
                                 }`}
                             />
-
                             {errors.title && (
                                 <p className="mt-1.5 text-xs text-red-500">
                                     {errors.title}
@@ -153,35 +132,31 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                             )}
                         </div>
 
-                        {/* Description */}
                         <div>
                             <label className="mb-2 block text-xs font-medium text-slate-600">
                                 Description
                             </label>
-
                             <textarea
                                 name="description"
                                 value={formData.description}
                                 onChange={handleChange}
                                 placeholder="Add a description..."
                                 rows={3}
-                                className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-green-400 focus:ring-2 focus:ring-green-100"
+                                className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"
                             />
                         </div>
 
-                        {/* Date & Time */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="mb-2 block text-xs font-medium text-slate-600">
                                     Due Date
                                 </label>
-
                                 <input
                                     type="date"
                                     name="dueDate"
                                     value={formData.dueDate}
                                     onChange={handleChange}
-                                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-green-400 focus:ring-2 focus:ring-green-100"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"
                                 />
                             </div>
 
@@ -189,42 +164,31 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                                 <label className="mb-2 block text-xs font-medium text-slate-600">
                                     Due Time
                                 </label>
-
                                 <input
                                     type="time"
                                     name="dueTime"
                                     value={formData.dueTime}
                                     onChange={handleChange}
-                                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-green-400 focus:ring-2 focus:ring-green-100"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"
                                 />
                             </div>
                         </div>
 
-                        {/* Priority & Tag */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="mb-2 block text-xs font-medium text-slate-600">
                                     Priority
                                 </label>
-
                                 <select
                                     name="priority"
                                     value={formData.priority}
                                     onChange={handleChange}
                                     className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"
                                 >
-                                    <option value={PRIORITY.NONE}>
-                                        None
-                                    </option>
-                                    <option value={PRIORITY.LOW}>
-                                        Low
-                                    </option>
-                                    <option value={PRIORITY.MEDIUM}>
-                                        Medium
-                                    </option>
-                                    <option value={PRIORITY.HIGH}>
-                                        High
-                                    </option>
+                                    <option value={PRIORITY.NONE}>None</option>
+                                    <option value={PRIORITY.LOW}>Low</option>
+                                    <option value={PRIORITY.MEDIUM}>Medium</option>
+                                    <option value={PRIORITY.HIGH}>High</option>
                                 </select>
                             </div>
 
@@ -232,32 +196,29 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                                 <label className="mb-2 block text-xs font-medium text-slate-600">
                                     Tag
                                 </label>
-
                                 <select
                                     name="tag"
                                     value={formData.tag}
                                     onChange={handleChange}
                                     className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"
                                 >
-                                    <option value={TAG.SCHOOL}>
-                                        School
-                                    </option>
-                                    <option value={TAG.PERSONAL}>
-                                        Personal
-                                    </option>
-                                    <option value={TAG.OTHERS}>
-                                        Others
-                                    </option>
+                                    <option value="">No tag</option>
+                                    {availableTags.map((tag) => (
+                                        <option
+                                            key={tag.tag_id}
+                                            value={tag.tag_id}
+                                        >
+                                            {tag.tag_name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
 
-                        {/* Status */}
                         <div>
                             <label className="mb-2 block text-xs font-medium text-slate-600">
                                 Status
                             </label>
-
                             <select
                                 name="status"
                                 value={formData.status}
@@ -277,19 +238,17 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                         </div>
                     </div>
 
-                    {/* Footer */}
                     <div className="flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
                         <button
                             type="button"
-                            onClick={handleClose}
+                            onClick={onClose}
                             className="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
                         >
                             Cancel
                         </button>
-
                         <button
                             type="submit"
-                            className="rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-200"
+                            className="rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-600"
                         >
                             Save Changes
                         </button>

@@ -8,8 +8,8 @@ function ComingSoon({
     const navigate = useNavigate();
 
     return (
-        <div className="flex min-h-[420px] items-center justify-center">
-            <div className="w-full max-w-md text-center">
+        <div className="flex min-h-[420px] items-center justify-center px-6">
+            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white px-8 py-10 text-center shadow-sm">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-green-500">
                     <Clock3 size={26} strokeWidth={1.8} />
                 </div>
