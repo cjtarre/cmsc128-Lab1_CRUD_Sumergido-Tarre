@@ -30,19 +30,34 @@ function Dashboard() {
 
             const priorityMap = {0: "none", 1: "low", 2: "medium", 3: "high"};
             const statusMap = {0: "not started", 1: "in progress", 2: "completed"};
-            const convertedData = fetchedTasks.map(task => ({
-                id: task.task_id,
-                title: task.task_name,
-                description: task.task_info || "No description provided",
-                status: statusMap[task.status] || "not started", 
-                priority: priorityMap[task.priority_level] || "none",
-                dueDate: task.due_date ? new Date(task.due_date).toLocaleDateString() : "No Date",
-                dueTime: task.due_date ? new Date(task.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
-                
-                // Fallback tag evaluation from your multi-table relational join array
-                tag: task.task_tag && task.task_tag[0]?.tags ? task.task_tag[0].tags.tag_name : "General",
-                category: task.status === "Completed" ? "completed" : "today" // Maps to filter conditions
-            }));
+
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const startOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+            const convertedData = fetchedTasks.map((task) => {
+                const due = task.due_date ? new Date(task.due_date) : null;
+
+                let category = "today";
+                if (due) {
+                    if (due < startOfToday) category = "overdue";
+                    else if (due >= startOfTomorrow) category = "upcoming";
+                }
+
+                return {
+                    id: task.task_id,
+                    title: task.task_name,
+                    description: task.task_info || "No description provided",
+                    status: statusMap[task.status] || "not started",
+                    priority: priorityMap[task.priority_level] || "none",
+                    dueDate: due ? due.toLocaleDateString() : "No Date",
+                    dueTime: due ? due.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+                    
+                    // Fallback tag evaluation from your multi-table relational join array
+                    tag: task.task_tag && task.task_tag[0]?.tags ? task.task_tag[0].tags.tag_name : "General",
+                    category
+                };
+            });
             setTasks(convertedData);
             setAvailableTags(fetchedTags);
         } catch (error) {
