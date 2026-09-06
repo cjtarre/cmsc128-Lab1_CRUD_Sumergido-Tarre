@@ -24,3 +24,6 @@ ___
 npm install axios
 ```
 - `axios`: acts as the HTTP client that communicates with external web server (Supabase)
+
+### Database Schema/ERD
+![A relational schema hosted in Supabase managing a many-to-many (M-M) relationship between tasks and tags.](database_erd.png)
