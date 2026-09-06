@@ -1,7 +1,12 @@
 import { useMemo, useState } from "react";
-import {ChevronLeft, ChevronRight,} from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+import { useTaskData } from "../shared/context/taskContext";
+import { formatDueTime } from "../shared/utils/dateUtils";
+import { STATUS } from "../shared/constants/taskOptions";
 
 function Calendar() {
+    const { tasks } = useTaskData();
     const [currentDate, setCurrentDate] = useState(new Date());
 
     const year = currentDate.getFullYear();
@@ -26,12 +31,10 @@ function Calendar() {
     const calendarDays = useMemo(() => {
         const days = [];
 
-        // Empty cells before the first day of the month
         for (let i = 0; i < firstDayOfMonth; i++) {
             days.push(null);
         }
 
-        // Days of the current month
         for (let day = 1; day <= daysInMonth; day++) {
             days.push(day);
         }
@@ -51,21 +54,45 @@ function Calendar() {
         setCurrentDate(new Date());
     }
 
+    function getTasksForDay(day) {
+        if (!day) return [];
+
+        const date = `${String(day).padStart(2, "0")}/${String(
+            month + 1
+        ).padStart(2, "0")}/${year}`;
+
+        return tasks.filter((task) => task.dueDate === date);
+    }
+
+    function getPriorityStyle(priority) {
+        if (priority === 3) {
+            return "bg-red-50 text-red-600";
+        }
+
+        if (priority === 2) {
+            return "bg-yellow-50 text-yellow-600";
+        }
+
+        if (priority === 1) {
+            return "bg-green-50 text-green-600";
+        }
+
+        return "bg-slate-100 text-slate-400";
+    }
+
     return (
         <div className="px-8 py-8">
-            {/* Page Header */}
+            {/* Header */}
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800">
                         Calendar
                     </h1>
-
                     <p className="mt-1 text-sm text-slate-500">
                         View your tasks by date.
                     </p>
                 </div>
 
-                {/* Month Navigation */}
                 <div className="flex items-center gap-2">
                     <button
                         type="button"
@@ -99,7 +126,7 @@ function Calendar() {
                 </div>
             </div>
 
-            {/* Calendar Container */}
+            {/* Calendar */}
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                 {/* Weekdays */}
                 <div className="grid grid-cols-7 border-b border-slate-200">
@@ -121,20 +148,52 @@ function Calendar() {
                     ))}
                 </div>
 
-                {/* Calendar Days */}
+                {/* Days */}
                 <div className="grid grid-cols-7">
-                    {calendarDays.map((day, index) => (
-                        <div
-                            key={index}
-                            className="min-h-28 border-b border-r border-slate-200 p-3"
-                        >
-                            {day && (
-                                <span className="text-sm font-medium text-slate-600">
-                                    {day}
-                                </span>
-                            )}
-                        </div>
-                    ))}
+                    {calendarDays.map((day, index) => {
+                        const dayTasks = getTasksForDay(day);
+
+                        return (
+                            <div
+                                key={index}
+                                className="min-h-32 border-b border-r border-slate-200 p-3"
+                            >
+                                {day && (
+                                    <>
+                                        <span className="text-sm font-medium text-slate-600">
+                                            {day}
+                                        </span>
+
+                                        <div className="mt-2 space-y-1.5">
+                                            {dayTasks.map((task) => (
+                                                <div
+                                                    key={task.id}
+                                                    className={`rounded-md px-2 py-1.5 text-[10px] ${getPriorityStyle(
+                                                        task.priority
+                                                    )}`}
+                                                >
+                                                    <p
+                                                        className={`font-semibold ${
+                                                            task.status ===
+                                                            STATUS.COMPLETED
+                                                                ? "line-through opacity-60"
+                                                                : ""
+                                                        }`}
+                                                    >
+                                                        {task.title}
+                                                    </p>
+
+                                                    <p className="mt-0.5 opacity-70">
+                                                        {formatDueTime(task.dueTime)}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </div>

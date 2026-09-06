@@ -4,12 +4,31 @@ import {
     Pencil,
     Trash2,
 } from "lucide-react";
+
 import taskStyles from "../../styles/taskStyles";
+import {
+    STATUS,
+    priorityLabels,
+    tagLabels,
+} from "../../constants/taskOptions";
+import { formatDueDate } from "../../utils/dateUtils";
 
 function TaskDetails({ task, onClose, onEdit, onDelete }) {
-    if (!task) {
-        return null;
-    }
+    if (!task) return null;
+
+    const isCompleted = task.status === STATUS.COMPLETED;
+
+    const statusLabels = {
+        [STATUS.NOT_STARTED]: "Not Started",
+        [STATUS.IN_PROGRESS]: "In Progress",
+        [STATUS.COMPLETED]: "Completed",
+    };
+
+    const statusColors = {
+        [STATUS.NOT_STARTED]: "text-slate-500",
+        [STATUS.IN_PROGRESS]: "text-amber-600",
+        [STATUS.COMPLETED]: "text-green-600",
+    };
 
     return (
         <div
@@ -25,7 +44,7 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
                         <h2
                             id="task-details-title"
                             className={`text-lg font-semibold ${
-                                task.status === "completed"
+                                isCompleted
                                     ? "text-slate-400 line-through"
                                     : "text-slate-800"
                             }`}
@@ -57,8 +76,7 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
                         </p>
 
                         <p className="text-sm leading-6 text-slate-600">
-                            {task.description ||
-                                "No description provided."}
+                            {task.description || "No description provided."}
                         </p>
                     </div>
 
@@ -77,17 +95,16 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
                                 />
 
                                 <div>
-                                    <div>
-                                        {task.dueDate ||
-                                            "No due date"}
+                                    {task.dueDate
+                                        ? formatDueDate(task.dueDate)
+                                        : "No due date"}
 
-                                        {task.dueTime && (
-                                            <span className="text-xs text-slate-400">
-                                                {" - "}
-                                                {task.dueTime}
-                                            </span>
-                                        )}
-                                    </div>
+                                    {task.dueTime && (
+                                        <span className="text-xs text-slate-400">
+                                            {" - "}
+                                            {task.dueTime}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -99,24 +116,41 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
                             </p>
 
                             <div className="mt-2">
-                                {task.priority ? (
+                                {task.priority > 0 ? (
                                     <span
                                         className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
-                                            taskStyles.priority[
-                                                task.priority
-                                            ] ||
-                                            taskStyles.priority.medium
+                                            isCompleted
+                                                ? "bg-slate-100 text-slate-400"
+                                                : taskStyles.priority[task.priority]
                                         }`}
                                     >
-                                        {task.priority}
+                                        {priorityLabels[task.priority]}
                                     </span>
                                 ) : (
-                                    <span className="text-sm text-slate-400">
+                                    <span className="inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide bg-slate-100 text-slate-400">
                                         None
                                     </span>
                                 )}
                             </div>
                         </div>
+                    </div>
+
+                    {/* Status */}
+                    <div>
+                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                            Status
+                        </p>
+
+                        <span
+                            className={`text-sm font-medium ${
+                                isCompleted
+                                    ? "text-green-600"
+                                    : statusColors[task.status] ||
+                                      "text-slate-500"
+                            }`}
+                        >
+                            {statusLabels[task.status] || "Not Started"}
+                        </span>
                     </div>
 
                     {/* Tag */}
@@ -125,16 +159,14 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
                             Tag
                         </p>
 
-                        {task.tag ? (
+                        {tagLabels[task.tag] ? (
                             <span
                                 className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                                    taskStyles.tag[
-                                        task.tag.toLowerCase()
-                                    ] ||
+                                    taskStyles.tag[task.tag] ||
                                     "bg-slate-100 text-slate-500"
                                 }`}
                             >
-                                {task.tag}
+                                {tagLabels[task.tag]}
                             </span>
                         ) : (
                             <span className="text-sm text-slate-400">
@@ -146,7 +178,6 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
 
                 {/* Footer */}
                 <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4">
-                    {/* Delete */}
                     <button
                         type="button"
                         onClick={() => onDelete(task)}
@@ -158,7 +189,6 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
                     </button>
 
                     <div className="flex items-center gap-2">
-                        {/* Edit */}
                         <button
                             type="button"
                             onClick={() => onEdit(task)}
@@ -169,7 +199,6 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
                             Edit
                         </button>
 
-                        {/* Close */}
                         <button
                             type="button"
                             onClick={onClose}

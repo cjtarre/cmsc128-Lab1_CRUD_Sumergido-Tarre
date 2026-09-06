@@ -1,6 +1,9 @@
 import { Search } from "lucide-react";
+import { useTaskData } from "../../context/taskContext";
 
 function SearchBar() {
+    const { searchTerm, setSearchTerm } = useTaskData();
+
     return (
         <div className="relative">
             <Search
@@ -10,6 +13,8 @@ function SearchBar() {
 
             <input
                 type="search"
+                value={searchTerm || ""}
+                onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search tasks..."
                 aria-label="Search tasks"
                 className="w-44 rounded-full border border-slate-200 bg-white py-2 pl-9 pr-4 text-xs text-slate-700 outline-none transition focus:border-green-300 focus:ring-2 focus:ring-green-50"

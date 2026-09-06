@@ -4,7 +4,6 @@ import MainLayout from "../layouts/MainLayout";
 import Landing from "../pages/Landing";
 import Dashboard from "../pages/Dashboard";
 import Calendar from "../pages/Calendar";
-import Completed from "../pages/Completed";
 import Profile from "../pages/Profile";
 import Settings from "../pages/Settings";
 import Notifications from "../pages/Notifications";
@@ -18,7 +17,6 @@ function AppRoutes() {
             <Route element={<MainLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/calendar" element={<Calendar />} />
-                <Route path="/completed" element={<Completed />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route

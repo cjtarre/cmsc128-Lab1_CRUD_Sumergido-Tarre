@@ -6,6 +6,7 @@ function TaskFilter({ value, onChange }) {
         { label: "Today", value: "today" },
         { label: "Upcoming", value: "upcoming" },
         { label: "Overdue", value: "overdue" },
+        { label: "Completed", value: "completed" },
     ];
 
     const containerRef = useRef(null);

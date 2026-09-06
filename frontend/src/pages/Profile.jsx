@@ -1,4 +1,4 @@
-import ComingSoon from "../components/common/ComingSoon";
+import ComingSoon from "../shared/components/common/ComingSoon";
 
 function Profile() {
     return (
