@@ -1,5 +1,5 @@
 ### Preliminary
-Create a `.env` file in `/backend` with the url and anon_key to database to ensure that backend fetches data properly.
+Create a `.env` file in `/backend` with `SUPABASE_URL` and `SUPABASE_ANON_KEY` (or `SUPABASE_KEY`) to ensure that backend fetches data properly.
 ___
 ### 1. Run the following in `/backend` terminal:  
 ```bash
