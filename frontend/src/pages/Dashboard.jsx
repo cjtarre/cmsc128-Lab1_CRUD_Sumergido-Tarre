@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 
 import { taskService } from "../services/taskService";
+import { tagService } from "../services/tagService";
 
 import TaskFilter from "../components/tasks/TaskFilter";
 import TaskTable from "../components/tasks/TaskTable";
@@ -15,19 +16,20 @@ function Dashboard() {
     const [selectedTask, setSelectedTask] = useState(null);
     const [taskToDelete, setTaskToDelete] = useState(null);
 
-
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [availableTags, setAvailableTags] = useState([]);
 
-    const loadTasks = async () => {
+    const loadInitialData = async () => {
         try {
             setLoading(true);
+            const [fetchedTasks, fetchedTags] = await Promise.all([
+                taskService.getTasks(),
+                tagService.getTags()
+            ]);
 
             const priorityMap = {0: "none", 1: "low", 2: "medium", 3: "high"};
             const statusMap = {0: "not started", 1: "in progress", 2: "completed"};
-
-            const fetchedTasks = await taskService.getTasks();
-
             const convertedData = fetchedTasks.map(task => ({
                 id: task.task_id,
                 title: task.task_name,
@@ -42,6 +44,7 @@ function Dashboard() {
                 category: task.status === "Completed" ? "completed" : "today" // Maps to filter conditions
             }));
             setTasks(convertedData);
+            setAvailableTags(fetchedTags);
         } catch (error) {
             console.error("Error loading tasks:", error);
         } finally {
@@ -50,7 +53,7 @@ function Dashboard() {
     };
 
     useEffect(() => {
-        loadTasks();
+        loadInitialData();
     }, []);
 
 
