@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
+
+import { taskService } from "../services/taskService";
 
 import TaskFilter from "../components/tasks/TaskFilter";
 import TaskTable from "../components/tasks/TaskTable";
@@ -13,52 +15,44 @@ function Dashboard() {
     const [selectedTask, setSelectedTask] = useState(null);
     const [taskToDelete, setTaskToDelete] = useState(null);
 
-    const tasks = [
-        {
-            id: 1,
-            title: "Finish CMSC 128 Lab",
-            description: "Complete the CRUD application.",
-            status: "pending",
-            priority: "high",
-            dueDate: "Today",
-            dueTime: "11:59 PM",
-            tag: "School",
-            category: "today",
-        },
-        {
-            id: 2,
-            title: "Review CMSC 124 notes",
-            description: "Review the latest lecture materials.",
-            status: "pending",
-            priority: "medium",
-            dueDate: "Today",
-            dueTime: "2:00 PM",
-            tag: "School",
-            category: "today",
-        },
-        {
-            id: 3,
-            title: "Buy groceries",
-            description: "Pick up groceries for the week.",
-            status: "pending",
-            priority: "low",
-            dueDate: "September 7",
-            dueTime: "3:00 PM",
-            tag: "Personal",
-            category: "upcoming",
-        },
-        {
-            id: 4,
-            title: "Submit activity",
-            description: "Submit the completed activity.",
-            status: "pending",
-            priority: "high",
-            dueDate: "September 2",
-            dueTime: "11:59 PM",
-            tag: "School",
-            category: "overdue",
-        },
-    ];
+
+    const [tasks, setTasks] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const loadTasks = async () => {
+        try {
+            setLoading(true);
+
+            const priorityMap = {0: "none", 1: "low", 2: "medium", 3: "high"};
+            const statusMap = {0: "not started", 1: "in progress", 2: "completed"};
+
+            const fetchedTasks = await taskService.getTasks();
+
+            const convertedData = fetchedTasks.map(task => ({
+                id: task.task_id,
+                title: task.task_name,
+                description: task.task_info || "No description provided",
+                status: statusMap[task.status] || "not started", 
+                priority: priorityMap[task.priority_level] || "none",
+                dueDate: task.due_date ? new Date(task.due_date).toLocaleDateString() : "No Date",
+                dueTime: task.due_date ? new Date(task.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+                
+                // Fallback tag evaluation from your multi-table relational join array
+                tag: task.task_tag && task.task_tag[0]?.tags ? task.task_tag[0].tags.tag_name : "General",
+                category: task.status === "Completed" ? "completed" : "today" // Maps to filter conditions
+            }));
+            setTasks(convertedData);
+        } catch (error) {
+            console.error("Error loading tasks:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadTasks();
+    }, []);
+
 
     const filteredTasks = tasks.filter((task) => {
         if (filter === "all") {
