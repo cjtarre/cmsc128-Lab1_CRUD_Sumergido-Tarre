@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import SearchBar from "./SearchBar";
 import ProfileMenu from "./ProfileMenu";
 
 function Header() {
@@ -13,8 +12,6 @@ function Header() {
             </Link>
 
             <div className="flex items-center gap-5">
-                <SearchBar />
-
                 <ProfileMenu />
             </div>
         </header>

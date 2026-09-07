@@ -56,7 +56,7 @@ function convertTask(task) {
             : "",
 
         tags,
-
+        createdAt: task.created_at,
         category,
     };
 }

@@ -1,18 +1,61 @@
-export function sortTasksByDueDate(tasks) {
-    const getTimestamp = (task) => {
-        if (!task.dueDate) return Infinity;
+export const TASK_SORT_MODES = {
+    TITLE_ASC: "title_asc",
+    TITLE_DESC: "title_desc",
+    PRIORITY_ASC: "priority_asc",
+    PRIORITY_DESC: "priority_desc",
+}
 
-        const [day, month, year] = task.dueDate.split("/").map(Number);
-        let [time, period] = (task.dueTime || "12:00 AM").split(" ");
-        let [hours, minutes] = time.split(":").map(Number);
+export const DUEDATE_SORT_MODES = {
+    DUE_ASC: "due_asc",
+    DUE_DESC: "due_desc",
+    CRE_ASC: "cre_asc",
+    CRE_DESC: "cre_desc",
+}
 
-        if (period === "PM" && hours !== 12) hours += 12;
-        if (period === "AM" && hours === 12) hours = 0;
+function getDueDateTimestamp(task) {
+    if (!task.dueDate) return Infinity;
 
-        return new Date(year, month - 1, day, hours, minutes).getTime();
-    };
+    const [day, month, year] = task.dueDate.split("/").map(Number);
+    let [time, period] = (task.dueTime || "12:00 AM").split(" ");
+    let [hours, minutes] = time.split(":").map(Number);
 
-    return [...tasks].sort(
-        (a, b) => getTimestamp(a) - getTimestamp(b)
-    );
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+    return new Date(year, month - 1, day, hours, minutes).getTime();
+}
+
+export function sortTasksByTaskColumn(tasks, mode) {
+    const sortedTasks = [...tasks];
+    switch (mode) {
+        case TASK_SORT_MODES.TITLE_ASC:
+            return sortedTasks.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+        case TASK_SORT_MODES.TITLE_DESC:
+            return sortedTasks.sort((a, b) => (b.title || "").localeCompare(a.title || ""));
+        case TASK_SORT_MODES.PRIORITY_ASC:
+            return sortedTasks.sort((a, b) => (a.priority || 0) - (b.priority || 0));
+        case TASK_SORT_MODES.PRIORITY_DESC:
+            return sortedTasks.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+        default:
+            return sortedTasks;
+    }
+}
+
+export function sortTasksByDueDateColumn(tasks, mode) {
+    const sortedTasks = [...tasks];
+    switch (mode) {
+        case DUEDATE_SORT_MODES.DUE_DESC:
+            return sortedTasks.sort((a, b) => getDueDateTimestamp(b) - getDueDateTimestamp(a));
+        case DUEDATE_SORT_MODES.CRE_ASC:
+        case DUEDATE_SORT_MODES.CRE_DESC:
+            return [...sortedTasks.sort((a, b) => {
+                const timestampA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const timestampB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+
+                if (mode === DUEDATE_SORT_MODES.CRE_ASC) return timestampA - timestampB;
+                return timestampB - timestampA;
+            })];
+        case DUEDATE_SORT_MODES.DUE_ASC:
+        default:
+            return sortedTasks.sort((a, b) => getDueDateTimestamp(a) - getDueDateTimestamp(b));
+    }
 }
