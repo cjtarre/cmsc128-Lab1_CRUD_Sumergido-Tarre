@@ -2,8 +2,20 @@ import { CalendarDays, X, Pencil, Trash2 } from "lucide-react";
 import taskStyles from "../../styles/taskStyles";
 import { STATUS, priorityLabels, statusLabels } from "../../constants/taskOptions";
 import { formatDueDate } from "../../utils/dateUtils";
+import { useEffect } from "react";
 
 function TaskDetails({ task, onClose, onEdit, onDelete }) {
+    // Uncomment the following useEffect to prevent background scrolling when the modal is open
+    // useEffect(() => {
+    //     if (!task) return;
+
+    //     const originalOverflow = document.body.style.overflow;
+    //     document.body.style.overflow = "hidden";
+
+    //     return () => {
+    //         document.body.style.overflow = originalOverflow;
+    //     };
+    // }, [task]);
     if (!task) return null;
 
     const isCompleted = task.status === STATUS.COMPLETED;
@@ -12,8 +24,8 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/25 px-4" role="dialog" aria-modal="true" aria-labelledby="task-details-title">
-            <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl">
-                <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
+            <div className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div className="shrink-0 flex items-start justify-between border-b border-slate-100 px-6 py-5">
                     <div className="min-w-0 pr-4">
                         <h2 id="task-details-title" className={`text-lg font-semibold ${isCompleted ? "text-slate-400 line-through" : "text-slate-800"}`}>
                             {task.title}
@@ -26,10 +38,10 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
                     </button>
                 </div>
 
-                <div className="space-y-6 px-6 py-6">
+                <div className="flex-1 overflow-y-auto space-y-6 px-6 py-6">
                     <div>
                         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Description</p>
-                        <p className="text-sm leading-6 text-slate-600">
+                        <p className="text-sm leading-6 text-slate-600 break-words whitespace-pre-line">
                             {task.description || "No description provided."}
                         </p>
                     </div>
@@ -86,7 +98,7 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4">
+                <div className="shrink-0 flex items-center justify-between border-t border-slate-100 px-6 py-4">
                     <button type="button" onClick={() => onDelete(task)} className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-500 transition hover:bg-red-50 hover:text-red-600">
                         <Trash2 size={15} /> Delete
                     </button>

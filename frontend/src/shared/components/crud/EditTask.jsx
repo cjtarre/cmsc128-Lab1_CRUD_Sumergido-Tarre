@@ -38,6 +38,17 @@ function EditTask({ task, isOpen, onClose, onSave }) {
         setErrors({});
     }, [task]);
 
+    // Uncomment the following useEffect to prevent background scrolling when the modal is open
+    // useEffect(() => {
+    //     if (!task) return;
+
+    //     const originalOverflow = document.body.style.overflow;
+    //     document.body.style.overflow = "hidden";
+
+    //     return () => {
+    //         document.body.style.overflow = originalOverflow;
+    //     };
+    // }, [task]);
     if (!isOpen || !task) return null;
 
     const handleChange = ({ target }) => {
@@ -96,8 +107,8 @@ function EditTask({ task, isOpen, onClose, onSave }) {
             aria-modal="true"
             aria-labelledby="edit-task-title"
         >
-            <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl">
-                <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
+            <div className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div className="shrink-0 flex items-start justify-between border-b border-slate-100 px-6 py-5">
                     <div>
                         <h2
                             id="edit-task-title"
@@ -119,8 +130,8 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit}>
-                    <div className="space-y-5 px-6 py-6">
+                <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+                    <div className="flex-1 overflow-y-auto space-y-5 px-6 py-6">
                         {/* Title */}
                         <div>
                             <label className="mb-2 block text-xs font-medium text-slate-600">
@@ -275,7 +286,7 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
+                    <div className="shrink-0 flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
                         <button
                             type="button"
                             onClick={onClose}
