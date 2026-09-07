@@ -6,15 +6,16 @@ export function validateTask(task) {
         return errors;
     }
 
-    if (!task.dueDate) {
-        errors.dueDate = "Due date is required.";
-        return errors;
-    }
+    // Due Date is optional, uncomment to make it mandatory
+    // if (!task.dueDate) {
+    //     errors.dueDate = "Due date is required.";
+    //     return errors;
+    // }
 
-    if (!task.dueTime) {
-        errors.dueTime = "Due time is required.";
-        return errors;
-    }
+    // if (!task.dueTime) {
+    //     errors.dueTime = "Due time is required.";
+    //     return errors;
+    // }
 
     return errors;
 }
