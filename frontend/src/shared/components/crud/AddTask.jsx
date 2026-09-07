@@ -11,7 +11,7 @@ const initialFormData = {
     dueDate: "",
     dueTime: "",
     priority: PRIORITY.NONE,
-    tag: "",
+    tags: [],
 };
 
 function AddTask({ isOpen, onClose, onSubmit }) {
@@ -38,6 +38,18 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                 [target.name]: "",
             }));
         }
+    };
+
+    const handleTagToggle = (tagId) => {
+        setFormData((previous) => {
+            const exists = previous.tags.includes(tagId);
+            return {
+                ...previous,
+                tags: exists
+                    ? previous.tags.filter((id) => id !== tagId)
+                    : [...previous.tags, tagId],
+            };
+        });
     };
 
     const handleSubmit = (event) => {
@@ -88,6 +100,7 @@ function AddTask({ isOpen, onClose, onSubmit }) {
 
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-5 px-6 py-6">
+                        {/* Title */}
                         <div>
                             <label className="mb-2 block text-xs font-medium text-slate-600">
                                 Title <span className="text-red-400">*</span>
@@ -111,6 +124,7 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                             )}
                         </div>
 
+                        {/* Description */}
                         <div>
                             <label className="mb-2 block text-xs font-medium text-slate-600">
                                 Description
@@ -124,12 +138,13 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                                 className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-green-400 focus:ring-2 focus:ring-green-100"
                             />
                         </div>
-
+                        
+                        {/* Due Date */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="mb-2 block text-xs font-medium text-slate-600">
-                                    Due Date <span className="text-red-400">*</span>
-                                </label>
+                                    Due Date {/*<span className="text-red-400">*</span>*/}
+                                </label> 
                                 <input
                                     type="date"
                                     name="dueDate"
@@ -146,7 +161,7 @@ function AddTask({ isOpen, onClose, onSubmit }) {
 
                             <div>
                                 <label className="mb-2 block text-xs font-medium text-slate-600">
-                                    Due Time <span className="text-red-400">*</span>
+                                    Due Time {/*<span className="text-red-400">*</span>*/}
                                 </label>
                                 <input
                                     type="time"
@@ -163,6 +178,7 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                             </div>
                         </div>
 
+                        {/* Priority */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="mb-2 block text-xs font-medium text-slate-600">
@@ -180,27 +196,31 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                                     <option value={PRIORITY.HIGH}>High</option>
                                 </select>
                             </div>
+                        </div>
 
-                            <div>
-                                <label className="mb-2 block text-xs font-medium text-slate-600">
-                                    Tag
-                                </label>
-                                <select
-                                    name="tag"
-                                    value={formData.tag}
-                                    onChange={handleChange}
-                                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100"
-                                >
-                                    <option value="">Select a tag</option>
-                                    {availableTags.map((tag) => (
-                                        <option
+                        {/* Tags */}
+                        <div>
+                            <label className="mb-2 block text-xs font-medium text-slate-600">
+                                Tags
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                                {availableTags.map((tag) => {
+                                    const isSelected = formData.tags.includes(tag.tag_id);
+                                    return (
+                                        <button
                                             key={tag.tag_id}
-                                            value={tag.tag_id}
+                                            type="button"
+                                            onClick={() => handleTagToggle(tag.tag_id)}
+                                            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                                                isSelected
+                                                    ? "border-green-400 bg-green-50 text-green-700"
+                                                    : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                                            }`}
                                         >
                                             {tag.tag_name}
-                                        </option>
-                                    ))}
-                                </select>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>

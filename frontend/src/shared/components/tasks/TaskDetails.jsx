@@ -7,8 +7,8 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
     if (!task) return null;
 
     const isCompleted = task.status === STATUS.COMPLETED;
-    const tagStyle =
-        taskStyles.tag[Number(task.tagId)] || "bg-slate-100 text-slate-500";
+    const getTagStyle = (tagId) =>
+        taskStyles.tag[Number(tagId)] || "bg-slate-100 text-slate-500";
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/25 px-4" role="dialog" aria-modal="true" aria-labelledby="task-details-title">
@@ -62,13 +62,22 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
                     </div>
 
                     <div>
-                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Tag</p>
-                        {task.tag ? (
-                            <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${isCompleted ? "bg-slate-100 text-slate-400" : tagStyle}`}>
-                                {task.tag}
-                            </span>
+                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Tags</p>
+                        {task.tags?.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                                {task.tags.map((t) => (
+                                    <span
+                                        key={t.tag_id}
+                                        className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
+                                            isCompleted ? "bg-slate-100 text-slate-400" : getTagStyle(t.tag_id)
+                                        }`}
+                                    >
+                                        {t.tag_name}
+                                    </span>
+                                ))}
+                            </div>
                         ) : (
-                            <span className="text-sm text-slate-400">No tag</span>
+                            <span className="text-sm text-slate-400">No tags</span>
                         )}
                     </div>
                 </div>

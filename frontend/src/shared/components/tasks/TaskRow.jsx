@@ -13,9 +13,7 @@ function TaskRow({
     priority = 0,
     dueDate = "",
     dueTime = "",
-    tag = "",
-    tagId = null,
-    onToggleComplete,
+    tags = [],
     onStatusChange,
     onEdit,
     onDelete,
@@ -34,41 +32,20 @@ function TaskRow({
         statusOptions.find((option) => option.value === status) ||
         statusOptions[0];
 
-    const normalizedTagId =
-        tagId !== null && tagId !== undefined && tagId !== ""
-            ? Number(tagId)
-            : null;
+    const getTagStyle = (tagId) =>
+        taskStyles.tag[Number(tagId)] || "bg-slate-100 text-slate-500";
 
-    const tagStyle =
-        taskStyles.tag[normalizedTagId] ||
-        "bg-slate-100 text-slate-500";
 
     return (
-        <div className="grid grid-cols-[minmax(0,2.3fr)_1.3fr_0.8fr_1fr_0.8fr_0.8fr] items-center gap-4 px-4 py-4 transition-colors duration-150 hover:bg-slate-50/50">
-            {/* Task */}
+        <div className="group relative grid grid-cols-[minmax(0,2.5fr)_1fr_2fr] items-center gap-4 px-4 py-4 transition-colors duration-150 hover:bg-slate-50/50">
+            {/* Task Column */}
             <div className="flex min-w-0 items-start gap-3">
                 <button
                     type="button"
-                    onClick={onToggleComplete}
-                    aria-label={
-                        isCompleted
-                            ? "Mark task as not completed"
-                            : "Mark task as completed"
-                    }
-                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition duration-200 ${
-                        isCompleted
-                            ? "border-green-500 bg-green-500 text-white"
-                            : "border-slate-300 text-transparent hover:border-green-400 hover:bg-green-50"
-                    }`}
-                >
-                    {isCompleted && <Check size={13} />}
-                </button>
-
-                <button
-                    type="button"
                     onClick={onView}
-                    className="min-w-0 text-left"
+                    className="w-full min-w-0 text-left"
                 >
+                    {/* Title and Description */}
                     <h3
                         className={`truncate text-sm font-semibold ${
                             isCompleted
@@ -90,41 +67,46 @@ function TaskRow({
                             {description}
                         </p>
                     )}
+
+                    {/* Metadata Badges Wrapper (Priority and Tag) */}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        {/* Priority */}
+                        <span
+                            className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                                isCompleted
+                                    ? "bg-slate-100 text-slate-400"
+                                    : priority > 0
+                                    ? taskStyles.priority[priority]
+                                    : "bg-slate-100 text-slate-400"
+                            }`}
+                        >
+                            {priorityLabels[priority] || "None"}
+                        </span>
+
+                        {/* Tags */}
+                        {tags.length > 0 &&
+                            tags.map((t) => (
+                                <span
+                                    key={t.tag_id}
+                                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
+                                        isCompleted
+                                            ? "bg-slate-100 text-slate-400"
+                                            : getTagStyle(t.tag_id)
+                                    }`}
+                                >
+                                    {t.tag_name}
+                                </span>
+                            ))
+                        }
+                    </div>
                 </button>
             </div>
 
-            {/* Due Date */}
-            <div
-                className={`flex min-w-0 items-start gap-1.5 text-xs ${
-                    isCompleted ? "text-slate-300" : "text-slate-400"
-                }`}
-            >
-                <CalendarDays size={14} className="mt-0.5 shrink-0" />
-
-                <div className="min-w-0 truncate">
-                    {dueDate ? formatDueDate(dueDate) : "No due date"}
-                    {dueTime && ` - ${dueTime}`}
-                </div>
-            </div>
-
-            {/* Priority */}
-            <div>
-                <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
-                        isCompleted
-                            ? "bg-slate-100 text-slate-400"
-                            : priority > 0
-                            ? taskStyles.priority[priority]
-                            : "bg-slate-100 text-slate-400"
-                    }`}
-                >
-                    {priorityLabels[priority] || "None"}
-                </span>
-            </div>
 
             {/* Status */}
-            <div className="relative">
+            <div className="relative min-w-0">
                 <button
+                    ref={statusButtonRef}
                     type="button"
                     onClick={(event) => {
                         event.stopPropagation();
@@ -133,7 +115,7 @@ function TaskRow({
                     aria-haspopup="listbox"
                     aria-expanded={isStatusOpen}
                     aria-label={`Change status for ${title}`}
-                    className={`flex items-center gap-0.5 font-medium transition focus:outline-none ${
+                    className={`flex w-full min-w-0 items-center gap-0.5 font-medium transition focus:outline-none ${
                         status === STATUS.COMPLETED
                             ? "text-green-600"
                             : status === STATUS.IN_PROGRESS
@@ -142,8 +124,7 @@ function TaskRow({
                     }`}
                     style={{ fontSize: "12px", lineHeight: "1" }}
                 >
-                    <span>{currentStatus.label}</span>
-
+                    <span className="truncate text-left">{currentStatus.label}</span>
                     <ChevronDown
                         size={8}
                         strokeWidth={2}
@@ -180,25 +161,27 @@ function TaskRow({
                     </div>
                 )}
             </div>
+            
+            {/* Due Date */}
+            <div
+                className={`flex min-w-0 items-start gap-1.5 text-xs ${
+                    isCompleted ? "text-slate-300" : "text-slate-400"
+                }`}
+            >
+                <CalendarDays size={14} className="mt-0.5 shrink-0" />
 
-            {/* Tag */}
-            <div>
-                <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                        isCompleted
-                            ? "bg-slate-100 text-slate-400"
-                            : tagStyle
-                    }`}
-                >
-                    {tag || "General"}
-                </span>
+                <div className="min-w-0 truncate">
+                    {dueDate ? formatDueDate(dueDate) : "No due date"}
+                    {dueTime && ` - ${dueTime}`}
+                </div>
             </div>
 
             {/* Actions */}
-            <ActionButtons
-                onEdit={onEdit}
-                onDelete={onDelete}
-            />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 bg-gradient-to-l from-white via-white pl-4">                <ActionButtons
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                />
+            </div>
         </div>
     );
 }
