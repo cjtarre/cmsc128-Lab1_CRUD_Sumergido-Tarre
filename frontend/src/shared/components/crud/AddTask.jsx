@@ -2,7 +2,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 
 import { PRIORITY } from "../../constants/taskOptions";
-import { validateTask } from "../../utils/validation";
+import { validateTask, INFO_MAX_LENGTH, NAME_MAX_LENGTH } from "../../utils/validation";
 import { useTaskData } from "../../context/taskContext";
 
 const initialFormData = {
@@ -117,11 +117,16 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                                         : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-green-100"
                                 }`}
                             />
-                            {errors.title && (
-                                <p className="mt-1.5 text-xs text-red-500">
-                                    {errors.title}
-                                </p>
-                            )}
+                            <div className="mt-1.5 flex items-center justify-between">
+                                {errors.title ? (
+                                    <p className="text-xs text-red-500">{errors.title}</p>
+                                ) : (
+                                    <span />
+                                )}
+                                <span className="text-[10px] text-slate-400">
+                                    {formData.title.length}/{NAME_MAX_LENGTH}
+                                </span>
+                            </div>
                         </div>
 
                         {/* Description */}
@@ -137,6 +142,18 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                                 rows={3}
                                 className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-green-400 focus:ring-2 focus:ring-green-100"
                             />
+                            <div className="mt-1.5 flex items-center justify-between">
+                                {errors.description ? (
+                                    <p className="mt-1.5 text-xs text-red-500">
+                                        {errors.description}
+                                    </p>
+                                ): (
+                                    <span />
+                                )}
+                                <span className="text-[10px] text-slate-400">
+                                    {formData.description.length}/{INFO_MAX_LENGTH}
+                                </span>
+                            </div>
                         </div>
                         
                         {/* Due Date */}
