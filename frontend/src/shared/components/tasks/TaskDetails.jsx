@@ -48,9 +48,13 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
 
                         <div className="rounded-xl bg-slate-50 px-4 py-3">
                             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Priority</p>
-                            <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${isCompleted ? "bg-slate-100 text-slate-400" : taskStyles.priority[task.priority] || taskStyles.priority[0]}`}>
-                                {priorityLabels[task.priority] || "None"}
-                            </span>
+                            {task.priority > 0 ? (
+                                <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${isCompleted ? "bg-slate-100 text-slate-400" : taskStyles.priority[task.priority]}`}>
+                                    {priorityLabels[task.priority]}
+                                </span>
+                            ) : (
+                                <span className="mt-2 text-sm text-slate-400">No priority</span>
+                            )}
                         </div>
                     </div>
 

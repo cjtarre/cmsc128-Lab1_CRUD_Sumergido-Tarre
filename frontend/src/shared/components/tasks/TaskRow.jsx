@@ -79,7 +79,7 @@ function TaskRow({
     };
 
     return (
-        <div className="group relative grid grid-cols-[minmax(0,2.5fr)_1fr_2fr] items-center gap-4 px-4 py-4 transition-colors duration-150 hover:bg-slate-50/50">
+        <div className="group relative grid grid-cols-[minmax(0,2.5fr)_1fr_2fr_44px] items-center gap-4 px-4 py-4 transition-colors duration-150 hover:bg-slate-50/50">
             {/* Task Column */}
             <div className="flex min-w-0 items-start gap-3">
                 <button
@@ -113,17 +113,15 @@ function TaskRow({
                     {/* Metadata Badges Wrapper (Priority and Tag) */}
                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
                         {/* Priority */}
-                        <span
-                            className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
-                                isCompleted
-                                    ? "bg-slate-100 text-slate-400"
-                                    : priority > 0
-                                    ? taskStyles.priority[priority]
-                                    : "bg-slate-100 text-slate-400"
-                            }`}
-                        >
-                            {priorityLabels[priority] || "None"}
-                        </span>
+                        {priority > 0 && (
+                            <span
+                                className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                                    isCompleted ? "bg-slate-100 text-slate-400" : taskStyles.priority[priority]
+                                }`}
+                            >
+                                {priorityLabels[priority]}
+                            </span>
+                        )}
 
                         {/* Tags */}
                         {tags.length > 0 &&
@@ -226,7 +224,8 @@ function TaskRow({
             </div>
 
             {/* Actions */}
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-150 bg-gradient-to-l from-white via-white pl-4">                <ActionButtons
+            <div className="sticky right-4 z-10 justify-self-end flex items-center opacity-0 pointer-events-none transition-all duration-150 group-hover:opacity-100 group-hover:pointer-events-auto bg-gradient-to-l from-white via-white pl-4">
+            <ActionButtons
                     onEdit={onEdit}
                     onDelete={onDelete}
                 />

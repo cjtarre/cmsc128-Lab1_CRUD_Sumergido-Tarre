@@ -11,7 +11,7 @@ function TaskTable({
     return (
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-x-auto">
             <div className="min-w-[640px]">
-                <div className="grid grid-cols-[minmax(0,2.5fr)_1fr_2fr] items-center gap-4 border-b border-slate-200 bg-slate-50/70 px-4 py-3">
+                <div className="grid grid-cols-[minmax(0,2.5fr)_1fr_2fr_44px] items-center gap-4 border-b border-slate-200 bg-slate-50/70 px-4 py-3">
                     {["Task", "Status", "Due Date"].map((label) => (
                         <span
                             key={label}
