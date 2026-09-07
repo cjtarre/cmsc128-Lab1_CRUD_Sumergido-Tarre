@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { CalendarDays, Check, ChevronDown } from "lucide-react";
 
 import ActionButtons from "../crud/ActionButtons";
@@ -20,6 +21,10 @@ function TaskRow({
     onView,
 }) {
     const [isStatusOpen, setIsStatusOpen] = useState(false);
+    const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+    const statusButtonRef = useRef(null);
+    const statusMenuRef = useRef(null);
+
     const isCompleted = status === STATUS.COMPLETED;
 
     const statusOptions = [
@@ -35,6 +40,43 @@ function TaskRow({
     const getTagStyle = (tagId) =>
         taskStyles.tag[Number(tagId)] || "bg-slate-100 text-slate-500";
 
+    useLayoutEffect(() => {
+        if (!isStatusOpen) return;
+
+        updateMenuPosition();
+
+        window.addEventListener("scroll", updateMenuPosition, true);
+        window.addEventListener("resize", updateMenuPosition);
+
+        return () => {
+            window.removeEventListener("scroll", updateMenuPosition, true);
+            window.removeEventListener("resize", updateMenuPosition);
+        };
+    }, [isStatusOpen]);
+
+    useEffect(() => {
+        if (!isStatusOpen) return;
+
+        const handleClickOutside = (event) => {
+            if (
+                statusButtonRef.current?.contains(event.target) ||
+                statusMenuRef.current?.contains(event.target)
+            ) {
+                return;
+            }
+            setIsStatusOpen(false);
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [isStatusOpen]);
+
+    const updateMenuPosition = () => {
+        const rect = statusButtonRef.current?.getBoundingClientRect();
+        if (rect) {
+            setMenuPosition({ top: rect.bottom + 4, left: rect.left });
+        }
+    };
 
     return (
         <div className="group relative grid grid-cols-[minmax(0,2.5fr)_1fr_2fr] items-center gap-4 px-4 py-4 transition-colors duration-150 hover:bg-slate-50/50">
@@ -134,32 +176,39 @@ function TaskRow({
                     />
                 </button>
 
-                {isStatusOpen && (
-                    <div className="absolute left-0 top-full z-50 mt-1 min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
-                        {statusOptions.map((option) => (
-                            <button
-                                key={option.value}
-                                type="button"
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    onStatusChange(option.value);
-                                    setIsStatusOpen(false);
-                                }}
-                                className={`block w-full rounded-md px-2 py-1 text-left font-medium transition ${
-                                    option.value === status
-                                        ? "bg-green-50 text-green-600"
-                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                                }`}
-                                style={{
-                                    fontSize: "12px",
-                                    lineHeight: "1",
-                                }}
-                            >
-                                {option.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
+                {isStatusOpen &&
+                    createPortal(
+                        <div
+                            ref={statusMenuRef}
+                            style={{
+                                position: "fixed",
+                                top: menuPosition.top,
+                                left: menuPosition.left,
+                            }}
+                            className="z-[9999] min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
+                        >
+                            {statusOptions.map((option) => (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        onStatusChange(option.value);
+                                        setIsStatusOpen(false);
+                                    }}
+                                    className={`block w-full rounded-md px-2 py-1 text-left font-medium transition ${
+                                        option.value === status
+                                            ? "bg-green-50 text-green-600"
+                                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                                    }`}
+                                    style={{ fontSize: "12px", lineHeight: "1" }}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>,
+                        document.body
+                    )}
             </div>
             
             {/* Due Date */}
