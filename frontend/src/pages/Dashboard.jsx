@@ -140,6 +140,13 @@ function Dashboard() {
         setCurrentPage(1);
     }, [filter, searchTerm, activeSort, priorityFilter, statusFilter, tagFilter]);
 
+    // independent effect to ensure currentPage is valid when totalPages changes
+    useEffect(() => {
+        if (totalPages > 0 && currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [totalPages, currentPage]);
+
     return (
         <div className="space-y-8">
             <header className="flex items-start justify-between gap-6">
