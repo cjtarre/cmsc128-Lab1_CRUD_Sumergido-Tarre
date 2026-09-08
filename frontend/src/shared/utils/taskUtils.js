@@ -44,7 +44,16 @@ export function sortTasksByDueDateColumn(tasks, mode) {
     const sortedTasks = [...tasks];
     switch (mode) {
         case DUEDATE_SORT_MODES.DUE_DESC:
-            return sortedTasks.sort((a, b) => getDueDateTimestamp(b) - getDueDateTimestamp(a));
+            return sortedTasks.sort((a, b) => {
+                const tsA = getDueDateTimestamp(a);
+                const tsB = getDueDateTimestamp(b);
+
+                if (!Number.isFinite(tsA) && !Number.isFinite(tsB)) return 0;
+                if (!Number.isFinite(tsA)) return 1;
+                if (!Number.isFinite(tsB)) return -1;
+
+                return tsB - tsA;
+            });
         case DUEDATE_SORT_MODES.CRE_ASC:
         case DUEDATE_SORT_MODES.CRE_DESC:
             return [...sortedTasks.sort((a, b) => {
@@ -56,6 +65,15 @@ export function sortTasksByDueDateColumn(tasks, mode) {
             })];
         case DUEDATE_SORT_MODES.DUE_ASC:
         default:
-            return sortedTasks.sort((a, b) => getDueDateTimestamp(a) - getDueDateTimestamp(b));
+            return sortedTasks.sort((a, b) => {
+                const tsA = getDueDateTimestamp(a);
+                const tsB = getDueDateTimestamp(b);
+
+                if (!Number.isFinite(tsA) && !Number.isFinite(tsB)) return 0;
+                if (!Number.isFinite(tsA)) return 1;
+                if (!Number.isFinite(tsB)) return -1;
+
+                return tsA - tsB;
+            });
     }
 }
