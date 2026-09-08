@@ -55,10 +55,8 @@ function convertTask(task) {
               })
             : "",
 
-        tag: tags[0]?.tag_name || "General",
-        tagId: tags[0]?.tag_id ?? null,
         tags,
-
+        createdAt: task.created_at,
         category,
     };
 }

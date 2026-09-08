@@ -17,7 +17,7 @@ const toApiTask = (task, includeTags = true) => {
         due_date: dueDate,
 
         ...(includeTags && {
-            tag_ids: task.tag ? [task.tag] : [],
+            tag_ids: task.tags || [],
         }),
     };
 };
@@ -43,10 +43,8 @@ const convertApiTask = (task) => {
                   minute: "2-digit",
               })
             : "",
-
-        tag: tags[0]?.tag_name || "General",
-        tagId: tags[0]?.tag_id ?? null,
         tags,
+        createdAt: task.created_at ?? null,
     };
 };
 

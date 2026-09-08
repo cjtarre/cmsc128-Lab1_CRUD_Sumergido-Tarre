@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { CalendarDays, Check, ChevronDown } from "lucide-react";
 
 import ActionButtons from "../crud/ActionButtons";
@@ -13,15 +14,17 @@ function TaskRow({
     priority = 0,
     dueDate = "",
     dueTime = "",
-    tag = "",
-    tagId = null,
-    onToggleComplete,
+    tags = [],
     onStatusChange,
     onEdit,
     onDelete,
     onView,
 }) {
     const [isStatusOpen, setIsStatusOpen] = useState(false);
+    const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+    const statusButtonRef = useRef(null);
+    const statusMenuRef = useRef(null);
+
     const isCompleted = status === STATUS.COMPLETED;
 
     const statusOptions = [
@@ -34,41 +37,57 @@ function TaskRow({
         statusOptions.find((option) => option.value === status) ||
         statusOptions[0];
 
-    const normalizedTagId =
-        tagId !== null && tagId !== undefined && tagId !== ""
-            ? Number(tagId)
-            : null;
+    const getTagStyle = (tagId) =>
+        taskStyles.tag[Number(tagId)] || "bg-slate-100 text-slate-500";
 
-    const tagStyle =
-        taskStyles.tag[normalizedTagId] ||
-        "bg-slate-100 text-slate-500";
+    useLayoutEffect(() => {
+        if (!isStatusOpen) return;
+
+        updateMenuPosition();
+
+        window.addEventListener("scroll", updateMenuPosition, true);
+        window.addEventListener("resize", updateMenuPosition);
+
+        return () => {
+            window.removeEventListener("scroll", updateMenuPosition, true);
+            window.removeEventListener("resize", updateMenuPosition);
+        };
+    }, [isStatusOpen]);
+
+    useEffect(() => {
+        if (!isStatusOpen) return;
+
+        const handleClickOutside = (event) => {
+            if (
+                statusButtonRef.current?.contains(event.target) ||
+                statusMenuRef.current?.contains(event.target)
+            ) {
+                return;
+            }
+            setIsStatusOpen(false);
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [isStatusOpen]);
+
+    const updateMenuPosition = () => {
+        const rect = statusButtonRef.current?.getBoundingClientRect();
+        if (rect) {
+            setMenuPosition({ top: rect.bottom + 4, left: rect.left });
+        }
+    };
 
     return (
-        <div className="grid grid-cols-[minmax(0,2.3fr)_1.3fr_0.8fr_1fr_0.8fr_0.8fr] items-center gap-4 px-4 py-4 transition-colors duration-150 hover:bg-slate-50/50">
-            {/* Task */}
+        <div className="group relative grid grid-cols-[minmax(0,2.5fr)_1fr_2fr_44px] items-center gap-4 px-4 py-4 transition-colors duration-150 hover:bg-slate-50/50">
+            {/* Task Column */}
             <div className="flex min-w-0 items-start gap-3">
                 <button
                     type="button"
-                    onClick={onToggleComplete}
-                    aria-label={
-                        isCompleted
-                            ? "Mark task as not completed"
-                            : "Mark task as completed"
-                    }
-                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition duration-200 ${
-                        isCompleted
-                            ? "border-green-500 bg-green-500 text-white"
-                            : "border-slate-300 text-transparent hover:border-green-400 hover:bg-green-50"
-                    }`}
-                >
-                    {isCompleted && <Check size={13} />}
-                </button>
-
-                <button
-                    type="button"
                     onClick={onView}
-                    className="min-w-0 text-left"
+                    className="w-full min-w-0 text-left"
                 >
+                    {/* Title and Description */}
                     <h3
                         className={`truncate text-sm font-semibold ${
                             isCompleted
@@ -90,9 +109,106 @@ function TaskRow({
                             {description}
                         </p>
                     )}
+
+                    {/* Metadata Badges Wrapper (Priority and Tag) */}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        {/* Priority */}
+                        {priority > 0 && (
+                            <span
+                                className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                                    isCompleted ? "bg-slate-100 text-slate-400" : taskStyles.priority[priority]
+                                }`}
+                            >
+                                {priorityLabels[priority]}
+                            </span>
+                        )}
+
+                        {/* Tags */}
+                        {tags.length > 0 &&
+                            tags.map((t) => (
+                                <span
+                                    key={t.tag_id}
+                                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
+                                        isCompleted
+                                            ? "bg-slate-100 text-slate-400"
+                                            : getTagStyle(t.tag_id)
+                                    }`}
+                                >
+                                    {t.tag_name}
+                                </span>
+                            ))
+                        }
+                    </div>
                 </button>
             </div>
 
+
+            {/* Status */}
+            <div className="relative min-w-0">
+                <button
+                    ref={statusButtonRef}
+                    type="button"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        setIsStatusOpen((previous) => !previous);
+                    }}
+                    aria-haspopup="listbox"
+                    aria-expanded={isStatusOpen}
+                    aria-label={`Change status for ${title}`}
+                    className={`flex w-full min-w-0 items-center gap-0.5 font-medium transition focus:outline-none ${
+                        status === STATUS.COMPLETED
+                            ? "text-green-600"
+                            : status === STATUS.IN_PROGRESS
+                            ? "text-amber-600"
+                            : "text-slate-500"
+                    }`}
+                    style={{ fontSize: "12px", lineHeight: "1" }}
+                >
+                    <span className="truncate text-left">{currentStatus.label}</span>
+                    <ChevronDown
+                        size={8}
+                        strokeWidth={2}
+                        className={`transition-transform duration-200 ${
+                            isStatusOpen ? "rotate-180" : ""
+                        }`}
+                    />
+                </button>
+
+                {isStatusOpen &&
+                    createPortal(
+                        <div
+                            ref={statusMenuRef}
+                            style={{
+                                position: "fixed",
+                                top: menuPosition.top,
+                                left: menuPosition.left,
+                            }}
+                            className="z-[9999] min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
+                        >
+                            {statusOptions.map((option) => (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        onStatusChange(option.value);
+                                        setIsStatusOpen(false);
+                                    }}
+                                    className={`block w-full rounded-md px-2 py-1 text-left font-medium transition ${
+                                        option.value === status
+                                            ? "bg-green-50 text-green-600"
+                                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                                    }`}
+                                    style={{ fontSize: "12px", lineHeight: "1" }}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>,
+                        document.body
+                    )}
+            </div>
+            
             {/* Due Date */}
             <div
                 className={`flex min-w-0 items-start gap-1.5 text-xs ${
@@ -107,98 +223,13 @@ function TaskRow({
                 </div>
             </div>
 
-            {/* Priority */}
-            <div>
-                <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
-                        isCompleted
-                            ? "bg-slate-100 text-slate-400"
-                            : priority > 0
-                            ? taskStyles.priority[priority]
-                            : "bg-slate-100 text-slate-400"
-                    }`}
-                >
-                    {priorityLabels[priority] || "None"}
-                </span>
-            </div>
-
-            {/* Status */}
-            <div className="relative">
-                <button
-                    type="button"
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        setIsStatusOpen((previous) => !previous);
-                    }}
-                    aria-haspopup="listbox"
-                    aria-expanded={isStatusOpen}
-                    aria-label={`Change status for ${title}`}
-                    className={`flex items-center gap-0.5 font-medium transition focus:outline-none ${
-                        status === STATUS.COMPLETED
-                            ? "text-green-600"
-                            : status === STATUS.IN_PROGRESS
-                            ? "text-amber-600"
-                            : "text-slate-500"
-                    }`}
-                    style={{ fontSize: "12px", lineHeight: "1" }}
-                >
-                    <span>{currentStatus.label}</span>
-
-                    <ChevronDown
-                        size={8}
-                        strokeWidth={2}
-                        className={`transition-transform duration-200 ${
-                            isStatusOpen ? "rotate-180" : ""
-                        }`}
-                    />
-                </button>
-
-                {isStatusOpen && (
-                    <div className="absolute left-0 top-full z-50 mt-1 min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
-                        {statusOptions.map((option) => (
-                            <button
-                                key={option.value}
-                                type="button"
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    onStatusChange(option.value);
-                                    setIsStatusOpen(false);
-                                }}
-                                className={`block w-full rounded-md px-2 py-1 text-left font-medium transition ${
-                                    option.value === status
-                                        ? "bg-green-50 text-green-600"
-                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                                }`}
-                                style={{
-                                    fontSize: "12px",
-                                    lineHeight: "1",
-                                }}
-                            >
-                                {option.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Tag */}
-            <div>
-                <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                        isCompleted
-                            ? "bg-slate-100 text-slate-400"
-                            : tagStyle
-                    }`}
-                >
-                    {tag || "General"}
-                </span>
-            </div>
-
             {/* Actions */}
+            <div className="sticky right-4 z-10 justify-self-end flex items-center opacity-0 pointer-events-none transition-all duration-150 group-hover:opacity-100 group-hover:pointer-events-auto bg-gradient-to-l from-white via-white pl-4">
             <ActionButtons
-                onEdit={onEdit}
-                onDelete={onDelete}
-            />
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                />
+            </div>
         </div>
     );
 }

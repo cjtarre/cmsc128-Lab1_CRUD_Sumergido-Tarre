@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 
 import useTasks from "../hooks/useTasks";
-import { useTaskData } from "../shared/context/taskContext";
+import { useTaskData } from "../shared/context/TaskContext";
 import { createTaskHandlers } from "../handlers/taskHandlers";
 import { getTaskCategory } from "../shared/utils/dateUtils";
-import { sortTasksByDueDate } from "../shared/utils/taskUtils";
 import { STATUS } from "../shared/constants/taskOptions";
 import emptyState from "../shared/constants/emptyState";
 import Pagination from "../shared/components/common/Pagination";
@@ -19,6 +18,14 @@ import AddTask from "../shared/components/crud/AddTask";
 import EditTask from "../shared/components/crud/EditTask";
 import DeleteTask from "../shared/components/crud/DeleteTask";
 
+import TaskFilterPanel from "../shared/components/tasks/TaskFilterPanel";
+import {
+    sortTasksByTaskColumn,
+    sortTasksByDueDateColumn,
+    TASK_SORT_MODES,
+    DUEDATE_SORT_MODES,
+} from "../shared/utils/taskUtils";
+
 function Dashboard() {
     const { tasks, setTasks, searchTerm, loading } = useTaskData();
     const [filter, setFilter] = useState("all");
@@ -27,6 +34,49 @@ function Dashboard() {
     const [taskToEdit, setTaskToEdit] = useState(null);
     const [taskToDelete, setTaskToDelete] = useState(null);
     const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+
+    const [activeSort, setActiveSort] = useState({
+        column: "dueDate",
+        mode: DUEDATE_SORT_MODES.DUE_ASC,
+    });
+    const [priorityFilter, setPriorityFilter] = useState([]);
+    const [statusFilter, setStatusFilter] = useState([]);
+    const [tagFilter, setTagFilter] = useState([]);
+    const taskSortCycle = [
+        TASK_SORT_MODES.TITLE_ASC,
+        TASK_SORT_MODES.TITLE_DESC,
+        TASK_SORT_MODES.PRIORITY_ASC,
+        TASK_SORT_MODES.PRIORITY_DESC,
+    ];
+
+    const dueDateSortCycle = [
+        DUEDATE_SORT_MODES.DUE_ASC,
+        DUEDATE_SORT_MODES.DUE_DESC,
+        DUEDATE_SORT_MODES.CRE_ASC,
+        DUEDATE_SORT_MODES.CRE_DESC,
+    ];
+
+    const handleSortTask = () => {
+        setActiveSort((previous) => {
+            if (previous.column !== "task") {
+                return { column: "task", mode: taskSortCycle[0] };
+            }
+            const nextIndex =
+                (taskSortCycle.indexOf(previous.mode) + 1) % taskSortCycle.length;
+            return { column: "task", mode: taskSortCycle[nextIndex] };
+        });
+    };
+
+    const handleSortDueDate = () => {
+        setActiveSort((previous) => {
+            if (previous.column !== "dueDate") {
+                return { column: "dueDate", mode: dueDateSortCycle[0] };
+            }
+            const nextIndex =
+                (dueDateSortCycle.indexOf(previous.mode) + 1) % dueDateSortCycle.length;
+            return { column: "dueDate", mode: dueDateSortCycle[nextIndex] };
+        });
+    };
 
     const tasksPerPage = 5;
     const currentEmptyState = emptyState[filter];
@@ -44,14 +94,27 @@ function Dashboard() {
         const search = (searchTerm || "").trim().toLowerCase();
         const title = task.title?.toLowerCase() || "";
         const description = task.description?.toLowerCase() || "";
-        const tag = task.tag?.toLowerCase() || "";
+        const tagNames = task.tags?.map((t) => t.tag_name.toLowerCase()) || [];
 
         if (
             search &&
             !title.includes(search) &&
             !description.includes(search) &&
-            !tag.includes(search)
+            !tagNames.some((name) => name.includes(search))
         ) return false;
+
+        if (priorityFilter.length > 0 && !priorityFilter.includes(task.priority)) {
+            return false;
+        }
+        if (statusFilter.length > 0 && !statusFilter.includes(task.status)) {
+            return false;
+        }
+        if (
+            tagFilter.length > 0 &&
+            !task.tags?.some((t) => tagFilter.includes(t.tag_id))
+        ) {
+            return false;
+        }
 
         if (filter === "completed") return task.status === STATUS.COMPLETED;
         if (task.status === STATUS.COMPLETED) return false;
@@ -60,24 +123,29 @@ function Dashboard() {
         return getTaskCategory(task.dueDate) === filter;
     });
 
-    const sortedTasks = sortTasksByDueDate(filteredTasks);
+    const sortedTasks = 
+        activeSort.column === "task"
+            ? sortTasksByTaskColumn(filteredTasks, activeSort.mode)
+            : sortTasksByDueDateColumn(filteredTasks, activeSort.mode);
+
     const totalPages = Math.ceil(sortedTasks.length / tasksPerPage);
     const paginatedTasks = sortedTasks.slice(
         (currentPage - 1) * tasksPerPage,
         currentPage * tasksPerPage
     );
 
+    // Reset pagination on any filter/sort change
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
-    }, [filter, searchTerm]);
+    }, [filter, searchTerm, activeSort, priorityFilter, statusFilter, tagFilter]);
 
+    // independent effect to ensure currentPage is valid when totalPages changes
     useEffect(() => {
         if (totalPages > 0 && currentPage > totalPages) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setCurrentPage(totalPages);
         }
-    }, [currentPage, totalPages]);
+    }, [totalPages, currentPage]);
 
     return (
         <div className="space-y-8">
@@ -105,6 +173,17 @@ function Dashboard() {
                 <section className="min-w-0">
                     <TaskFilter value={filter} onChange={setFilter} />
 
+                    <div className="mt-4">
+                        <TaskFilterPanel
+                            priorityFilter={priorityFilter}
+                            statusFilter={statusFilter}
+                            tagFilter={tagFilter}
+                            onPriorityFilterChange={setPriorityFilter}
+                            onStatusFilterChange={setStatusFilter}
+                            onTagFilterChange={setTagFilter}
+                        />
+                    </div>
+
                     <div className="mt-6">
                         {loading ? (
                             <div className="flex min-h-[300px] items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -117,6 +196,9 @@ function Dashboard() {
                             <>
                                 <TaskTable
                                     tasks={paginatedTasks}
+                                    activeSort={activeSort}
+                                    onSortTask={handleSortTask}
+                                    onSortDueDate={handleSortDueDate}
                                     onToggleComplete={handlers.handleToggleComplete}
                                     onStatusChange={handlers.handleStatusChange}
                                     onEdit={handlers.handleEditTask}
