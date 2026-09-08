@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 
 import useTasks from "../hooks/useTasks";
-import { useTaskData } from "../shared/context/taskContext";
+import { useTaskData } from "../shared/context/TaskContext";
 import { createTaskHandlers } from "../handlers/taskHandlers";
 import { getTaskCategory } from "../shared/utils/dateUtils";
 import { STATUS } from "../shared/constants/taskOptions";
