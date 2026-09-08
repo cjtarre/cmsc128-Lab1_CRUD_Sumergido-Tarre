@@ -44,6 +44,7 @@ const convertApiTask = (task) => {
               })
             : "",
         tags,
+        createdAt: task.created_at ?? null,
     };
 };
 
