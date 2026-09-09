@@ -4,233 +4,135 @@ import { Plus } from "lucide-react";
 import useTasks from "../hooks/useTasks";
 import { useTaskData } from "../shared/context/TaskContext";
 import { createTaskHandlers } from "../handlers/taskHandlers";
-import { getTaskCategory } from "../shared/utils/dateUtils";
-import { STATUS } from "../shared/constants/taskOptions";
 import emptyState from "../shared/constants/emptyState";
-import Pagination from "../shared/components/common/Pagination";
+import { filterTasks } from "../shared/utils/taskFilters";
+import { sortTasksByTaskColumn, sortTasksByDueDateColumn, DUEDATE_SORT_MODES, TASK_SORT_CYCLE, DUEDATE_SORT_CYCLE, getNextSort,} from "../shared/utils/taskUtils";
 
+import Pagination from "../shared/components/common/Pagination";
+import EmptyState from "../shared/components/common/EmptyState";
+import EncouragementCard from "../shared/components/common/EncouragementCard";
 import TaskFilter from "../shared/components/tasks/TaskFilter";
+import TaskFilterPanel from "../shared/components/tasks/TaskFilterPanel";
 import TaskTable from "../shared/components/tasks/TaskTable";
 import TaskDetails from "../shared/components/tasks/TaskDetails";
 import CalendarWidget from "../shared/components/calendar/CalendarWidget";
-import EmptyState from "../shared/components/common/EmptyState";
 import AddTask from "../shared/components/crud/AddTask";
 import EditTask from "../shared/components/crud/EditTask";
 import DeleteTask from "../shared/components/crud/DeleteTask";
 
-import TaskFilterPanel from "../shared/components/tasks/TaskFilterPanel";
-import {
-    sortTasksByTaskColumn,
-    sortTasksByDueDateColumn,
-    TASK_SORT_MODES,
-    DUEDATE_SORT_MODES,
-} from "../shared/utils/taskUtils";
-
 function Dashboard() {
     const { tasks, setTasks, searchTerm, loading } = useTaskData();
+
     const [filter, setFilter] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedTask, setSelectedTask] = useState(null);
     const [taskToEdit, setTaskToEdit] = useState(null);
     const [taskToDelete, setTaskToDelete] = useState(null);
     const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
-
-    const [activeSort, setActiveSort] = useState({
-        column: "dueDate",
-        mode: DUEDATE_SORT_MODES.DUE_ASC,
-    });
+    const [activeSort, setActiveSort] = useState({ column: "dueDate", mode: DUEDATE_SORT_MODES.DUE_ASC,});
     const [priorityFilter, setPriorityFilter] = useState([]);
     const [statusFilter, setStatusFilter] = useState([]);
     const [tagFilter, setTagFilter] = useState([]);
-    const taskSortCycle = [
-        TASK_SORT_MODES.TITLE_ASC,
-        TASK_SORT_MODES.TITLE_DESC,
-        TASK_SORT_MODES.PRIORITY_ASC,
-        TASK_SORT_MODES.PRIORITY_DESC,
-    ];
-
-    const dueDateSortCycle = [
-        DUEDATE_SORT_MODES.DUE_ASC,
-        DUEDATE_SORT_MODES.DUE_DESC,
-        DUEDATE_SORT_MODES.CRE_ASC,
-        DUEDATE_SORT_MODES.CRE_DESC,
-    ];
-
-    const handleSortTask = () => {
-        setActiveSort((previous) => {
-            if (previous.column !== "task") {
-                return { column: "task", mode: taskSortCycle[0] };
-            }
-            const nextIndex =
-                (taskSortCycle.indexOf(previous.mode) + 1) % taskSortCycle.length;
-            return { column: "task", mode: taskSortCycle[nextIndex] };
-        });
-    };
-
-    const handleSortDueDate = () => {
-        setActiveSort((previous) => {
-            if (previous.column !== "dueDate") {
-                return { column: "dueDate", mode: dueDateSortCycle[0] };
-            }
-            const nextIndex =
-                (dueDateSortCycle.indexOf(previous.mode) + 1) % dueDateSortCycle.length;
-            return { column: "dueDate", mode: dueDateSortCycle[nextIndex] };
-        });
-    };
 
     const tasksPerPage = 5;
     const currentEmptyState = emptyState[filter];
+
     const taskActions = useTasks(tasks, setTasks);
+    const handlers = createTaskHandlers({ ...taskActions, setSelectedTask, setTaskToEdit, setTaskToDelete, setIsAddTaskOpen,});
 
-    const handlers = createTaskHandlers({
-        ...taskActions,
-        setSelectedTask,
-        setTaskToEdit,
-        setTaskToDelete,
-        setIsAddTaskOpen,
-    });
+    const handleSortTask = () => { setActiveSort((previous) => getNextSort(previous, "task", TASK_SORT_CYCLE) ); };
+    const handleSortDueDate = () => { setActiveSort((previous) => getNextSort(previous, "dueDate", DUEDATE_SORT_CYCLE) ); };
 
-    const filteredTasks = tasks.filter((task) => {
-        const search = (searchTerm || "").trim().toLowerCase();
-        const title = task.title?.toLowerCase() || "";
-        const description = task.description?.toLowerCase() || "";
-        const tagNames = task.tags?.map((t) => t.tag_name.toLowerCase()) || [];
+    const filteredTasks = filterTasks( tasks, filter, searchTerm, priorityFilter, statusFilter, tagFilter);
 
-        if (
-            search &&
-            !title.includes(search) &&
-            !description.includes(search) &&
-            !tagNames.some((name) => name.includes(search))
-        ) return false;
-
-        if (priorityFilter.length > 0 && !priorityFilter.includes(task.priority)) {
-            return false;
-        }
-        if (statusFilter.length > 0 && !statusFilter.includes(task.status)) {
-            return false;
-        }
-        if (
-            tagFilter.length > 0 &&
-            !task.tags?.some((t) => tagFilter.includes(t.tag_id))
-        ) {
-            return false;
-        }
-
-        if (filter === "completed") return task.status === STATUS.COMPLETED;
-        if (task.status === STATUS.COMPLETED) return false;
-        if (filter === "all") return true;
-
-        return getTaskCategory(task.dueDate) === filter;
-    });
-
-    const sortedTasks = 
-        activeSort.column === "task"
+    const sortedTasks = activeSort.column === "task"
             ? sortTasksByTaskColumn(filteredTasks, activeSort.mode)
             : sortTasksByDueDateColumn(filteredTasks, activeSort.mode);
 
     const totalPages = Math.ceil(sortedTasks.length / tasksPerPage);
-    const paginatedTasks = sortedTasks.slice(
-        (currentPage - 1) * tasksPerPage,
-        currentPage * tasksPerPage
-    );
+    const paginatedTasks = sortedTasks.slice((currentPage - 1) * tasksPerPage, currentPage * tasksPerPage);
 
-    // Reset pagination on any filter/sort change
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCurrentPage(1);
-    }, [filter, searchTerm, activeSort, priorityFilter, statusFilter, tagFilter]);
+        setCurrentPage(1);}, [filter, searchTerm, activeSort, priorityFilter, statusFilter, tagFilter]);
 
-    // independent effect to ensure currentPage is valid when totalPages changes
-    useEffect(() => {
-        if (totalPages > 0 && currentPage > totalPages) {
-            setCurrentPage(totalPages);
-        }
-    }, [totalPages, currentPage]);
+    useEffect(() => { if (totalPages > 0 && currentPage > totalPages) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setCurrentPage(totalPages); }}, [totalPages, currentPage]);
 
     return (
         <div className="space-y-8">
             <header className="flex items-start justify-between gap-6">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-slate-800">
-                        My Tasks
-                    </h1>
-                    <p className="mt-1 text-sm text-slate-400">
-                        Manage and organize your tasks.
-                    </p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-slate-800"> My Tasks </h1>
+                    <p className="mt-1 text-sm text-slate-400">  Manage and organize your tasks. </p>
                 </div>
 
                 <button
                     type="button"
                     onClick={handlers.handleOpenAddTask}
                     className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3.5 py-2 text-sm font-medium text-green-600 shadow-sm transition-all hover:border-green-300 hover:bg-green-100 hover:shadow focus:outline-none focus:ring-2 focus:ring-green-200"
-                >
-                    <Plus size={16} />
-                    Add Task
-                </button>
+                > <Plus size={16} /> Add Task </button>
             </header>
 
-            <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-                <section className="min-w-0">
+            <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(260px,3fr)]">
+                <section className="min-w-0 space-y-4">
                     <TaskFilter value={filter} onChange={setFilter} />
 
-                    <div className="mt-4">
-                        <TaskFilterPanel
-                            priorityFilter={priorityFilter}
-                            statusFilter={statusFilter}
-                            tagFilter={tagFilter}
-                            onPriorityFilterChange={setPriorityFilter}
-                            onStatusFilterChange={setStatusFilter}
-                            onTagFilterChange={setTagFilter}
-                        />
-                    </div>
-
-                    <div className="mt-6">
-                        {loading ? (
-                            <div className="flex min-h-[300px] items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm">
-                                <div className="flex items-center gap-3 text-sm text-slate-400">
-                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-green-500" />
-                                    Loading tasks...
-                                </div>
+                    {loading ? (
+                        <div className="flex min-h-[300px] items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm">
+                            <div className="flex items-center gap-3 text-sm text-slate-400">
+                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-green-500" />
+                                Loading tasks...
                             </div>
-                        ) : filteredTasks.length ? (
-                            <>
-                                <TaskTable
-                                    tasks={paginatedTasks}
-                                    activeSort={activeSort}
-                                    onSortTask={handleSortTask}
-                                    onSortDueDate={handleSortDueDate}
-                                    onToggleComplete={handlers.handleToggleComplete}
-                                    onStatusChange={handlers.handleStatusChange}
-                                    onEdit={handlers.handleEditTask}
-                                    onDelete={handlers.handleDeleteTask}
-                                    onView={handlers.handleViewTask}
-                                />
-
-                                <Pagination
-                                    currentPage={currentPage}
-                                    totalPages={totalPages}
-                                    totalItems={sortedTasks.length}
-                                    itemsPerPage={tasksPerPage}
-                                    onPageChange={setCurrentPage}
-                                />
-                            </>
-                        ) : (
-                            <EmptyState
-                                title={currentEmptyState.title}
-                                description={currentEmptyState.description}
-                                actionLabel={currentEmptyState.actionLabel}
-                                onAction={
-                                    currentEmptyState.showAction
-                                        ? handlers.handleOpenAddTask
-                                        : undefined
-                                }
+                        </div>
+                    ) : filteredTasks.length ? (
+                        <>
+                            <TaskTable
+                                tasks={paginatedTasks}
+                                activeSort={activeSort}
+                                onSortTask={handleSortTask}
+                                onSortDueDate={handleSortDueDate}
+                                onToggleComplete={handlers.handleToggleComplete}
+                                onStatusChange={handlers.handleStatusChange}
+                                onEdit={handlers.handleEditTask}
+                                onDelete={handlers.handleDeleteTask}
+                                onView={handlers.handleViewTask}
                             />
-                        )}
-                    </div>
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                totalItems={sortedTasks.length}
+                                itemsPerPage={tasksPerPage}
+                                onPageChange={setCurrentPage}
+                            />
+                        </>
+                    ) : (
+                        <EmptyState
+                            title={currentEmptyState.title}
+                            description={currentEmptyState.description}
+                            actionLabel={currentEmptyState.actionLabel}
+                            onAction={
+                                currentEmptyState.showAction
+                                    ? handlers.handleOpenAddTask
+                                    : undefined
+                            }
+                        />
+                    )}
                 </section>
 
-                <aside>
+                <aside className="space-y-4">
+                    <TaskFilterPanel
+                        priorityFilter={priorityFilter}
+                        statusFilter={statusFilter}
+                        tagFilter={tagFilter}
+                        onPriorityFilterChange={setPriorityFilter}
+                        onStatusFilterChange={setStatusFilter}
+                        onTagFilterChange={setTagFilter}
+                    />
+
                     <CalendarWidget tasks={tasks} />
+                    <EncouragementCard />
                 </aside>
             </div>
 

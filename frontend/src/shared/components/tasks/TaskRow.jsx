@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { CalendarDays, Check, ChevronDown } from "lucide-react";
 
 import ActionButtons from "../crud/ActionButtons";
 import taskStyles from "../../styles/taskStyles";
 import { formatDueDate } from "../../utils/dateUtils";
-import { STATUS, priorityLabels } from "../../constants/taskOptions";
+import { STATUS, priorityLabels, statusLabels } from "../../constants/taskOptions";
 
 function TaskRow({
     title = "Untitled Task",
@@ -15,6 +15,7 @@ function TaskRow({
     dueDate = "",
     dueTime = "",
     tags = [],
+    onToggleComplete,
     onStatusChange,
     onEdit,
     onDelete,
@@ -22,29 +23,31 @@ function TaskRow({
 }) {
     const [isStatusOpen, setIsStatusOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
     const statusButtonRef = useRef(null);
     const statusMenuRef = useRef(null);
-
     const isCompleted = status === STATUS.COMPLETED;
 
-    const statusOptions = [
-        { value: STATUS.NOT_STARTED, label: "Not Started" },
-        { value: STATUS.IN_PROGRESS, label: "In Progress" },
-        { value: STATUS.COMPLETED, label: "Completed" },
-    ];
+    const statusOptions = Object.values(STATUS).map((value) => ({
+        value,
+        label: statusLabels[value] || value,
+    }));
 
     const currentStatus =
-        statusOptions.find((option) => option.value === status) ||
-        statusOptions[0];
+        statusOptions.find((option) => option.value === status) || statusOptions[0];
 
-    const getTagStyle = (tagId) =>
-        taskStyles.tag[Number(tagId)] || "bg-slate-100 text-slate-500";
+    const getTagStyle = (id) =>
+        taskStyles.tag[Number(id)] || "bg-slate-100 text-slate-500";
+
+    const updateMenuPosition = useCallback(() => {
+        const rect = statusButtonRef.current?.getBoundingClientRect();
+        if (rect) setMenuPosition({ top: rect.bottom + 4, left: rect.left });
+    }, []);
 
     useLayoutEffect(() => {
         if (!isStatusOpen) return;
 
         updateMenuPosition();
-
         window.addEventListener("scroll", updateMenuPosition, true);
         window.addEventListener("resize", updateMenuPosition);
 
@@ -52,7 +55,7 @@ function TaskRow({
             window.removeEventListener("scroll", updateMenuPosition, true);
             window.removeEventListener("resize", updateMenuPosition);
         };
-    }, [isStatusOpen]);
+    }, [isStatusOpen, updateMenuPosition]);
 
     useEffect(() => {
         if (!isStatusOpen) return;
@@ -61,9 +64,8 @@ function TaskRow({
             if (
                 statusButtonRef.current?.contains(event.target) ||
                 statusMenuRef.current?.contains(event.target)
-            ) {
-                return;
-            }
+            ) return;
+
             setIsStatusOpen(false);
         };
 
@@ -71,23 +73,29 @@ function TaskRow({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [isStatusOpen]);
 
-    const updateMenuPosition = () => {
-        const rect = statusButtonRef.current?.getBoundingClientRect();
-        if (rect) {
-            setMenuPosition({ top: rect.bottom + 4, left: rect.left });
-        }
-    };
-
     return (
         <div className="group relative grid grid-cols-[minmax(0,2.5fr)_1fr_2fr_44px] items-center gap-4 px-4 py-4 transition-colors duration-150 hover:bg-slate-50/50">
-            {/* Task Column */}
-            <div className="flex min-w-0 items-start gap-3">
+
+            {/* Task */}
+            <div className="flex min-w-0 items-start gap-2.5">
+                <button
+                    type="button"
+                    onClick={onToggleComplete}
+                    aria-label={isCompleted ? "Mark as incomplete" : "Mark as complete"}
+                    className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition ${
+                        isCompleted
+                            ? "border-green-500 bg-green-500 text-white"
+                            : "border-slate-300 hover:border-green-400"
+                    }`}
+                >
+                    {isCompleted && <Check size={9} strokeWidth={3} />}
+                </button>
+
                 <button
                     type="button"
                     onClick={onView}
                     className="w-full min-w-0 text-left"
                 >
-                    {/* Title and Description */}
                     <h3
                         className={`truncate text-sm font-semibold ${
                             isCompleted
@@ -99,49 +107,39 @@ function TaskRow({
                     </h3>
 
                     {description && (
-                        <p
-                            className={`mt-1 truncate text-xs ${
-                                isCompleted
-                                    ? "text-slate-300"
-                                    : "text-slate-500"
-                            }`}
-                        >
+                        <p className={`mt-1 truncate text-xs ${
+                            isCompleted ? "text-slate-300" : "text-slate-500"
+                        }`}>
                             {description}
                         </p>
                     )}
 
-                    {/* Metadata Badges Wrapper (Priority and Tag) */}
                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                        {/* Priority */}
                         {priority > 0 && (
-                            <span
-                                className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
-                                    isCompleted ? "bg-slate-100 text-slate-400" : taskStyles.priority[priority]
-                                }`}
-                            >
+                            <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                                isCompleted
+                                    ? "bg-slate-100 text-slate-400"
+                                    : taskStyles.priority[priority]
+                            }`}>
                                 {priorityLabels[priority]}
                             </span>
                         )}
 
-                        {/* Tags */}
-                        {tags.length > 0 &&
-                            tags.map((t) => (
-                                <span
-                                    key={t.tag_id}
-                                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                                        isCompleted
-                                            ? "bg-slate-100 text-slate-400"
-                                            : getTagStyle(t.tag_id)
-                                    }`}
-                                >
-                                    {t.tag_name}
-                                </span>
-                            ))
-                        }
+                        {tags.map((tag) => (
+                            <span
+                                key={tag.tag_id}
+                                className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
+                                    isCompleted
+                                        ? "bg-slate-100 text-slate-400"
+                                        : getTagStyle(tag.tag_id)
+                                }`}
+                            >
+                                {tag.tag_name}
+                            </span>
+                        ))}
                     </div>
                 </button>
             </div>
-
 
             {/* Status */}
             <div className="relative min-w-0">
@@ -174,49 +172,45 @@ function TaskRow({
                     />
                 </button>
 
-                {isStatusOpen &&
-                    createPortal(
-                        <div
-                            ref={statusMenuRef}
-                            style={{
-                                position: "fixed",
-                                top: menuPosition.top,
-                                left: menuPosition.left,
-                            }}
-                            className="z-[9999] min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
-                        >
-                            {statusOptions.map((option) => (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    onClick={(event) => {
-                                        event.stopPropagation();
-                                        onStatusChange(option.value);
-                                        setIsStatusOpen(false);
-                                    }}
-                                    className={`block w-full rounded-md px-2 py-1 text-left font-medium transition ${
-                                        option.value === status
-                                            ? "bg-green-50 text-green-600"
-                                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                                    }`}
-                                    style={{ fontSize: "12px", lineHeight: "1" }}
-                                >
-                                    {option.label}
-                                </button>
-                            ))}
-                        </div>,
-                        document.body
-                    )}
+                {isStatusOpen && createPortal(
+                    <div
+                        ref={statusMenuRef}
+                        style={{
+                            position: "fixed",
+                            top: menuPosition.top,
+                            left: menuPosition.left,
+                        }}
+                        className="z-[9999] min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
+                    >
+                        {statusOptions.map((option) => (
+                            <button
+                                key={option.value}
+                                type="button"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onStatusChange(option.value);
+                                    setIsStatusOpen(false);
+                                }}
+                                className={`block w-full rounded-md px-2 py-1 text-left font-medium transition ${
+                                    option.value === status
+                                        ? "bg-green-50 text-green-600"
+                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                                }`}
+                                style={{ fontSize: "12px", lineHeight: "1" }}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+                    </div>,
+                    document.body
+                )}
             </div>
-            
-            {/* Due Date */}
-            <div
-                className={`flex min-w-0 items-start gap-1.5 text-xs ${
-                    isCompleted ? "text-slate-300" : "text-slate-400"
-                }`}
-            >
-                <CalendarDays size={14} className="mt-0.5 shrink-0" />
 
+            {/* Due Date */}
+            <div className={`flex min-w-0 items-start gap-1.5 text-xs ${
+                isCompleted ? "text-slate-300" : "text-slate-400"
+            }`}>
+                <CalendarDays size={14} className="mt-0.5 shrink-0" />
                 <div className="min-w-0 truncate">
                     {dueDate ? formatDueDate(dueDate) : "No due date"}
                     {dueTime && ` - ${dueTime}`}
@@ -224,11 +218,8 @@ function TaskRow({
             </div>
 
             {/* Actions */}
-            <div className="sticky right-4 z-10 justify-self-end flex items-center opacity-0 pointer-events-none transition-all duration-150 group-hover:opacity-100 group-hover:pointer-events-auto bg-gradient-to-l from-white via-white pl-4">
-            <ActionButtons
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                />
+            <div className="sticky right-4 z-10 flex items-center justify-self-end bg-gradient-to-l from-white via-white pl-4 opacity-0 pointer-events-none transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100">
+                <ActionButtons onEdit={onEdit} onDelete={onDelete} />
             </div>
         </div>
     );

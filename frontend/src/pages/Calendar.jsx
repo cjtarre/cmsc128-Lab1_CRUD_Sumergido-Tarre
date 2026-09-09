@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { useTaskData } from "../shared/context/taskContext";
+import { useTaskData } from "../shared/context/TaskContext";
 import { formatDueTime } from "../shared/utils/dateUtils";
 import { STATUS } from "../shared/constants/taskOptions";
+import taskStyles from "../shared/styles/taskStyles";
 
 function Calendar() {
     const { tasks } = useTaskData();
@@ -31,28 +32,17 @@ function Calendar() {
 
     const goToToday = () => setCurrentDate(new Date());
 
-    const previousMonth = () =>
-        setCurrentDate(new Date(year, month - 1, 1));
+    const previousMonth = () => setCurrentDate(new Date(year, month - 1, 1));
 
-    const nextMonth = () =>
-        setCurrentDate(new Date(year, month + 1, 1));
+    const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
     const getTasksForDay = (day) => {
         if (!day) return [];
 
-        const date = `${String(day).padStart(2, "0")}/${String(
-            month + 1
-        ).padStart(2, "0")}/${year}`;
-
+        const date = `${String(day).padStart(2, "0")}/${String( month + 1).padStart(2, "0")}/${year}`;
         return tasks.filter((task) => task.dueDate === date);
     };
 
-    const getPriorityStyle = (priority) =>
-        ({
-            3: "bg-red-50 text-red-600",
-            2: "bg-yellow-50 text-yellow-600",
-            1: "bg-green-50 text-green-600",
-        }[priority] || "bg-slate-100 text-slate-400");
 
     const today = new Date();
     const isCurrentMonth =
@@ -148,9 +138,7 @@ function Calendar() {
                                             {dayTasks.map((task) => (
                                                 <div
                                                     key={task.id}
-                                                    className={`rounded-md px-2 py-1.5 text-[10px] ${getPriorityStyle(
-                                                        task.priority
-                                                    )}`}
+                                                    className={`rounded-md px-2 py-1.5 text-[10px] ${taskStyles.priority[task.priority] || "bg-slate-100 text-slate-400"}`}
                                                 >
                                                     <p
                                                         className={`font-semibold ${

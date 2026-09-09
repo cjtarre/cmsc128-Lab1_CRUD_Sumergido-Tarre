@@ -17,7 +17,7 @@ const toApiTask = (task, includeTags = true) => {
         due_date: dueDate,
 
         ...(includeTags && {
-            tag_ids: task.tags || [],
+            tag_ids: (task.tags || []).map((tag) => typeof tag === "object" ? tag.tag_id : tag),
         }),
     };
 };

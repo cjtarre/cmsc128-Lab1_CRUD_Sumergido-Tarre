@@ -5,17 +5,14 @@ import { formatDueDate } from "../../utils/dateUtils";
 import { useEffect } from "react";
 
 function TaskDetails({ task, onClose, onEdit, onDelete }) {
-    // Uncomment the following useEffect to prevent background scrolling when the modal is open
-    // useEffect(() => {
-    //     if (!task) return;
+    
+    useEffect(() => {
+    if (!task) return;
 
-    //     const originalOverflow = document.body.style.overflow;
-    //     document.body.style.overflow = "hidden";
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
-    //     return () => {
-    //         document.body.style.overflow = originalOverflow;
-    //     };
-    // }, [task]);
+    return () => {document.body.style.overflow = originalOverflow;};}, [task]);
     if (!task) return null;
 
     const isCompleted = task.status === STATUS.COMPLETED;

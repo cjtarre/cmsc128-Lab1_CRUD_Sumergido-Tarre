@@ -15,6 +15,7 @@ const taskStyles = {
     tag: {
         1: "bg-blue-50 text-blue-600",
         2: "bg-purple-50 text-purple-600",
+        3: "bg-slate-100 text-slate-500",
     },
 };
 

@@ -1,6 +1,6 @@
 import AppRoutes from "./routes/AppRoutes";
 import AppToaster from "./shared/components/common/AppToaster";
-import { TaskProvider } from "./shared/context/taskContext";
+import { TaskProvider } from "./shared/context/TaskContext";
 
 function App() {
     return (

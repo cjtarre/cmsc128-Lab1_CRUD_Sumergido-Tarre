@@ -8,16 +8,8 @@ const formatDate = (date) => {
 };
 
 export function createTaskHandlers({
-    getTask,
-    addTask,
-    updateTask,
-    deleteTask,
-    updateTaskStatus,
-    toggleTaskComplete,
-    setSelectedTask,
-    setTaskToEdit,
-    setTaskToDelete,
-    setIsAddTaskOpen,
+    getTask, addTask, updateTask, deleteTask, updateTaskStatus, toggleTaskComplete,
+    setSelectedTask, setTaskToEdit, setTaskToDelete, setIsAddTaskOpen,
 }) {
     return {
         handleOpenAddTask: () => setIsAddTaskOpen(true),
@@ -110,7 +102,31 @@ export function createTaskHandlers({
                 );
 
                 setTaskToDelete(null);
-                toast.success("Task deleted successfully!");
+
+                let undoing = false;
+
+                toast("Task deleted.", {
+                    position: "top-center",
+                    action: {
+                        label: "Undo",
+                        onClick: async () => {
+                            if (undoing) return;
+                            undoing = true;
+
+                            try {
+                                await addTask(task);
+                                toast.success("Task restored!");
+                            } catch (error) {
+                                console.error("Error restoring task:", error);
+                                toast.error("Failed to restore task.");
+                            }
+                        },
+                    },
+                    classNames: {
+                        actionButton: "!bg-green-50 !text-green-600 hover:!bg-green-100",
+                    },
+                    duration: 5000,
+                });
             } catch (error) {
                 console.error("Error deleting task:", error);
                 toast.error("Failed to delete task.");
@@ -129,7 +145,8 @@ export function createTaskHandlers({
                     error.response?.data || error
                 );
                 toast.error(
-                    error.response?.data?.error || "Failed to update task status."
+                    error.response?.data?.error ||
+                    "Failed to update task status."
                 );
             }
         },
