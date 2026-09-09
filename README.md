@@ -136,7 +136,7 @@ cmsc128-Lab1_CRUD_Sumergido-Tarre/
 │   │   │   └── MainLayout.jsx
 │   │   ├── pages/
 │   │   │   ├── Dashboard.jsx
-│   │   │   ├── LandingPage.jsx
+│   │   │   ├── Landing.jsx
 │   │   │   └── NotFound.jsx
 │   │   ├── routes/
 │   │   │   └── AppRoutes.jsx
