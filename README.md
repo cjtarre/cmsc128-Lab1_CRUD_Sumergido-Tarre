@@ -385,8 +385,8 @@ StudyBoard applies basic HCI principles through:
 
 ## Contributors
 
-* **Ma. Christie Jude Tarre**
 * **Gabrielle Sumergido**
+* **Ma. Christie Jude Tarre**
 
 ---
 
