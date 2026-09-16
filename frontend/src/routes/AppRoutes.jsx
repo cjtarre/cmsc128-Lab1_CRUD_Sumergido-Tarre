@@ -6,7 +6,8 @@ import Dashboard from "../features/tasks/pages/Dashboard";
 import Calendar from "../features/calendar/pages/Calendar"
 import Login from "../features/auth/pages/Login";
 import Signup from "../features/auth/pages/Signup";
-;
+import About from "../pages/About";
+
 import Profile from "../pages/Profile";
 import Settings from "../pages/Settings";
 import Notifications from "../pages/Notifications";
@@ -18,6 +19,7 @@ function AppRoutes() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/about" element={<About />} />
 
             <Route element={<MainLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
