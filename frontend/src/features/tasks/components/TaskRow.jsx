@@ -2,10 +2,10 @@ import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react
 import { createPortal } from "react-dom";
 import { CalendarDays, Check, ChevronDown } from "lucide-react";
 
-import ActionButtons from "../crud/ActionButtons";
-import taskStyles from "../../styles/taskStyles";
-import { formatDueDate } from "../../utils/dateUtils";
-import { STATUS, priorityLabels, statusLabels } from "../../constants/taskOptions";
+import ActionButtons from "./ActionButtons";
+import taskStyles from "../styles/taskStyles";
+import { formatDueDate } from "../../../shared/utils/dateUtils";
+import { STATUS, priorityLabels, statusLabels } from "../constants/taskOptions";
 
 function TaskRow({
     title = "Untitled Task",

@@ -1,7 +1,7 @@
 import { ArrowRight, ListTodo, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 
-function Landing() {
+function LandingPage() {
     return (
         <div className="min-h-screen bg-[#f5faf7]">
             <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6">
@@ -88,4 +88,4 @@ function Landing() {
     );
 }
 
-export default Landing;
+export default LandingPage;

@@ -1,7 +1,7 @@
 import { CalendarDays, X, Pencil, Trash2 } from "lucide-react";
-import taskStyles from "../../styles/taskStyles";
-import { STATUS, priorityLabels, statusLabels } from "../../constants/taskOptions";
-import { formatDueDate } from "../../utils/dateUtils";
+import taskStyles from "../styles/taskStyles";
+import { STATUS, priorityLabels, statusLabels } from "../constants/taskOptions";
+import { formatDueDate } from "../../../shared/utils/dateUtils";
 import { useEffect } from "react";
 
 function TaskDetails({ task, onClose, onEdit, onDelete }) {

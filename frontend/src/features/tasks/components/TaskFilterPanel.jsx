@@ -1,13 +1,8 @@
 import { useState } from "react";
 import { Check, ChevronDown, Search } from "lucide-react";
 
-import {
-    PRIORITY,
-    priorityLabels,
-    STATUS,
-    statusLabels,
-} from "../../constants/taskOptions";
-import { useTaskData } from "../../context/TaskContext";
+import { PRIORITY, priorityLabels, STATUS, statusLabels } from "../constants/taskOptions";
+import { useTaskData } from "../context/TaskContext";
 
 const FilterGroup = ({ label, items, selected, onChange }) => (
     <div>

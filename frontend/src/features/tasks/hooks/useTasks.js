@@ -1,4 +1,4 @@
-import { STATUS } from "../shared/constants/taskOptions";
+import { STATUS } from "../constants/taskOptions";
 import { taskService } from "../services/taskService";
 
 const toApiTask = (task, includeTags = true) => {

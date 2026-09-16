@@ -1,4 +1,4 @@
-import ConfirmDialog from "../common/ConfirmDialog";
+import ConfirmDialog from "../../../shared/components/common/ConfirmDialog";
 
 function DeleteTask({ task, onConfirm, onCancel }) {
     return (

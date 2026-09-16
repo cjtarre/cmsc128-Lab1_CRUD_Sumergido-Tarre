@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-import calendarStyles from "../../styles/calendarStyles";
+import calendarStyles from "../styles/calendarStyles";
 
 function CalendarWidget({ tasks = [] }) {
     const today = new Date();

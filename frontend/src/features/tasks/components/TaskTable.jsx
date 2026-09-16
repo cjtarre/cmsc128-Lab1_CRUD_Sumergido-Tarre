@@ -1,6 +1,6 @@
 import TaskRow from "./TaskRow";
 import SortButtonToggle from "./TaskColumnSort";
-import { taskSortLabels, dueDateSortLabels } from "../../utils/taskUtils";
+import { taskSortLabels, dueDateSortLabels } from "../utils/taskUtils";
 
 function TaskTable({
     tasks, activeSort, onSortTask, onSortDueDate,

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-import { taskService } from "../../services/taskService";
-import { tagService } from "../../services/tagService";
+import { taskService } from "../services/taskService";
+import { tagService } from "../services/tagService";
 
 const TaskContext = createContext(null);
 

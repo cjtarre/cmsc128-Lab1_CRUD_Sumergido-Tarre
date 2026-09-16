@@ -1,5 +1,5 @@
 import { STATUS } from "../constants/taskOptions";
-import { getTaskCategory } from "./dateUtils";
+import { getTaskCategory } from "../../../shared/utils/dateUtils";
 
 export function filterTasks(
     tasks,

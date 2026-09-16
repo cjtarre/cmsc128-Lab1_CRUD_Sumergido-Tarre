@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { useTaskData } from "../shared/context/TaskContext";
-import { formatDueTime } from "../shared/utils/dateUtils";
-import { STATUS } from "../shared/constants/taskOptions";
-import taskStyles from "../shared/styles/taskStyles";
+import { formatDueTime } from "../../../shared/utils/dateUtils";
+
+import { useTaskData } from "../../tasks/context/TaskContext";
+import { STATUS } from "../../tasks/constants/taskOptions";
+import taskStyles from "../../tasks/styles/taskStyles";
 
 function Calendar() {
     const { tasks } = useTaskData();

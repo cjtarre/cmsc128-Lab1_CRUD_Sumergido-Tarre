@@ -2,23 +2,26 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 
 import useTasks from "../hooks/useTasks";
-import { useTaskData } from "../shared/context/TaskContext";
+import { useTaskData } from "../context/TaskContext";
 import { createTaskHandlers } from "../handlers/taskHandlers";
-import emptyState from "../shared/constants/emptyState";
-import { filterTasks } from "../shared/utils/taskFilters";
-import { sortTasksByTaskColumn, sortTasksByDueDateColumn, DUEDATE_SORT_MODES, TASK_SORT_CYCLE, DUEDATE_SORT_CYCLE, getNextSort,} from "../shared/utils/taskUtils";
+import emptyState from "../../../shared/constants/emptyState";
+import { filterTasks } from "../utils/taskFilters";
+import { sortTasksByTaskColumn, sortTasksByDueDateColumn, DUEDATE_SORT_MODES, TASK_SORT_CYCLE, DUEDATE_SORT_CYCLE, getNextSort,} from "../utils/taskUtils";
 
-import Pagination from "../shared/components/common/Pagination";
-import EmptyState from "../shared/components/common/EmptyState";
-import EncouragementCard from "../shared/components/common/EncouragementCard";
-import TaskFilter from "../shared/components/tasks/TaskFilter";
-import TaskFilterPanel from "../shared/components/tasks/TaskFilterPanel";
-import TaskTable from "../shared/components/tasks/TaskTable";
-import TaskDetails from "../shared/components/tasks/TaskDetails";
-import CalendarWidget from "../shared/components/calendar/CalendarWidget";
-import AddTask from "../shared/components/crud/AddTask";
-import EditTask from "../shared/components/crud/EditTask";
-import DeleteTask from "../shared/components/crud/DeleteTask";
+import Pagination from "../../../shared/components/common/Pagination";
+import EmptyState from "../../../shared/components/common/EmptyState";
+import EncouragementCard from "../../../shared/components/common/EncouragementCard";
+
+import TaskFilter from "../components/TaskFilter";
+import TaskFilterPanel from "../components/TaskFilterPanel";
+import TaskTable from "../components/TaskTable";
+import TaskDetails from "../components/TaskDetails";
+
+import CalendarWidget from "../../calendar/components/CalendarWidget";
+
+import AddTask from "../components/AddTask";
+import EditTask from "../components/EditTask";
+import DeleteTask from "../components/DeleteTask";
 
 function Dashboard() {
     const { tasks, setTasks, searchTerm, loading } = useTaskData();

@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { STATUS } from "../shared/constants/taskOptions";
+import { STATUS } from "../constants/taskOptions";
 
 const formatDate = (date) => {
     if (!date) return "";
