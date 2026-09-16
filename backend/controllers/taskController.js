@@ -14,6 +14,7 @@ const getAllTasks = async (req, res) => {
                     )
                 )
             `)
+            .eq('user_id', req.user.id)
             .order('created_at', { ascending: false });
         
         if (error) throw error;
@@ -32,7 +33,14 @@ const createTask = async (req, res) => {
         // insert task details
         const { data: newTask, error: newTaskError } = await supabase
             .from('tasks')
-            .insert([{ task_name, task_info, priority_level, status, due_date }])
+            .insert([{ 
+                task_name, 
+                task_info, 
+                priority_level, 
+                status, 
+                due_date,
+                user_id: req.user.id
+            }])
             .select()
             .single();
 
@@ -83,6 +91,7 @@ const updateTask = async (req, res) => {
             .from('tasks')
             .update({ task_name, task_info, priority_level, status, due_date })
             .eq('task_id', task_id)
+            .eq('user_id', req.user.id)
             .select();
 
         if (updateError) throw updateError;
@@ -136,6 +145,7 @@ const deleteTask = async (req, res) => {
             .from('tasks')
             .delete()
             .eq('task_id', task_id)
+            .eq('user_id', req.user.id)
             .select();
         
         if (error) throw error;
