@@ -1,32 +1,12 @@
 import { ArrowRight, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import HoverText from "../shared/components/effects/HoverText";
+import PublicNavbar from "../shared/components/navigation/PublicNavBar";
 
 function LandingPage() {
     return (
         <div className="min-h-screen bg-[#f5faf7] text-slate-800">
-            <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
-                <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-                    <Link to="/" className="flex items-center gap-2 text-lg font-bold">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-green-500">
-                            <GraduationCap size={20} strokeWidth={1.8} />
-                        </span>
-                        StudyBoard
-                    </Link>
-
-                    <nav className="flex items-center gap-1">
-                        <Link to="/about" className="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:bg-green-50 hover:text-green-600">
-                            About
-                        </Link>
-                        <Link to="/login" className="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:bg-green-50 hover:text-green-600">
-                            Log in
-                        </Link>
-                        <Link to="/signup" className="rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white hover:bg-green-600">
-                            Sign up
-                        </Link>
-                    </nav>
-                </div>
-            </header>
+            <PublicNavbar />
 
             <main>
                 <section className="relative overflow-hidden px-6 py-28 sm:py-36">
