@@ -7,6 +7,10 @@ if (!supabaseUrl || !supabaseKey) {
     throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY/SUPABASE_KEY in environment');
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+        persistSession: false,
+    }
+});
 
 module.exports = supabase;
