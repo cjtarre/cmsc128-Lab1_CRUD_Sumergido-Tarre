@@ -15,6 +15,7 @@ import Profile from "../pages/Profile";
 import Settings from "../pages/Settings";
 import Notifications from "../pages/Notifications";
 import NotFound from "../pages/NotFound";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
 
 function AppRoutes() {
     const location = useLocation();
@@ -26,6 +27,7 @@ function AppRoutes() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/about" element={<About />} />
+                    <Route path="/privacy" element={<PrivacyPolicy />} />
 
                     <Route element={<MainLayout />}>
                         <Route path="/dashboard" element={<Dashboard />} />

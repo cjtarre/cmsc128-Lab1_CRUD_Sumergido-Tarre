@@ -1,14 +1,17 @@
 import { useState } from "react";
+import { ArrowLeft, Eye, EyeOff, GraduationCap, Lock, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import HoverText from "../../../shared/components/effects/HoverText";
 import { useAuth } from "../hooks/useAuth";
 
 function Signup() {
     const { signup } = useAuth();
     const navigate = useNavigate();
-
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -27,107 +30,133 @@ function Signup() {
             await signup(email, password);
             navigate("/login");
         } catch (error) {
-            setError(
-                error.response?.data?.error ||
-                "Unable to create account."
-            );
+            setError(error.response?.data?.error || "Unable to create account.");
         } finally {
             setLoading(false);
         }
     };
 
+    const inputClass =
+        "w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-11 text-sm outline-none focus:border-green-500 focus:bg-white focus:ring-2 focus:ring-green-100";
+
     return (
-        <div className="flex min-h-screen items-center justify-center bg-[#f5faf7] px-4">
-            <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
-                <h1 className="mb-2 text-2xl font-bold text-slate-800">
-                    Create an account
-                </h1>
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f5faf7] px-4 py-10">
+            <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-green-100/60 blur-3xl" />
 
-                <p className="mb-6 text-sm text-slate-500">
-                    Sign up to start managing your tasks.
-                </p>
+            <Link
+                to="/"
+                className="absolute left-5 top-5 flex items-center gap-2 text-sm text-slate-500 hover:text-green-600 sm:left-8 sm:top-7"
+            >
+                <ArrowLeft size={16} /> Back to home
+            </Link>
 
-                {error && (
-                    <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-                        {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label
-                            htmlFor="email"
-                            className="mb-1 block text-sm font-medium text-slate-700"
-                        >
-                            Email
-                        </label>
-
-                        <input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(event) => setEmail(event.target.value)}
-                            required
-                            className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-green-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label
-                            htmlFor="password"
-                            className="mb-1 block text-sm font-medium text-slate-700"
-                        >
-                            Password
-                        </label>
-
-                        <input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(event) => setPassword(event.target.value)}
-                            required
-                            className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-green-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label
-                            htmlFor="confirmPassword"
-                            className="mb-1 block text-sm font-medium text-slate-700"
-                        >
-                            Confirm password
-                        </label>
-
-                        <input
-                            id="confirmPassword"
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(event) =>
-                                setConfirmPassword(event.target.value)
-                            }
-                            required
-                            className="w-full rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-green-500"
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        {loading ? "Creating account..." : "Create account"}
-                    </button>
-                </form>
-
-                <p className="mt-6 text-center text-sm text-slate-500">
-                    Already have an account?{" "}
+            <div className="relative w-full max-w-md">
+                <div className="mb-7 text-center">
                     <Link
-                        to="/login"
-                        className="font-medium text-green-600 hover:underline"
+                        to="/"
+                        className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50 text-green-500"
                     >
-                        Sign in
+                        <GraduationCap size={28} strokeWidth={1.7} />
                     </Link>
-                </p>
+
+                    <HoverText
+                        text="Create your account"
+                        className="text-3xl font-bold tracking-tight text-slate-800"
+                    />
+
+                    <p className="mt-2 text-sm text-slate-500">
+                        Start organizing your schoolwork with StudyBoard.
+                    </p>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-200/40 sm:p-8">
+                    {error && (
+                        <div
+                            role="alert"
+                            className="mb-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600"
+                        >
+                            {error}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div>
+                            <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
+                                Email
+                            </label>
+                            <div className="relative">
+                                <Mail size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(event) => setEmail(event.target.value)}
+                                    placeholder="you@example.com"
+                                    autoComplete="email"
+                                    required
+                                    className={inputClass}
+                                />
+                            </div>
+                        </div>
+
+                        {[
+                            ["password", "Password", password, setPassword, showPassword, setShowPassword, "Create a password"],
+                            ["confirmPassword", "Confirm password", confirmPassword, setConfirmPassword, showConfirmPassword, setShowConfirmPassword, "Re-enter your password"],
+                        ].map(([id, label, value, setValue, show, setShow, placeholder]) => (
+                            <div key={id}>
+                                <label htmlFor={id} className="mb-2 block text-sm font-medium text-slate-700">
+                                    {label}
+                                </label>
+
+                                <div className="relative">
+                                    <Lock size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+
+                                    <input
+                                        id={id}
+                                        type={show ? "text" : "password"}
+                                        value={value}
+                                        onChange={(event) => setValue(event.target.value)}
+                                        placeholder={placeholder}
+                                        autoComplete="new-password"
+                                        required
+                                        className={inputClass}
+                                    />
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setShow(!show)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    >
+                                        {show ? <EyeOff size={17} /> : <Eye size={17} />}
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {loading ? "Creating account..." : "Create account"}
+                        </button>
+
+                        <p className="text-center text-xs text-slate-400">
+                            By creating an account, you acknowledge our{" "}
+                            <Link to="/privacy" className="font-medium text-green-600 hover:text-green-700">
+                                Privacy Policy
+                            </Link>
+                            .
+                        </p>
+                    </form>
+
+                    <p className="mt-6 text-center text-sm text-slate-500">
+                        Already have an account?{" "}
+                        <Link to="/login" className="font-semibold text-green-600 hover:text-green-700">
+                            Sign in
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     );
