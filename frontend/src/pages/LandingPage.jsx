@@ -16,7 +16,7 @@ function LandingPage() {
                 </Link>
 
                 <Link
-                    to="/dashboard"
+                    to="/login"
                     className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-500 transition hover:bg-green-50 hover:text-green-600"
                 >
                     Log in
@@ -47,7 +47,7 @@ function LandingPage() {
                     </p>
 
                     <Link
-                        to="/dashboard"
+                        to="/login"
                         className="mt-7 inline-flex items-center gap-2 rounded-lg bg-green-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-600 hover:shadow"
                     >
                         Get Started
