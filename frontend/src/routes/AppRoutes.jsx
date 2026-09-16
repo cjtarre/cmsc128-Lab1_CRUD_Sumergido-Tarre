@@ -1,5 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
+import ProtectedRoute from ".ProtectedRoutes";
+import { TaskProvider } from "./shared/context/TaskContext";
 
 import Landing from "../pages/Landing";
 import Dashboard from "../pages/Dashboard";
@@ -14,7 +16,13 @@ function AppRoutes() {
         <Routes>
             <Route path="/" element={<Landing />} />
 
-            <Route element={<MainLayout />}>
+            <Route element={
+                <ProtectedRoute>  
+                    <TaskProvider>
+                        <MainLayout />  
+                    </ TaskProvider>
+                </ ProtectedRoute> 
+            }>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/profile" element={<Profile />} />
