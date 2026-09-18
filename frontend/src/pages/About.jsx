@@ -7,31 +7,31 @@ function About() {
             <PublicNavbar />
 
             <main>
-                <section className="px-6 py-24 sm:py-32">
+                <section className="px-6 py-20 sm:py-24">
                     <div className="mx-auto max-w-3xl text-center">
-                        <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-green-500">
+                        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-green-500">
                             <GraduationCap size={28} strokeWidth={1.7} />
                         </div>
 
                         <p className="text-xs font-semibold uppercase tracking-widest text-green-500">
-                            About StudyBoard
+                            About Takda
                         </p>
 
                         <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
-                            Built to make student life a little easier.
+                            Built to make student life easier.
                         </h1>
 
-                        <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
-                            StudyBoard is a simple task management app designed to help students
-                            organize schoolwork, keep track of deadlines, and stay on top of
-                            everyday tasks.
+                        <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
+                            Takda is a simple task management app that helps
+                            students organize schoolwork, track deadlines, and
+                            manage everyday tasks.
                         </p>
                     </div>
                 </section>
 
-                <section className="border-y border-slate-200 bg-white px-6 py-16">
+                <section className="border-y border-slate-200 bg-white px-6 py-14">
                     <div className="mx-auto max-w-5xl">
-                        <div className="mb-10 text-center">
+                        <div className="mb-8 text-center">
                             <p className="text-xs font-semibold uppercase tracking-widest text-green-500">
                                 What we focus on
                             </p>
@@ -45,30 +45,34 @@ function About() {
                             <InfoCard
                                 icon={ListTodo}
                                 title="Organize"
-                                text="Keep assignments, tasks, and responsibilities in one place."
+                                text="Keep schoolwork and responsibilities in one place."
                             />
 
                             <InfoCard
                                 icon={CheckCircle2}
                                 title="Plan"
-                                text="Keep deadlines visible and know what needs your attention."
+                                text="Keep deadlines visible and know what needs attention."
                             />
 
                             <InfoCard
                                 icon={Users}
                                 title="Stay on track"
-                                text="Build better study habits by keeping your work manageable."
+                                text="Manage your workload and build better study habits."
                             />
                         </div>
                     </div>
                 </section>
 
-                <section className="px-6 py-20">
+                <section className="px-6 py-16">
                     <div className="mx-auto max-w-3xl">
-                        <div className="rounded-3xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm sm:px-12">
-                            <Users size={28} strokeWidth={1.7} className="mx-auto text-green-500" />
+                        <div className="rounded-3xl border border-slate-200 bg-white px-6 py-10 text-center shadow-sm sm:px-12">
+                            <Users
+                                size={28}
+                                strokeWidth={1.7}
+                                className="mx-auto text-green-500"
+                            />
 
-                            <p className="mt-5 text-xs font-semibold uppercase tracking-widest text-green-500">
+                            <p className="mt-4 text-xs font-semibold uppercase tracking-widest text-green-500">
                                 Meet the team
                             </p>
 
@@ -77,16 +81,16 @@ function About() {
                             </h2>
 
                             <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-slate-500">
-                                StudyBoard was created as a student project with the goal of
-                                making everyday schoolwork a little easier to manage.
+                                Takda was created as a CMSC 128 project to make
+                                everyday schoolwork easier to manage.
                             </p>
 
-                            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                            <div className="mt-7 grid gap-3 sm:grid-cols-2">
                                 <TeamCard name="Ma. Christie Jude Tarre" />
                                 <TeamCard name="Gabrielle Sumergido" />
                             </div>
 
-                            <p className="mt-8 text-xs text-slate-400">
+                            <p className="mt-7 text-xs text-slate-400">
                                 CMSC 128 · Software Engineering
                             </p>
                         </div>
@@ -94,11 +98,11 @@ function About() {
                 </section>
             </main>
 
-            <footer className="border-t border-slate-200 bg-white px-6 py-7">
-                <div className="mx-auto flex max-w-6xl items-center justify-between">
+            <footer className="border-t border-slate-200 bg-white px-6 py-6">
+                <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 sm:flex-row">
                     <div className="flex items-center gap-2">
                         <GraduationCap size={17} className="text-green-500" />
-                        <span className="text-sm font-semibold">StudyBoard</span>
+                        <span className="text-sm font-semibold">Takda</span>
                     </div>
 
                     <p className="text-xs text-slate-400">

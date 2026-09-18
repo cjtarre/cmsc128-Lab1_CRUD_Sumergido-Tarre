@@ -7,9 +7,9 @@ function PrivacyPolicy() {
             <PublicNavbar />
 
             <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
-                <div className="mb-10">
+                <div className="mb-10 text-center sm:text-left">
                     <p className="mb-2 text-sm font-semibold text-green-600">
-                        StudyBoard
+                        Takda
                     </p>
 
                     <h1 className="text-3xl font-bold tracking-tight text-slate-800 sm:text-4xl">
@@ -19,104 +19,84 @@ function PrivacyPolicy() {
                     <p className="mt-3 text-sm text-slate-500">
                         Last updated: September 2026
                     </p>
+
+                    <p className="mt-5 max-w-2xl text-sm leading-6 text-slate-500">
+                        This policy explains how Takda collects, uses, stores,
+                        and protects information when you use the application.
+                    </p>
                 </div>
 
                 <div className="space-y-8 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-200/30 sm:p-10">
                     <section>
-                        <h2 className="mb-3 text-lg font-semibold text-slate-800">
+                        <h2 className="mb-2 text-lg font-semibold text-slate-800">
                             1. Information we collect
                         </h2>
                         <p className="leading-7 text-slate-600">
-                            StudyBoard collects information that you provide when
-                            creating and using your account. This may include your
-                            email address, username, display name, and information
-                            you choose to store in the application, such as tasks.
+                            Takda collects information provided when creating
+                            and using an account, such as your email address,
+                            display name, and password. It may also store data
+                            you add to the application, such as tasks.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="mb-3 text-lg font-semibold text-slate-800">
+                        <h2 className="mb-2 text-lg font-semibold text-slate-800">
                             2. How we use your information
                         </h2>
                         <p className="leading-7 text-slate-600">
-                            Your information is used to provide StudyBoard's
-                            features, including account authentication, profile
-                            management, and task management. Information associated
-                            with your account is used to provide you with your own
-                            application data.
+                            Your information is used to provide account
+                            authentication, profile management, task
+                            management, and other Takda features. Your data is
+                            associated with your account to provide your
+                            personalized application experience.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="mb-3 text-lg font-semibold text-slate-800">
-                            3. Passwords and security
+                        <h2 className="mb-2 text-lg font-semibold text-slate-800">
+                            3. Security
                         </h2>
                         <p className="leading-7 text-slate-600">
-                            StudyBoard is designed so that passwords are not stored
-                            as plain text. Authentication information is handled
-                            through the application's authentication system, with
-                            appropriate measures intended to protect account
-                            information.
+                            Passwords are not stored in plain text. Takda uses
+                            password hashing and authentication controls to
+                            help protect account information and restrict
+                            unauthorized access.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="mb-3 text-lg font-semibold text-slate-800">
-                            4. Sharing of information
+                        <h2 className="mb-2 text-lg font-semibold text-slate-800">
+                            4. Sharing and storage
                         </h2>
                         <p className="leading-7 text-slate-600">
-                            StudyBoard does not sell your personal information.
-                            Account and application data is intended to be used for
-                            providing the StudyBoard service and is not intentionally
-                            made available to other users except where required by
-                            an application's feature.
+                            Takda does not sell your personal information. Your
+                            account and application data is stored in the
+                            application's database and is intended to be
+                            accessible only through authorized access.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="mb-3 text-lg font-semibold text-slate-800">
-                            5. Data retention
+                        <h2 className="mb-2 text-lg font-semibold text-slate-800">
+                            5. Your rights
                         </h2>
                         <p className="leading-7 text-slate-600">
-                            Account and application data may remain stored while
-                            your account is active. The exact retention and deletion
-                            process depends on the application's implemented
-                            database and account-management features.
+                            You may review and manage information associated
+                            with your account through the features available in
+                            Takda. Available options may include updating
+                            account information and managing stored data.
                         </p>
                     </section>
 
                     <section>
-                        <h2 className="mb-3 text-lg font-semibold text-slate-800">
-                            6. Your information
+                        <h2 className="mb-2 text-lg font-semibold text-slate-800">
+                            6. Changes and contact
                         </h2>
                         <p className="leading-7 text-slate-600">
-                            StudyBoard aims to provide users with access to and
-                            control over information associated with their account.
-                            Available profile, account, and data-management options
-                            depend on the features implemented in the application.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 className="mb-3 text-lg font-semibold text-slate-800">
-                            7. Changes to this policy
-                        </h2>
-                        <p className="leading-7 text-slate-600">
-                            This Privacy Policy may be updated as StudyBoard's
-                            features, data handling practices, or security
-                            mechanisms change. Updates will be reflected on this
-                            page.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 className="mb-3 text-lg font-semibold text-slate-800">
-                            8. Contact
-                        </h2>
-                        <p className="leading-7 text-slate-600">
-                            For questions about this Privacy Policy or StudyBoard's
-                            handling of information, please contact the StudyBoard
-                            project team.
+                            This policy may be updated as Takda's features or
+                            data practices change. For questions or concerns
+                            about this policy, please contact the Takda project
+                            team.
                         </p>
                     </section>
                 </div>
@@ -124,9 +104,9 @@ function PrivacyPolicy() {
                 <div className="mt-8 text-center">
                     <Link
                         to="/"
-                        className="text-sm font-medium text-green-600 hover:text-green-700"
+                        className="text-sm font-medium text-green-600 transition hover:text-green-700"
                     >
-                        Back to StudyBoard
+                        Back to Takda
                     </Link>
                 </div>
             </main>
