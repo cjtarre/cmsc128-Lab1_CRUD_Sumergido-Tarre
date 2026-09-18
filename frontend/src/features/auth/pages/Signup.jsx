@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-    ChevronLeft,
-    Eye,
-    EyeOff,
-    GraduationCap,
-    Lock,
-    Mail,
-} from "lucide-react";
+import {ChevronLeft, Eye, EyeOff, GraduationCap, Lock, Mail,} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import HoverText from "../../../shared/components/effects/HoverText";
 import { useAuth } from "../hooks/useAuth";
@@ -195,7 +188,7 @@ function Signup({ embedded = false, onSwitchToLogin }) {
             >
                 By creating an account, you agree to our{" "}
                 <Link
-                    to="/privacy-policy"
+                    to="/privacy" target="_blank" rel="nonopener nonreferrer"
                     className={`font-medium underline ${
                         embedded ? "text-green-300" : "text-green-600"
                     }`}
