@@ -1,12 +1,20 @@
 import { useState } from "react";
-import { ArrowLeft, Eye, EyeOff, GraduationCap, Lock, Mail } from "lucide-react";
+import {
+    ChevronLeft,
+    Eye,
+    EyeOff,
+    GraduationCap,
+    Lock,
+    Mail,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import HoverText from "../../../shared/components/effects/HoverText";
 import { useAuth } from "../hooks/useAuth";
 
-function Signup() {
+function Signup({ embedded = false, onSwitchToLogin }) {
     const { signup } = useAuth();
     const navigate = useNavigate();
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -15,8 +23,8 @@ function Signup() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         setError("");
 
         if (password !== confirmPassword) {
@@ -29,133 +37,278 @@ function Signup() {
         try {
             await signup(email, password);
             navigate("/login");
-        } catch (error) {
-            setError(error.response?.data?.error || "Unable to create account.");
+        } catch (err) {
+            setError(
+                err.response?.data?.error || "Unable to create account."
+            );
         } finally {
             setLoading(false);
         }
     };
 
-    const inputClass =
-        "w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-11 text-sm outline-none focus:border-green-500 focus:bg-white focus:ring-2 focus:ring-green-100";
+    const inputClass = embedded
+        ? "w-full rounded-lg border border-white/15 bg-white/10 py-2.5 pl-10 pr-10 text-sm text-white placeholder:text-white/45 outline-none focus:border-white/40 focus:ring-2 focus:ring-white/10"
+        : "w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100";
 
-    return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f5faf7] px-4 py-10">
-            <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-green-100/60 blur-3xl" />
+    const form = (
+        <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+                <label
+                    htmlFor="signup-email"
+                    className={`text-sm font-medium ${
+                        embedded ? "text-white/80" : "text-slate-700"
+                    }`}
+                >
+                    Email
+                </label>
 
-            <Link
-                to="/"
-                className="absolute left-5 top-5 flex items-center gap-2 text-sm text-slate-500 hover:text-green-600 sm:left-8 sm:top-7"
-            >
-                <ArrowLeft size={16} /> Back to home
-            </Link>
-
-            <div className="relative w-full max-w-md">
-                <div className="mb-7 text-center">
-                    <Link
-                        to="/"
-                        className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50 text-green-500"
-                    >
-                        <GraduationCap size={28} strokeWidth={1.7} />
-                    </Link>
-
-                    <HoverText
-                        text="Create your account"
-                        className="text-3xl font-bold tracking-tight text-slate-800"
+                <div className="relative mt-2">
+                    <Mail
+                        size={17}
+                        className={`absolute left-3 top-1/2 -translate-y-1/2 ${
+                            embedded ? "text-white/45" : "text-slate-400"
+                        }`}
                     />
 
-                    <p className="mt-2 text-sm text-slate-500">
-                        Start organizing your schoolwork with StudyBoard.
+                    <input
+                        id="signup-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        placeholder="you@example.com"
+                        className={inputClass}
+                    />
+                </div>
+            </div>
+
+            <div>
+                <label
+                    htmlFor="signup-password"
+                    className={`text-sm font-medium ${
+                        embedded ? "text-white/80" : "text-slate-700"
+                    }`}
+                >
+                    Password
+                </label>
+
+                <div className="relative mt-2">
+                    <Lock
+                        size={17}
+                        className={`absolute left-3 top-1/2 -translate-y-1/2 ${
+                            embedded ? "text-white/45" : "text-slate-400"
+                        }`}
+                    />
+
+                    <input
+                        id="signup-password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        placeholder="Create a password"
+                        className={inputClass}
+                    />
+
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label="Toggle password visibility"
+                        className={`absolute right-3 top-1/2 -translate-y-1/2 ${
+                            embedded
+                                ? "text-white/45 hover:text-white"
+                                : "text-slate-400"
+                        }`}
+                    >
+                        {showPassword ? (
+                            <EyeOff size={17} />
+                        ) : (
+                            <Eye size={17} />
+                        )}
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label
+                    htmlFor="signup-confirm"
+                    className={`text-sm font-medium ${
+                        embedded ? "text-white/80" : "text-slate-700"
+                    }`}
+                >
+                    Confirm password
+                </label>
+
+                <div className="relative mt-2">
+                    <Lock
+                        size={17}
+                        className={`absolute left-3 top-1/2 -translate-y-1/2 ${
+                            embedded ? "text-white/45" : "text-slate-400"
+                        }`}
+                    />
+
+                    <input
+                        id="signup-confirm"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        placeholder="Confirm your password"
+                        className={inputClass}
+                    />
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        aria-label="Toggle password visibility"
+                        className={`absolute right-3 top-1/2 -translate-y-1/2 ${
+                            embedded
+                                ? "text-white/45 hover:text-white"
+                                : "text-slate-400"
+                        }`}
+                    >
+                        {showConfirmPassword ? (
+                            <EyeOff size={17} />
+                        ) : (
+                            <Eye size={17} />
+                        )}
+                    </button>
+                </div>
+            </div>
+
+            {error && (
+                <p
+                    className={`text-sm ${
+                        embedded ? "text-red-200" : "text-red-500"
+                    }`}
+                >
+                    {error}
+                </p>
+            )}
+
+            <p
+                className={`pt-1 text-xs leading-5 ${
+                    embedded ? "text-white/55" : "text-slate-500"
+                }`}
+            >
+                By creating an account, you agree to our{" "}
+                <Link
+                    to="/privacy-policy"
+                    className={`font-medium underline ${
+                        embedded ? "text-green-300" : "text-green-600"
+                    }`}
+                >
+                    Privacy Policy
+                </Link>
+                .
+            </p>
+
+            <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-lg bg-green-500 py-2.5 text-sm font-medium
+                    text-white transition hover:bg-green-600 disabled:opacity-60"
+            >
+                {loading ? "Creating account..." : "Create account"}
+            </button>
+        </form>
+    );
+
+    if (embedded) {
+        return (
+            <div className="flex min-h-screen items-start px-6 pt-24 pb-12 sm:px-10 sm:pt-28">
+                <div className="mx-auto w-full max-w-md">
+                    <div className="mb-8 flex flex-col items-center text-center">
+                        <div className="flex items-center gap-2 text-green-300">
+                            <GraduationCap size={24} />
+                            <span className="font-bold text-white">
+                                Takda
+                            </span>
+                        </div>
+
+                        <h1 className="mt-8 text-center text-3xl font-black tracking-tight text-white">
+                            <HoverText text="Create your account" />
+                        </h1>
+
+                        <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-6 text-white/60">
+                            Start organizing your schoolwork with Takda.
+                        </p>
+                    </div>
+
+                    {form}
+
+                    <p className="mt-8 text-center text-sm text-white/60">
+                        Already have an account?{" "}
+                        <button
+                            type="button"
+                            onClick={onSwitchToLogin}
+                            className="font-semibold text-green-300 hover:text-green-200"
+                        >
+                            Sign in
+                        </button>
                     </p>
                 </div>
+            </div>
+        );
+    }
 
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-200/40 sm:p-8">
-                    {error && (
-                        <div
-                            role="alert"
-                            className="mb-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600"
-                        >
-                            {error}
-                        </div>
-                    )}
+    return (
+        <div className="min-h-screen bg-[#f5faf7] px-6 py-6">
+            <div className="mx-auto max-w-md">
+                <Link
+                    to="/"
+                    aria-label="Back to home"
+                    className="group flex h-10 w-10 items-center overflow-hidden
+                        rounded-full border border-slate-200 bg-white px-3
+                        text-slate-500 shadow-sm transition-all duration-300
+                        hover:w-32 hover:border-green-200 hover:text-green-600"
+                >
+                    <ChevronLeft
+                        size={18}
+                        className="shrink-0 transition-transform duration-300
+                            group-hover:-translate-x-0.5"
+                    />
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div>
-                            <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
-                                Email
-                            </label>
-                            <div className="relative">
-                                <Mail size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input
-                                    id="email"
-                                    type="email"
-                                    value={email}
-                                    onChange={(event) => setEmail(event.target.value)}
-                                    placeholder="you@example.com"
-                                    autoComplete="email"
-                                    required
-                                    className={inputClass}
-                                />
+                    <span
+                        className="ml-1 max-w-0 whitespace-nowrap text-sm
+                            font-medium opacity-0 transition-all duration-300
+                            group-hover:max-w-24 group-hover:opacity-100"
+                    >
+                        Back to home
+                    </span>
+                </Link>
+
+                <div className="flex min-h-[90vh] items-center">
+                    <div className="w-full">
+                        <div className="mb-10 text-center">
+                            <div className="flex items-center justify-center gap-2 text-green-500">
+                                <GraduationCap size={24} />
+                                <span className="font-bold">Takda</span>
                             </div>
+
+                            <h1 className="mt-10 text-3xl font-black tracking-tight">
+                                Create your account
+                            </h1>
+
+                            <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-6 text-slate-500">
+                                Start organizing your schoolwork with Takda.
+                            </p>
                         </div>
 
-                        {[
-                            ["password", "Password", password, setPassword, showPassword, setShowPassword, "Create a password"],
-                            ["confirmPassword", "Confirm password", confirmPassword, setConfirmPassword, showConfirmPassword, setShowConfirmPassword, "Re-enter your password"],
-                        ].map(([id, label, value, setValue, show, setShow, placeholder]) => (
-                            <div key={id}>
-                                <label htmlFor={id} className="mb-2 block text-sm font-medium text-slate-700">
-                                    {label}
-                                </label>
+                        {form}
 
-                                <div className="relative">
-                                    <Lock size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-
-                                    <input
-                                        id={id}
-                                        type={show ? "text" : "password"}
-                                        value={value}
-                                        onChange={(event) => setValue(event.target.value)}
-                                        placeholder={placeholder}
-                                        autoComplete="new-password"
-                                        required
-                                        className={inputClass}
-                                    />
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setShow(!show)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                                    >
-                                        {show ? <EyeOff size={17} /> : <Eye size={17} />}
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                            {loading ? "Creating account..." : "Create account"}
-                        </button>
-
-                        <p className="text-center text-xs text-slate-400">
-                            By creating an account, you acknowledge our{" "}
-                            <Link to="/privacy" className="font-medium text-green-600 hover:text-green-700">
-                                Privacy Policy
+                        <p className="mt-8 text-center text-sm text-slate-500">
+                            Already have an account?{" "}
+                            <Link
+                                to="/login"
+                                className="font-semibold text-green-600"
+                            >
+                                Sign in
                             </Link>
-                            .
                         </p>
-                    </form>
-
-                    <p className="mt-6 text-center text-sm text-slate-500">
-                        Already have an account?{" "}
-                        <Link to="/login" className="font-semibold text-green-600 hover:text-green-700">
-                            Sign in
-                        </Link>
-                    </p>
+                    </div>
                 </div>
             </div>
         </div>
