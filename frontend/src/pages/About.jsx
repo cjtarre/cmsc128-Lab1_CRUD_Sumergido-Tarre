@@ -1,5 +1,5 @@
 import { CheckCircle2, GraduationCap, ListTodo, Users } from "lucide-react";
-import PublicNavbar from "../shared/components/navigation/PublicNavBar";
+import PublicNavbar from "../shared/components/navigation/PublicNavbar";
 
 function About() {
     return (

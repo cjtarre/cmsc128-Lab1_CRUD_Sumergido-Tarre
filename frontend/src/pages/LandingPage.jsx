@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowRight, GraduationCap } from "lucide-react";
 import HoverText from "../shared/components/effects/HoverText";
-import PublicNavbar from "../shared/components/navigation/PublicNavBar";
+import PublicNavbar from "../shared/components/navigation/PublicNavbar";
 import AuthPanel from "../features/auth/components/AuthPanel";
 
 function LandingPage() {

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import PublicNavbar from "../shared/components/navigation/PublicNavBar";
+import PublicNavbar from "../shared/components/navigation/PublicNavbar";
 
 function PrivacyPolicy() {
     return (
