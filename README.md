@@ -1,11 +1,14 @@
-# StudyBoard
+# Takda
 
-StudyBoard is a web-based To-Do List application developed for **CMSC 128 – Laboratory Activity 1: CRUD To-Do List**. It allows users to create, view, update, delete, and manage tasks with persistent data storage through Supabase.
+Takda is a web-based task management application developed for **CMSC 128 – Software Engineering**. It helps students organize schoolwork, deadlines, and everyday tasks through task management, filtering, sorting, calendar views, and user accounts.
+
+The application uses a React frontend, an Express backend, and Supabase PostgreSQL for persistent data storage.
 
 ---
 
 ## Features
 
+### Task Management
 * Add tasks with:
 
   * Title
@@ -25,6 +28,17 @@ StudyBoard is a web-based To-Do List application developed for **CMSC 128 – La
 * Calendar view
 * Pagination
 * Persistent task data
+
+### Authentication
+
+- User registration interface
+- User login interface
+- Password visibility controls
+- Password confirmation during registration
+- Form validation and error feedback
+- Forgot password navigation
+- Privacy Policy
+- Authentication frontend prepared for backend integration
 
 ---
 
@@ -56,7 +70,7 @@ StudyBoard is a web-based To-Do List application developed for **CMSC 128 – La
 
 ## Project Architecture
 
-StudyBoard follows a frontend-backend architecture where the React frontend communicates with the Express backend through REST API endpoints. The backend handles application logic and communicates with Supabase for persistent data storage.
+Takda follows a frontend-backend architecture where the React frontend communicates with the Express backend through REST API endpoints. The backend handles application logic and communicates with Supabase for persistent data storage.
 
 ```mermaid
 flowchart TD
@@ -112,6 +126,7 @@ PostgreSQL Database
 
 ```text
 cmsc128-Lab1_CRUD_Sumergido-Tarre/
+
 │
 ├── backend/
 │   ├── config/
@@ -128,27 +143,23 @@ cmsc128-Lab1_CRUD_Sumergido-Tarre/
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── handlers/
-│   │   │   └── taskHandlers.js
-│   │   ├── hooks/
-│   │   │   └── useTasks.js
+│   │   ├── features/
+│   │   │   ├── auth/
+│   │   │   │   ├── components/
+│   │   │   │   ├── context/
+│   │   │   │   ├── hooks/
+│   │   │   │   ├── pages/
+│   │   │   │   └── services/
+│   │   │   ├── calendar/
+│   │   │   └── tasks/
+│   │   │
 │   │   ├── layouts/
-│   │   │   └── MainLayout.jsx
 │   │   ├── pages/
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── Landing.jsx
-│   │   │   └── NotFound.jsx
 │   │   ├── routes/
-│   │   │   └── AppRoutes.jsx
-│   │   ├── services/
-│   │   │   ├── taskService.js
-│   │   │   └── tagService.js
 │   │   └── shared/
 │   │       ├── components/
 │   │       ├── constants/
-│   │       ├── context/
-│   │       ├── data/
-│   │       ├── styles/
+│   │       ├── services/
 │   │       └── utils/
 │   │
 │   ├── App.jsx
@@ -234,7 +245,7 @@ The frontend runs on:
 http://localhost:5173
 ```
 
-Open the frontend URL in a browser to use StudyBoard.
+Open the frontend URL in a browser to use Takda.
 
 ---
 
@@ -337,9 +348,9 @@ This allows task data to remain available after refreshing the page or restartin
 
 ### Dashboard
 
-![StudyBoard Dashboard](screenshots/dashboard.png)
+![Takda Dashboard](screenshots/dashboard.png)
 
-![StudyBoard Dashboard Empty State](screenshots/dashboard-empty-state.png)
+![Takda Dashboard Empty State](screenshots/dashboard-empty-state.png)
 
 ### Add Task
 
@@ -371,7 +382,7 @@ This allows task data to remain available after refreshing the page or restartin
 
 ## HCI Considerations
 
-StudyBoard applies basic HCI principles through:
+Takda applies basic HCI principles through:
 
 * Clear labels for task fields and actions
 * Consistent navigation and layout
@@ -380,6 +391,9 @@ StudyBoard applies basic HCI principles through:
 * Confirmation before destructive actions
 * Search, filtering, sorting, and pagination
 * Calendar-based task organization
+* Password visibility controls
+* Form validation and error feedback
+* Responsive layouts for different screen sizes
 
 ---
 
@@ -392,7 +406,7 @@ StudyBoard applies basic HCI principles through:
 
 ## Course Information
 
-**CMSC 128 – Laboratory Activity 1: CRUD To-Do List**
+**CMSC 128 – Software Engineering**
 
 **University of the Philippines Visayas**
 
