@@ -27,10 +27,10 @@ function LandingPage() {
                             : "w-full"
                     }`}
             >
-                <div className="min-h-screen">
+                <div className="flex min-h-screen flex-col">
                     <PublicNavbar showAuth={showAuth} />
 
-                    <main>
+                    <main className="flex-1">
                         <section className="relative overflow-hidden px-6 py-24 sm:py-32 lg:py-36">
                             <div
                                 className="pointer-events-none absolute left-1/2 top-0 h-72 w-72

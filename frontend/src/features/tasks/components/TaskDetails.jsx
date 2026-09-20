@@ -1,18 +1,22 @@
 import { CalendarDays, X, Pencil, Trash2 } from "lucide-react";
+import { useEffect } from "react";
+
 import taskStyles from "../styles/taskStyles";
 import { STATUS, priorityLabels, statusLabels } from "../constants/taskOptions";
 import { formatDueDate } from "../../../shared/utils/dateUtils";
-import { useEffect } from "react";
 
 function TaskDetails({ task, onClose, onEdit, onDelete }) {
-    
     useEffect(() => {
-    if (!task) return;
+        if (!task) return;
 
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
 
-    return () => {document.body.style.overflow = originalOverflow;};}, [task]);
+        return () => {
+            document.body.style.overflow = originalOverflow;
+        };
+    }, [task]);
+
     if (!task) return null;
 
     const isCompleted = task.status === STATUS.COMPLETED;
@@ -20,92 +24,163 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
         taskStyles.tag[Number(tagId)] || "bg-slate-100 text-slate-500";
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/25 px-4" role="dialog" aria-modal="true" aria-labelledby="task-details-title">
-            <div className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl border border-slate-200 bg-white shadow-xl">
-                <div className="shrink-0 flex items-start justify-between border-b border-slate-100 px-6 py-5">
+        <div
+            className="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/25 p-3 pt-7 sm:flex sm:items-center sm:justify-center sm:p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="task-details-title"
+        >
+            <div className="mx-auto flex max-h-[calc(100dvh-2.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl sm:max-h-[85vh] sm:rounded-2xl">
+                <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-4 py-4 sm:px-6 sm:py-5">
                     <div className="min-w-0 pr-4">
-                        <h2 id="task-details-title" className={`text-lg font-semibold ${isCompleted ? "text-slate-400 line-through" : "text-slate-800"}`}>
+                        <h2
+                            id="task-details-title"
+                            className={`break-words text-lg font-semibold ${
+                                isCompleted
+                                    ? "text-slate-400 line-through"
+                                    : "text-slate-800"
+                            }`}
+                        >
                             {task.title}
                         </h2>
-                        <p className="mt-1 text-xs text-slate-400">Task Details</p>
+                        <p className="mt-1 text-xs text-slate-400">
+                            Task Details
+                        </p>
                     </div>
 
-                    <button type="button" onClick={onClose} aria-label="Close task details" className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        aria-label="Close task details"
+                        className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
+                    >
                         <X size={18} />
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto space-y-6 px-6 py-6">
+                <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-5 sm:space-y-6 sm:px-6 sm:py-6">
                     <div>
-                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Description</p>
-                        <p className="text-sm leading-6 text-slate-600 break-words whitespace-pre-line">
+                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                            Description
+                        </p>
+                        <p className="break-words whitespace-pre-line text-sm leading-6 text-slate-600">
                             {task.description || "No description provided."}
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                         <div className="rounded-xl bg-slate-50 px-4 py-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Due Date</p>
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                                Due Date
+                            </p>
                             <div className="mt-2 flex items-start gap-2 text-sm text-slate-600">
                                 <CalendarDays size={15} className="mt-0.5 shrink-0" />
-                                <div>
-                                    {task.dueDate ? formatDueDate(task.dueDate) : "No due date"}
-                                    {task.dueTime && <span className="text-xs text-slate-400">{" - "}{task.dueTime}</span>}
+                                <div className="min-w-0 break-words">
+                                    {task.dueDate
+                                        ? formatDueDate(task.dueDate)
+                                        : "No due date"}
+                                    {task.dueTime && (
+                                        <span className="text-xs text-slate-400">
+                                            {" - "}{task.dueTime}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
                         <div className="rounded-xl bg-slate-50 px-4 py-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Priority</p>
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                                Priority
+                            </p>
                             {task.priority > 0 ? (
-                                <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${isCompleted ? "bg-slate-100 text-slate-400" : taskStyles.priority[task.priority]}`}>
+                                <span
+                                    className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                                        isCompleted
+                                            ? "bg-slate-100 text-slate-400"
+                                            : taskStyles.priority[task.priority]
+                                    }`}
+                                >
                                     {priorityLabels[task.priority]}
                                 </span>
                             ) : (
-                                <span className="mt-2 text-sm text-slate-400">No priority</span>
+                                <span className="mt-2 block text-sm text-slate-400">
+                                    No priority
+                                </span>
                             )}
                         </div>
                     </div>
 
                     <div>
-                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Status</p>
-                        <span className={`text-xs font-medium ${isCompleted ? "text-green-600" : taskStyles.status[task.status] || taskStyles.status[STATUS.NOT_STARTED]}`}>
+                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                            Status
+                        </p>
+                        <span
+                            className={`text-xs font-medium ${
+                                isCompleted
+                                    ? "text-green-600"
+                                    : taskStyles.status[task.status] ||
+                                      taskStyles.status[STATUS.NOT_STARTED]
+                            }`}
+                        >
                             {statusLabels[task.status] || "Not Started"}
                         </span>
                     </div>
 
                     <div>
-                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Tags</p>
+                        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                            Tags
+                        </p>
+
                         {task.tags?.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
-                                {task.tags.map((t) => (
+                                {task.tags.map((tag) => (
                                     <span
-                                        key={t.tag_id}
+                                        key={tag.tag_id}
                                         className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                                            isCompleted ? "bg-slate-100 text-slate-400" : getTagStyle(t.tag_id)
+                                            isCompleted
+                                                ? "bg-slate-100 text-slate-400"
+                                                : getTagStyle(tag.tag_id)
                                         }`}
                                     >
-                                        {t.tag_name}
+                                        {tag.tag_name}
                                     </span>
                                 ))}
                             </div>
                         ) : (
-                            <span className="text-sm text-slate-400">No tags</span>
+                            <span className="text-sm text-slate-400">
+                                No tags
+                            </span>
                         )}
                     </div>
                 </div>
 
-                <div className="shrink-0 flex items-center justify-between border-t border-slate-100 px-6 py-4">
-                    <button type="button" onClick={() => onDelete(task)} className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-500 transition hover:bg-red-50 hover:text-red-600">
-                        <Trash2 size={15} /> Delete
+                <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-slate-100 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <button
+                        type="button"
+                        onClick={() => onDelete(task)}
+                        className="w-full rounded-lg px-3 py-2 text-sm font-medium text-red-500 transition hover:bg-red-50 hover:text-red-600 sm:w-auto"
+                    >
+                        <span className="inline-flex items-center justify-center gap-2">
+                            <Trash2 size={15} />
+                            Delete
+                        </span>
                     </button>
 
-                    <div className="flex items-center gap-2">
-                        <button type="button" onClick={() => onEdit(task)} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-green-500 transition hover:bg-green-50 hover:text-green-600">
-                            <Pencil size={15} /> Edit
+                    <div className="flex w-full gap-2 sm:w-auto">
+                        <button
+                            type="button"
+                            onClick={() => onEdit(task)}
+                            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-green-500 transition hover:bg-green-50 hover:text-green-600 sm:flex-none"
+                        >
+                            <Pencil size={15} />
+                            Edit
                         </button>
 
-                        <button type="button" onClick={onClose} className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex flex-1 items-center justify-center rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 sm:flex-none"
+                        >
                             Close
                         </button>
                     </div>

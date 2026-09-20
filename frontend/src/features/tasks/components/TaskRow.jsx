@@ -8,31 +8,19 @@ import { formatDueDate } from "../../../shared/utils/dateUtils";
 import { STATUS, priorityLabels, statusLabels } from "../constants/taskOptions";
 
 function TaskRow({
-    title = "Untitled Task",
-    description = "",
-    status = STATUS.NOT_STARTED,
-    priority = 0,
-    dueDate = "",
-    dueTime = "",
-    tags = [],
-    onToggleComplete,
-    onStatusChange,
-    onEdit,
-    onDelete,
-    onView,
+    title = "Untitled Task", description = "", status = STATUS.NOT_STARTED,
+    priority = 0, dueDate = "", dueTime = "", tags = [],
+    onToggleComplete, onStatusChange, onEdit, onDelete, onView,
 }) {
     const [isStatusOpen, setIsStatusOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-
     const statusButtonRef = useRef(null);
     const statusMenuRef = useRef(null);
     const isCompleted = status === STATUS.COMPLETED;
 
     const statusOptions = Object.values(STATUS).map((value) => ({
-        value,
-        label: statusLabels[value] || value,
+        value, label: statusLabels[value] || value,
     }));
-
     const currentStatus =
         statusOptions.find((option) => option.value === status) || statusOptions[0];
 
@@ -46,11 +34,9 @@ function TaskRow({
 
     useLayoutEffect(() => {
         if (!isStatusOpen) return;
-
         updateMenuPosition();
         window.addEventListener("scroll", updateMenuPosition, true);
         window.addEventListener("resize", updateMenuPosition);
-
         return () => {
             window.removeEventListener("scroll", updateMenuPosition, true);
             window.removeEventListener("resize", updateMenuPosition);
@@ -59,22 +45,19 @@ function TaskRow({
 
     useEffect(() => {
         if (!isStatusOpen) return;
-
         const handleClickOutside = (event) => {
             if (
                 statusButtonRef.current?.contains(event.target) ||
                 statusMenuRef.current?.contains(event.target)
             ) return;
-
             setIsStatusOpen(false);
         };
-
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [isStatusOpen]);
 
     return (
-        <div className="group relative grid grid-cols-[minmax(0,2.5fr)_1fr_2fr_44px] items-center gap-4 px-4 py-4 transition-colors duration-150 hover:bg-slate-50/50">
+        <div className="group relative grid min-w-0 grid-cols-1 gap-3 px-4 py-4 transition-colors hover:bg-slate-50/50 sm:grid-cols-[minmax(0,2.5fr)_minmax(90px,1fr)_minmax(140px,2fr)_44px] sm:items-center sm:gap-4">
 
             {/* Task */}
             <div className="flex min-w-0 items-start gap-2.5">
@@ -91,18 +74,10 @@ function TaskRow({
                     {isCompleted && <Check size={9} strokeWidth={3} />}
                 </button>
 
-                <button
-                    type="button"
-                    onClick={onView}
-                    className="w-full min-w-0 text-left"
-                >
-                    <h3
-                        className={`truncate text-sm font-semibold ${
-                            isCompleted
-                                ? "text-slate-400 line-through"
-                                : "text-slate-800 hover:text-green-600"
-                        }`}
-                    >
+                <button type="button" onClick={onView} className="w-full min-w-0 text-left">
+                    <h3 className={`truncate text-sm font-semibold ${
+                        isCompleted ? "text-slate-400 line-through" : "text-slate-800 hover:text-green-600"
+                    }`}>
                         {title}
                     </h3>
 
@@ -117,9 +92,7 @@ function TaskRow({
                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
                         {priority > 0 && (
                             <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
-                                isCompleted
-                                    ? "bg-slate-100 text-slate-400"
-                                    : taskStyles.priority[priority]
+                                isCompleted ? "bg-slate-100 text-slate-400" : taskStyles.priority[priority]
                             }`}>
                                 {priorityLabels[priority]}
                             </span>
@@ -129,9 +102,7 @@ function TaskRow({
                             <span
                                 key={tag.tag_id}
                                 className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                                    isCompleted
-                                        ? "bg-slate-100 text-slate-400"
-                                        : getTagStyle(tag.tag_id)
+                                    isCompleted ? "bg-slate-100 text-slate-400" : getTagStyle(tag.tag_id)
                                 }`}
                             >
                                 {tag.tag_name}
@@ -143,12 +114,16 @@ function TaskRow({
 
             {/* Status */}
             <div className="relative min-w-0">
+                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-400 sm:hidden">
+                    Status
+                </span>
+
                 <button
                     ref={statusButtonRef}
                     type="button"
                     onClick={(event) => {
                         event.stopPropagation();
-                        setIsStatusOpen((previous) => !previous);
+                        setIsStatusOpen((prev) => !prev);
                     }}
                     aria-haspopup="listbox"
                     aria-expanded={isStatusOpen}
@@ -166,20 +141,14 @@ function TaskRow({
                     <ChevronDown
                         size={8}
                         strokeWidth={2}
-                        className={`transition-transform duration-200 ${
-                            isStatusOpen ? "rotate-180" : ""
-                        }`}
+                        className={`transition-transform duration-200 ${isStatusOpen ? "rotate-180" : ""}`}
                     />
                 </button>
 
                 {isStatusOpen && createPortal(
                     <div
                         ref={statusMenuRef}
-                        style={{
-                            position: "fixed",
-                            top: menuPosition.top,
-                            left: menuPosition.left,
-                        }}
+                        style={{ position: "fixed", top: menuPosition.top, left: menuPosition.left }}
                         className="z-[9999] min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
                     >
                         {statusOptions.map((option) => (
@@ -218,7 +187,7 @@ function TaskRow({
             </div>
 
             {/* Actions */}
-            <div className="sticky right-4 z-10 flex items-center justify-self-end bg-gradient-to-l from-white via-white pl-4 opacity-0 pointer-events-none transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100">
+            <div className="flex items-center justify-end sm:sticky sm:right-4 sm:z-10 sm:bg-gradient-to-l sm:from-white sm:via-white sm:pl-4 sm:opacity-0 sm:pointer-events-none sm:transition-all sm:duration-150 sm:group-hover:pointer-events-auto sm:group-hover:opacity-100">
                 <ActionButtons onEdit={onEdit} onDelete={onDelete} />
             </div>
         </div>
