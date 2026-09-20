@@ -9,11 +9,11 @@ function NotFound() {
                     404
                 </h1>
 
-                <h2 className="mt-4 text-2xl font-semibold text-slate-800">
+                <h2 className="mt-4 text-2xl font-semibold text-slate-800 dark:text-white">
                     Page not found
                 </h2>
 
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                     Sorry, the page you're looking for doesn't exist.
                 </p>
 

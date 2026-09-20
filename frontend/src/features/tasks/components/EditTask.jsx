@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
 
-import { PRIORITY, STATUS, DATE_TIME_FIELDS, EDIT_SELECT_FIELDS } from "../constants/taskOptions";
+import {
+    PRIORITY,
+    STATUS,
+    DATE_TIME_FIELDS,
+    EDIT_SELECT_FIELDS,
+} from "../constants/taskOptions";
 import { convertToInputDate, convertToInputTime } from "../../../shared/utils/dateUtils";
 import { validateTask, INFO_MAX_LENGTH, NAME_MAX_LENGTH } from "../../../shared/utils/validation";
 import { useTaskData } from "../context/TaskContext";
@@ -43,7 +48,9 @@ function EditTask({ task, isOpen, onClose, onSave }) {
         const overflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
 
-        return () => {document.body.style.overflow = overflow;};
+        return () => {
+            document.body.style.overflow = overflow;
+        };
     }, [isOpen]);
 
     if (!isOpen || !task) return null;
@@ -94,30 +101,30 @@ function EditTask({ task, isOpen, onClose, onSave }) {
     };
 
     const inputClass = (field) =>
-        `w-full rounded-lg border px-3 py-2.5 text-sm text-slate-500 placeholder:text-slate-400 outline-none transition ${
+        `w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-600 placeholder:text-slate-400 outline-none transition dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500 ${
             errors[field]
-                ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-green-100"
+                ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100 dark:border-red-800 dark:focus:border-red-600 dark:focus:ring-red-950"
+                : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-600 dark:focus:border-green-600 dark:focus:ring-green-950"
         }`;
 
     return (
         <div
-            className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-900/25 p-3 pt-7 sm:flex sm:items-center sm:justify-center sm:p-4"
+            className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-900/25 p-3 pt-7 dark:bg-black/50 sm:flex sm:items-center sm:justify-center sm:p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-task-title"
         >
-            <div className="mx-auto flex max-h-[calc(100dvh-2.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl sm:max-h-[85vh] sm:rounded-2xl">
-                <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-4 py-4 sm:px-6 sm:py-5">
+            <div className="mx-auto flex max-h-[calc(100dvh-2.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900 sm:max-h-[85vh] sm:rounded-2xl">
+                <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-4 py-4 dark:border-slate-700 sm:px-6 sm:py-5">
                     <div>
                         <h2
                             id="edit-task-title"
-                            className="text-lg font-semibold text-slate-800"
+                            className="text-lg font-semibold text-slate-800 dark:text-slate-100"
                         >
                             Edit Task
                         </h2>
 
-                        <p className="mt-1 text-[10px] leading-none text-slate-400">
+                        <p className="mt-1 text-[10px] leading-none text-slate-400 dark:text-slate-500">
                             Update your task details.
                         </p>
                     </div>
@@ -126,19 +133,16 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                         type="button"
                         onClick={onClose}
                         aria-label="Close"
-                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
+                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
                     >
                         <X size={18} />
                     </button>
                 </div>
 
-                <form
-                    onSubmit={handleSubmit}
-                    className="flex min-h-0 flex-1 flex-col"
-                >
+                <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
                     <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6">
                         <div>
-                            <label className="mb-2 block text-xs font-medium text-slate-600">
+                            <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-300">
                                 Title <span className="text-red-400">*</span>
                             </label>
 
@@ -153,21 +157,21 @@ function EditTask({ task, isOpen, onClose, onSave }) {
 
                             <div className="mt-1.5 flex justify-between">
                                 {errors.title ? (
-                                    <p className="text-xs text-red-500">
+                                    <p className="text-xs text-red-500 dark:text-red-400">
                                         {errors.title}
                                     </p>
                                 ) : (
                                     <span />
                                 )}
 
-                                <span className="text-[10px] leading-none text-slate-400">
+                                <span className="text-[10px] leading-none text-slate-400 dark:text-slate-500">
                                     {formData.title.length}/{NAME_MAX_LENGTH}
                                 </span>
                             </div>
                         </div>
 
                         <div>
-                            <label className="mb-2 block text-xs font-medium text-slate-600">
+                            <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-300">
                                 Description
                             </label>
 
@@ -182,14 +186,14 @@ function EditTask({ task, isOpen, onClose, onSave }) {
 
                             <div className="mt-1.5 flex justify-between">
                                 {errors.description ? (
-                                    <p className="text-xs text-red-500">
+                                    <p className="text-xs text-red-500 dark:text-red-400">
                                         {errors.description}
                                     </p>
                                 ) : (
                                     <span />
                                 )}
 
-                                <span className="text-[10px] leading-none text-slate-400">
+                                <span className="text-[10px] leading-none text-slate-400 dark:text-slate-500">
                                     {formData.description.length}/{INFO_MAX_LENGTH}
                                 </span>
                             </div>
@@ -198,9 +202,8 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                         <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             {DATE_TIME_FIELDS.map(([field, label, type]) => (
                                 <div key={field} className="min-w-0">
-                                    <label className="mb-2 block text-xs font-medium text-slate-600">
-                                        {label}{" "}
-                                        <span className="text-red-400">*</span>
+                                    <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-300">
+                                        {label} <span className="text-red-400">*</span>
                                     </label>
 
                                     <input
@@ -212,7 +215,7 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                                     />
 
                                     {errors[field] && (
-                                        <p className="mt-1.5 text-xs text-red-500">
+                                        <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">
                                             {errors[field]}
                                         </p>
                                     )}
@@ -221,66 +224,53 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                         </div>
 
                         <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                            {EDIT_SELECT_FIELDS.map(
-                                ([field, label, options]) => (
-                                    <div key={field} className="min-w-0">
-                                        <label className="mb-2 block text-xs font-medium text-slate-600">
-                                            {label}
-                                        </label>
+                            {EDIT_SELECT_FIELDS.map(([field, label, options]) => (
+                                <div key={field} className="min-w-0">
+                                    <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-300">
+                                        {label}
+                                    </label>
 
-                                        <div className="relative">
-                                            <select
-                                                name={field}
-                                                value={formData[field]}
-                                                onChange={handleChange}
-                                                className={`${inputClass(
-                                                    field
-                                                )} min-w-0 appearance-none pr-8 text-xs sm:text-sm`}
-                                            >
-                                                {options.map(
-                                                    ([value, text]) => (
-                                                        <option
-                                                            key={value}
-                                                            value={value}
-                                                        >
-                                                            {text}
-                                                        </option>
-                                                    )
-                                                )}
-                                            </select>
+                                    <div className="relative">
+                                        <select
+                                            name={field}
+                                            value={formData[field]}
+                                            onChange={handleChange}
+                                            className={`${inputClass(field)} min-w-0 appearance-none pr-8 text-xs sm:text-sm`}
+                                        >
+                                            {options.map(([value, text]) => (
+                                                <option key={value} value={value}>
+                                                    {text}
+                                                </option>
+                                            ))}
+                                        </select>
 
-                                            <ChevronDown
-                                                size={14}
-                                                className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"
-                                            />
-                                        </div>
+                                        <ChevronDown
+                                            size={14}
+                                            className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+                                        />
                                     </div>
-                                )
-                            )}
+                                </div>
+                            ))}
                         </div>
 
                         <div>
-                            <label className="mb-2 block text-xs font-medium text-slate-600">
+                            <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-300">
                                 Tags
                             </label>
 
                             <div className="flex min-h-[42px] flex-wrap content-start gap-1.5">
                                 {availableTags.map((tag) => {
-                                    const isSelected = formData.tags.includes(
-                                        tag.tag_id
-                                    );
+                                    const isSelected = formData.tags.includes(tag.tag_id);
 
                                     return (
                                         <button
                                             key={tag.tag_id}
                                             type="button"
-                                            onClick={() =>
-                                                handleTagToggle(tag.tag_id)
-                                            }
+                                            onClick={() => handleTagToggle(tag.tag_id)}
                                             className={`rounded-full border px-2.5 py-1.5 text-[11px] font-medium leading-none transition ${
                                                 isSelected
-                                                    ? "border-green-400 bg-green-50 text-green-700"
-                                                    : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                                                    ? "border-green-400 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950/50 dark:text-green-400"
+                                                    : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                                             }`}
                                         >
                                             {tag.tag_name}
@@ -291,11 +281,11 @@ function EditTask({ task, isOpen, onClose, onSave }) {
                         </div>
                     </div>
 
-                    <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-slate-100 bg-white px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
+                    <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-slate-100 bg-white px-4 py-4 dark:border-slate-700 dark:bg-slate-900 sm:flex-row sm:justify-end sm:px-6">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="w-full rounded-lg px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 sm:w-auto"
+                            className="w-full rounded-lg px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 sm:w-auto"
                         >
                             Cancel
                         </button>

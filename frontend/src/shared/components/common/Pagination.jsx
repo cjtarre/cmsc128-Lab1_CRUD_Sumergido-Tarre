@@ -14,7 +14,7 @@ function Pagination({
 
     return (
         <div className="mt-4 flex items-center justify-between gap-3">
-            <p className="min-w-0 truncate text-xs text-slate-400">
+            <p className="min-w-0 truncate text-xs text-slate-400 dark:text-slate-500">
                 <span className="sm:hidden">
                     {start}–{end} of {totalItems}
                 </span>
@@ -28,13 +28,13 @@ function Pagination({
                     type="button"
                     disabled={currentPage === 1}
                     onClick={() => onPageChange(currentPage - 1)}
-                    className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-400 dark:hover:bg-slate-800"
                     aria-label="Previous page"
                 >
                     <ChevronLeft size={16} />
                 </button>
 
-                <span className="px-2 text-xs font-medium text-slate-500 sm:hidden">
+                <span className="px-2 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
                     {currentPage} / {totalPages}
                 </span>
 
@@ -48,7 +48,7 @@ function Pagination({
                                 className={`h-8 w-8 rounded-lg text-xs font-medium transition ${
                                     currentPage === page
                                         ? "bg-green-500 text-white"
-                                        : "text-slate-500 hover:bg-slate-100"
+                                        : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                                 }`}
                             >
                                 {page}
@@ -61,7 +61,7 @@ function Pagination({
                     type="button"
                     disabled={currentPage === totalPages}
                     onClick={() => onPageChange(currentPage + 1)}
-                    className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-400 dark:hover:bg-slate-800"
                     aria-label="Next page"
                 >
                     <ChevronRight size={16} />

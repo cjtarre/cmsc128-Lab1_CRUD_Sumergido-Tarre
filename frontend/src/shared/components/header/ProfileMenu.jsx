@@ -2,8 +2,10 @@ import { Bell, LogOut, Settings, User } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../common/ConfirmDialog";
+import { useAuth } from "../../../features/auth/hooks/useAuth";
 
 function ProfileMenu() {
+    const { user, logout } = useAuth();
     const [open, setOpen] = useState(false);
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     const navigate = useNavigate();
@@ -13,9 +15,14 @@ function ProfileMenu() {
         setShowLogoutDialog(true);
     };
 
-    const handleConfirmLogout = () => {
+    const handleConfirmLogout = async () => {
         setShowLogoutDialog(false);
-        navigate("/");
+
+        try {
+            await logout();
+        } finally {
+            navigate("/", { replace: true });
+        }
     };
 
     return (
@@ -26,7 +33,7 @@ function ProfileMenu() {
                 aria-label="Open profile menu"
                 aria-expanded={open}
                 title="Profile"
-                className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-green-50 hover:text-green-600 focus:outline-none focus:ring-2 focus:ring-green-100"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-green-50 hover:text-green-600 focus:outline-none focus:ring-2 focus:ring-green-100 dark:text-slate-400 dark:hover:bg-green-950 dark:hover:text-green-400 dark:focus:ring-green-900"
             >
                 <User size={19} strokeWidth={1.8} />
             </button>
@@ -38,45 +45,56 @@ function ProfileMenu() {
                         onClick={() => setOpen(false)}
                     />
 
-                    <div className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
-                        <div className="border-b border-slate-100 px-4 py-3">
-                            <p className="text-sm font-semibold text-slate-800">Student</p>
-                            <p className="mt-0.5 text-xs text-slate-400">student@studyboard.com</p>
+                    <div className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                        <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-700">
+                            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                                {user?.display_name ||
+                                    user?.username ||
+                                    "User"}
+                            </p>
+
+                            <p className="mt-0.5 truncate text-xs text-slate-400 dark:text-slate-500">
+                                {user?.email || ""}
+                            </p>
                         </div>
 
                         <div className="p-1.5">
                             <Link
                                 to="/profile"
                                 onClick={() => setOpen(false)}
-                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-green-600"
+                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-green-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-green-400"
                             >
-                                <User size={16} /> Profile
+                                <User size={16} />
+                                Profile
                             </Link>
 
                             <Link
                                 to="/settings"
                                 onClick={() => setOpen(false)}
-                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-green-600"
+                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-green-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-green-400"
                             >
-                                <Settings size={16} /> Settings
+                                <Settings size={16} />
+                                Settings
                             </Link>
 
                             <Link
                                 to="/notifications"
                                 onClick={() => setOpen(false)}
-                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-green-600"
+                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-green-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-green-400"
                             >
-                                <Bell size={16} /> Notifications
+                                <Bell size={16} />
+                                Notifications
                             </Link>
                         </div>
 
-                        <div className="border-t border-slate-100 p-1.5">
+                        <div className="border-t border-slate-100 p-1.5 dark:border-slate-700">
                             <button
                                 type="button"
                                 onClick={handleLogoutClick}
-                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-red-500 transition hover:bg-red-50"
+                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-red-500 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
                             >
-                                <LogOut size={16} /> Logout
+                                <LogOut size={16} />
+                                Logout
                             </button>
                         </div>
                     </div>

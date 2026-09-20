@@ -1,16 +1,16 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 
 import calendarStyles from "../styles/calendarStyles";
 
 function CalendarWidget({ tasks = [] }) {
     const today = new Date();
-    const navigate = useNavigate();
 
     const [currentDate, setCurrentDate] = useState(
         new Date(today.getFullYear(), today.getMonth(), 1)
     );
+
     const [selectedDate, setSelectedDate] = useState(null);
 
     const year = currentDate.getFullYear();
@@ -30,15 +30,10 @@ function CalendarWidget({ tasks = [] }) {
         setSelectedDate(null);
     };
 
-    const isToday = (day) =>
-        day === today.getDate() &&
-        month === today.getMonth() &&
-        year === today.getFullYear();
+    const isToday = (day) =>day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
 
     const getTaskPriority = (day) => {
-        const date = `${String(day).padStart(2, "0")}/${String(
-            month + 1
-        ).padStart(2, "0")}/${year}`;
+        const date = `${String(day).padStart(2, "0")}/${String(  month + 1 ).padStart(2, "0")}/${year}`;
 
         const priorities = tasks
             .filter((task) => task.dueDate === date)
@@ -52,10 +47,10 @@ function CalendarWidget({ tasks = [] }) {
     };
 
     return (
-        <div className="w-full rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="w-full rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             {/* Header */}
             <div className="mb-5 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-slate-800">
+                <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
                     {monthName} {year}
                 </h2>
 
@@ -64,7 +59,7 @@ function CalendarWidget({ tasks = [] }) {
                         type="button"
                         onClick={() => changeMonth(-1)}
                         aria-label="Previous month"
-                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-green-100"
+                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-green-100 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 dark:focus:ring-green-900"
                     >
                         <ChevronLeft size={16} />
                     </button>
@@ -73,7 +68,7 @@ function CalendarWidget({ tasks = [] }) {
                         type="button"
                         onClick={() => changeMonth(1)}
                         aria-label="Next month"
-                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-green-100"
+                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-green-100 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 dark:focus:ring-green-900"
                     >
                         <ChevronRight size={16} />
                     </button>
@@ -81,7 +76,7 @@ function CalendarWidget({ tasks = [] }) {
             </div>
 
             {/* Weekdays */}
-            <div className="mb-2 grid grid-cols-7 text-center text-[10px] font-semibold text-slate-400">
+            <div className="mb-2 grid grid-cols-7 text-center text-[10px] font-semibold text-slate-400 dark:text-slate-500">
                 {weekdays.map((day) => (
                     <span key={day}>{day}</span>
                 ))}
@@ -105,23 +100,20 @@ function CalendarWidget({ tasks = [] }) {
                             type="button"
                             onClick={() => {
                                 setSelectedDate(day);
-                                navigate("/calendar");
                             }}
                             className={`relative flex h-9 w-full items-center justify-center rounded-lg text-xs transition ${
                                 todayDate
-                                    ? calendarStyles.today
+                                    ? `${calendarStyles.today} dark:bg-green-950/40`
                                     : selected
-                                    ? calendarStyles.selected
-                                    : calendarStyles.day
+                                    ? `${calendarStyles.selected} dark:bg-slate-800`
+                                    : `${calendarStyles.day} dark:text-slate-300 dark:hover:bg-slate-800`
                             }`}
                         >
                             {day}
 
                             {priority && (
                                 <span
-                                    className={`absolute bottom-1 h-1 w-1 rounded-full ${
-                                        calendarStyles.priorityDot[priority]
-                                    }`}
+                                    className={`absolute bottom-1 h-1 w-1 rounded-full ${calendarStyles.priorityDot[priority]}`}
                                 />
                             )}
                         </button>
@@ -130,7 +122,7 @@ function CalendarWidget({ tasks = [] }) {
             </div>
 
             {/* Legend */}
-            <div className="mt-5 flex items-center justify-center gap-4 border-t border-slate-100 pt-4">
+            <div className="mt-5 flex items-center justify-center gap-4 border-t border-slate-100 pt-4 dark:border-slate-700">
                 {[
                     ["low", "Low"],
                     ["medium", "Medium"],
@@ -143,7 +135,8 @@ function CalendarWidget({ tasks = [] }) {
                         <span
                             className={`h-2 w-2 rounded-full ${calendarStyles.priorityDot[priority]}`}
                         />
-                        <span className="text-[10px] text-slate-500">
+
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">
                             {label}
                         </span>
                     </div>
@@ -152,7 +145,7 @@ function CalendarWidget({ tasks = [] }) {
 
             <Link
                 to="/calendar"
-                className="mt-4 block w-full text-center text-xs font-medium text-green-600 transition hover:text-green-700"
+                className="mt-4 block w-full text-center text-xs font-medium text-green-600 transition hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
             >
                 View Calendar →
             </Link>

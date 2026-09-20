@@ -40,7 +40,7 @@ function Login({ embedded = false, onSwitchToSignup }) {
 
     const inputClass = embedded
         ? "w-full rounded-lg border border-white/15 bg-white/10 py-2.5 pl-10 pr-10 text-sm text-white placeholder:text-white/45 outline-none focus:border-white/40 focus:ring-2 focus:ring-white/10"
-        : "w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100";
+        : "w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-green-400 dark:focus:ring-green-900/50";
 
     const form = (
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -48,7 +48,9 @@ function Login({ embedded = false, onSwitchToSignup }) {
                 <label
                     htmlFor="login-email"
                     className={`text-sm font-medium ${
-                        embedded ? "text-white/80" : "text-slate-700"
+                        embedded
+                            ? "text-white/80"
+                            : "text-slate-700 dark:text-slate-200"
                     }`}
                 >
                     Email
@@ -58,7 +60,9 @@ function Login({ embedded = false, onSwitchToSignup }) {
                     <Mail
                         size={17}
                         className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                            embedded ? "text-white/45" : "text-slate-400"
+                            embedded
+                                ? "text-white/45"
+                                : "text-slate-400 dark:text-slate-500"
                         }`}
                     />
 
@@ -78,7 +82,9 @@ function Login({ embedded = false, onSwitchToSignup }) {
                 <label
                     htmlFor="login-password"
                     className={`text-sm font-medium ${
-                        embedded ? "text-white/80" : "text-slate-700"
+                        embedded
+                            ? "text-white/80"
+                            : "text-slate-700 dark:text-slate-200"
                     }`}
                 >
                     Password
@@ -88,7 +94,9 @@ function Login({ embedded = false, onSwitchToSignup }) {
                     <Lock
                         size={17}
                         className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                            embedded ? "text-white/45" : "text-slate-400"
+                            embedded
+                                ? "text-white/45"
+                                : "text-slate-400 dark:text-slate-500"
                         }`}
                     />
 
@@ -109,7 +117,7 @@ function Login({ embedded = false, onSwitchToSignup }) {
                         className={`absolute right-3 top-1/2 -translate-y-1/2 ${
                             embedded
                                 ? "text-white/45 hover:text-white"
-                                : "text-slate-400"
+                                : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                         }`}
                     >
                         {showPassword ? (
@@ -124,7 +132,9 @@ function Login({ embedded = false, onSwitchToSignup }) {
             {error && (
                 <p
                     className={`text-sm ${
-                        embedded ? "text-red-200" : "text-red-500"
+                        embedded
+                            ? "text-red-200"
+                            : "text-red-500 dark:text-red-400"
                     }`}
                 >
                     {error}
@@ -137,7 +147,7 @@ function Login({ embedded = false, onSwitchToSignup }) {
                     className={`text-xs font-medium ${
                         embedded
                             ? "text-green-300 hover:text-green-200"
-                            : "text-green-600 hover:text-green-700"
+                            : "text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
                     }`}
                 >
                     Forgot password?
@@ -162,9 +172,7 @@ function Login({ embedded = false, onSwitchToSignup }) {
                     <div className="mb-10 flex flex-col items-center text-center">
                         <div className="flex items-center gap-2 text-green-300">
                             <GraduationCap size={24} />
-                            <span className="font-bold text-white">
-                                Takda
-                            </span>
+                            <span className="font-bold text-white">Takda</span>
                         </div>
 
                         <h1 className="mt-10 text-3xl font-black tracking-tight text-white">
@@ -194,7 +202,7 @@ function Login({ embedded = false, onSwitchToSignup }) {
     }
 
     return (
-        <div className="min-h-screen bg-[#f5faf7] px-6 py-6">
+        <div className="min-h-screen bg-[#f5faf7] px-6 py-6 dark:bg-slate-950">
             <div className="mx-auto max-w-md">
                 <Link
                     to="/"
@@ -202,7 +210,9 @@ function Login({ embedded = false, onSwitchToSignup }) {
                     className="group flex h-10 w-10 items-center overflow-hidden
                         rounded-full border border-slate-200 bg-white px-3
                         text-slate-500 shadow-sm transition-all duration-300
-                        hover:w-32 hover:border-green-200 hover:text-green-600"
+                        hover:w-32 hover:border-green-200 hover:text-green-600
+                        dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400
+                        dark:hover:border-green-800 dark:hover:text-green-400"
                 >
                     <ChevronLeft
                         size={18}
@@ -222,27 +232,27 @@ function Login({ embedded = false, onSwitchToSignup }) {
                 <div className="flex min-h-[90vh] items-center">
                     <div className="w-full">
                         <div className="mb-10 text-center">
-                            <div className="flex items-center justify-center gap-2 text-green-500">
+                            <div className="flex items-center justify-center gap-2 text-green-500 dark:text-green-400">
                                 <GraduationCap size={24} />
                                 <span className="font-bold">Takda</span>
                             </div>
 
-                            <h1 className="mt-10 text-3xl font-black tracking-tight">
+                            <h1 className="mt-10 text-3xl font-black tracking-tight text-slate-800 dark:text-white">
                                 Welcome back
                             </h1>
 
-                            <p className="mt-3 text-sm leading-6 text-slate-500">
+                            <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
                                 Sign in to continue to Takda.
                             </p>
                         </div>
 
                         {form}
 
-                        <p className="mt-8 text-center text-sm text-slate-500">
+                        <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
                             Don't have an account?{" "}
                             <Link
                                 to="/signup"
-                                className="font-semibold text-green-600"
+                                className="font-semibold text-green-600 dark:text-green-400"
                             >
                                 Create one
                             </Link>

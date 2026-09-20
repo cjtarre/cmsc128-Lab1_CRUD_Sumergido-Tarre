@@ -7,18 +7,17 @@ function EmptyState({
     onAction,
 }) {
     return (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-30 text-center">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-30 text-center dark:border-slate-700 dark:bg-slate-900">
             {/* Icon */}
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-green-500">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-green-500 dark:bg-green-950/50 dark:text-green-400">
                 <ListTodo size={26} />
             </div>
 
-            {/* Text */}
-            <h2 className="mt-4 text-lg font-semibold text-slate-800">
+            <h2 className="mt-4 text-lg font-semibold text-slate-800 dark:text-slate-100">
                 {title}
             </h2>
 
-            <p className="mt-1 max-w-sm text-sm text-slate-500">
+            <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
                 {description}
             </p>
 

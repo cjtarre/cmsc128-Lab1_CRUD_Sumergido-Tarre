@@ -2,15 +2,17 @@ import { useState } from "react";
 import { Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
 import {
-    PRIORITY, priorityLabels,
-    STATUS, statusLabels,
+    PRIORITY,
+    priorityLabels,
+    STATUS,
+    statusLabels,
 } from "../constants/taskOptions";
 import { useTaskData } from "../context/TaskContext";
 
 function FilterGroup({ label, items, selected, onChange }) {
     return (
         <div>
-            <p className="mb-2 text-[9px] font-semibold uppercase tracking-wider text-slate-400">
+            <p className="mb-2 text-[9px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 {label}
             </p>
 
@@ -25,21 +27,23 @@ function FilterGroup({ label, items, selected, onChange }) {
                             onClick={() =>
                                 onChange(
                                     active
-                                        ? selected.filter((item) => item !== value)
+                                        ? selected.filter(
+                                              (item) => item !== value
+                                          )
                                         : [...selected, value]
                                 )
                             }
                             className={`flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-medium transition ${
                                 active
-                                    ? "border-green-200 bg-green-50 text-green-600"
-                                    : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                                    ? "border-green-200 bg-green-50 text-green-600 dark:border-green-800 dark:bg-green-950/50 dark:text-green-400"
+                                    : "border-slate-200 bg-white text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
                             }`}
                         >
                             <span
                                 className={`flex h-3 w-3 shrink-0 items-center justify-center rounded-[3px] border ${
                                     active
                                         ? "border-green-500 bg-green-500 text-white"
-                                        : "border-slate-300 bg-white"
+                                        : "border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800"
                                 }`}
                             >
                                 {active && <Check size={8} strokeWidth={3} />}
@@ -74,7 +78,8 @@ function FilterGroups({
             <FilterGroup
                 label="Priority"
                 items={Object.values(PRIORITY).map((value) => [
-                    value, priorityLabels[value],
+                    value,
+                    priorityLabels[value],
                 ])}
                 selected={priorityFilter}
                 onChange={onPriorityFilterChange}
@@ -83,7 +88,8 @@ function FilterGroups({
             <FilterGroup
                 label="Status"
                 items={Object.values(STATUS).map((value) => [
-                    value, statusLabels[value],
+                    value,
+                    statusLabels[value],
                 ])}
                 selected={statusFilter}
                 onChange={onStatusFilterChange}
@@ -92,7 +98,8 @@ function FilterGroups({
             <FilterGroup
                 label="Tags"
                 items={availableTags.map((tag) => [
-                    tag.tag_id, tag.tag_name,
+                    tag.tag_id,
+                    tag.tag_name,
                 ])}
                 selected={tagFilter}
                 onChange={onTagFilterChange}
@@ -137,20 +144,21 @@ function TaskFilterPanel({
     return (
         <>
             {/* Mobile / Tablet */}
-            <div className="relative w-auto rounded-xl border border-slate-200 bg-white shadow-sm xl:hidden">
+            <div className="relative w-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 xl:hidden">
                 <div className="flex h-10 items-center gap-1 px-1.5">
                     <div className="relative hidden min-w-0 flex-1 sm:block">
                         <Search
                             size={13}
-                            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
                         />
+
                         <input
                             type="search"
                             value={searchTerm || ""}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Search tasks..."
                             aria-label="Search tasks"
-                            className="h-8 w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-[10px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-green-300 focus:ring-2 focus:ring-green-50"
+                            className="h-8 w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-[10px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-green-300 focus:ring-2 focus:ring-green-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-green-600 dark:focus:ring-green-900/50"
                         />
                     </div>
 
@@ -160,8 +168,8 @@ function TaskFilterPanel({
                         aria-label="Search tasks"
                         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition sm:hidden ${
                             mobileSearchOpen || searchTerm
-                                ? "bg-green-50 text-green-600"
-                                : "text-slate-400 hover:bg-slate-50"
+                                ? "bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400"
+                                : "text-slate-400 hover:bg-slate-50 dark:text-slate-500 dark:hover:bg-slate-800"
                         }`}
                     >
                         <Search size={16} />
@@ -173,8 +181,8 @@ function TaskFilterPanel({
                         aria-label="Filter tasks"
                         className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
                             mobileFilterOpen || filterCount
-                                ? "bg-green-50 text-green-600"
-                                : "text-slate-400 hover:bg-slate-50"
+                                ? "bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400"
+                                : "text-slate-400 hover:bg-slate-50 dark:text-slate-500 dark:hover:bg-slate-800"
                         }`}
                     >
                         <SlidersHorizontal size={16} />
@@ -190,7 +198,7 @@ function TaskFilterPanel({
                         <button
                             type="button"
                             onClick={clearAll}
-                            className="px-1 text-[10px] font-medium text-slate-400 hover:text-green-600"
+                            className="px-1 text-[10px] font-medium text-slate-400 hover:text-green-600 dark:text-slate-500 dark:hover:text-green-400"
                         >
                             Clear
                         </button>
@@ -198,12 +206,13 @@ function TaskFilterPanel({
                 </div>
 
                 {mobileSearchOpen && (
-                    <div className="border-t border-slate-100 px-3 py-3 sm:hidden">
+                    <div className="border-t border-slate-100 px-3 py-3 dark:border-slate-700 sm:hidden">
                         <div className="relative">
                             <Search
                                 size={13}
-                                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
                             />
+
                             <input
                                 type="search"
                                 autoFocus
@@ -211,16 +220,16 @@ function TaskFilterPanel({
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Search tasks..."
                                 aria-label="Search tasks"
-                                className="w-full rounded-md border border-slate-200 bg-white py-2 pl-8 pr-3 text-[10px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-green-300 focus:ring-2 focus:ring-green-50"
+                                className="w-full rounded-md border border-slate-200 bg-white py-2 pl-8 pr-3 text-[10px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-green-300 focus:ring-2 focus:ring-green-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-green-600 dark:focus:ring-green-900/50"
                             />
                         </div>
                     </div>
                 )}
 
                 {mobileFilterOpen && (
-                    <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-[280px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
-                        <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2.5">
-                            <span className="text-xs font-semibold text-slate-500">
+                    <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-[280px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                        <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2.5 dark:border-slate-700">
+                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-300">
                                 Filters
                             </span>
 
@@ -228,7 +237,7 @@ function TaskFilterPanel({
                                 type="button"
                                 onClick={() => setMobileFilterOpen(false)}
                                 aria-label="Close filters"
-                                className="rounded-md p-1 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
+                                className="rounded-md p-1 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
                             >
                                 <X size={14} />
                             </button>
@@ -242,14 +251,14 @@ function TaskFilterPanel({
             </div>
 
             {/* Desktop */}
-            <div className="relative hidden rounded-xl border border-slate-200 bg-white shadow-sm xl:block">
+            <div className="relative hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 xl:block">
                 <div className="flex items-center justify-between px-4 py-2.5">
                     <button
                         type="button"
                         onClick={() => setIsExpanded((prev) => !prev)}
                         className="flex flex-1 items-center gap-1.5 text-left"
                     >
-                        <span className="text-xs font-semibold text-slate-400">
+                        <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
                             Search & Filter
                         </span>
 
@@ -265,7 +274,7 @@ function TaskFilterPanel({
                             <button
                                 type="button"
                                 onClick={clearAll}
-                                className="text-[10px] font-medium text-slate-400 hover:text-green-600"
+                                className="text-[10px] font-medium text-slate-400 hover:text-green-600 dark:text-slate-500 dark:hover:text-green-400"
                             >
                                 Clear all
                             </button>
@@ -279,11 +288,11 @@ function TaskFilterPanel({
                                     ? "Collapse filters"
                                     : "Expand filters"
                             }
-                            className="rounded p-0.5 hover:bg-slate-50"
+                            className="rounded p-0.5 hover:bg-slate-50 dark:hover:bg-slate-800"
                         >
                             <ChevronDown
                                 size={14}
-                                className={`text-slate-400 transition-transform ${
+                                className={`text-slate-400 transition-transform dark:text-slate-500 ${
                                     isExpanded ? "rotate-180" : ""
                                 }`}
                             />
@@ -292,19 +301,20 @@ function TaskFilterPanel({
                 </div>
 
                 {isExpanded && (
-                    <div className="space-y-4 border-t border-slate-100 bg-slate-50/30 px-4 py-4">
+                    <div className="absolute left-0 right-0 top-full z-40 mt-2 space-y-4 rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-900">
                         <div className="relative">
                             <Search
                                 size={13}
-                                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
                             />
+
                             <input
                                 type="search"
                                 value={searchTerm || ""}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Search tasks..."
                                 aria-label="Search tasks"
-                                className="w-full rounded-md border border-slate-200 bg-white py-2 pl-8 pr-3 text-[10px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-green-300 focus:ring-2 focus:ring-green-50"
+                                className="w-full rounded-md border border-slate-200 bg-white py-2 pl-8 pr-3 text-[10px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-green-300 focus:ring-2 focus:ring-green-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-green-600 dark:focus:ring-green-900/50"
                             />
                         </div>
 

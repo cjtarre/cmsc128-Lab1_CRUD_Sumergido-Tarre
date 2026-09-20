@@ -1,5 +1,12 @@
 import { useState } from "react";
-import {ChevronLeft, Eye, EyeOff, GraduationCap, Lock, Mail,} from "lucide-react";
+import {
+    ChevronLeft,
+    Eye,
+    EyeOff,
+    GraduationCap,
+    Lock,
+    Mail,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import HoverText from "../../../shared/components/effects/HoverText";
 import { useAuth } from "../hooks/useAuth";
@@ -41,7 +48,7 @@ function Signup({ embedded = false, onSwitchToLogin }) {
 
     const inputClass = embedded
         ? "w-full rounded-lg border border-white/15 bg-white/10 py-2.5 pl-10 pr-10 text-sm text-white placeholder:text-white/45 outline-none focus:border-white/40 focus:ring-2 focus:ring-white/10"
-        : "w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100";
+        : "w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-green-400 dark:focus:ring-green-900/50";
 
     const form = (
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -49,7 +56,9 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                 <label
                     htmlFor="signup-email"
                     className={`text-sm font-medium ${
-                        embedded ? "text-white/80" : "text-slate-700"
+                        embedded
+                            ? "text-white/80"
+                            : "text-slate-700 dark:text-slate-200"
                     }`}
                 >
                     Email
@@ -59,7 +68,9 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                     <Mail
                         size={17}
                         className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                            embedded ? "text-white/45" : "text-slate-400"
+                            embedded
+                                ? "text-white/45"
+                                : "text-slate-400 dark:text-slate-500"
                         }`}
                     />
 
@@ -79,7 +90,9 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                 <label
                     htmlFor="signup-password"
                     className={`text-sm font-medium ${
-                        embedded ? "text-white/80" : "text-slate-700"
+                        embedded
+                            ? "text-white/80"
+                            : "text-slate-700 dark:text-slate-200"
                     }`}
                 >
                     Password
@@ -89,7 +102,9 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                     <Lock
                         size={17}
                         className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                            embedded ? "text-white/45" : "text-slate-400"
+                            embedded
+                                ? "text-white/45"
+                                : "text-slate-400 dark:text-slate-500"
                         }`}
                     />
 
@@ -110,7 +125,7 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                         className={`absolute right-3 top-1/2 -translate-y-1/2 ${
                             embedded
                                 ? "text-white/45 hover:text-white"
-                                : "text-slate-400"
+                                : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                         }`}
                     >
                         {showPassword ? (
@@ -126,7 +141,9 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                 <label
                     htmlFor="signup-confirm"
                     className={`text-sm font-medium ${
-                        embedded ? "text-white/80" : "text-slate-700"
+                        embedded
+                            ? "text-white/80"
+                            : "text-slate-700 dark:text-slate-200"
                     }`}
                 >
                     Confirm password
@@ -136,7 +153,9 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                     <Lock
                         size={17}
                         className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                            embedded ? "text-white/45" : "text-slate-400"
+                            embedded
+                                ? "text-white/45"
+                                : "text-slate-400 dark:text-slate-500"
                         }`}
                     />
 
@@ -159,7 +178,7 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                         className={`absolute right-3 top-1/2 -translate-y-1/2 ${
                             embedded
                                 ? "text-white/45 hover:text-white"
-                                : "text-slate-400"
+                                : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                         }`}
                     >
                         {showConfirmPassword ? (
@@ -174,7 +193,9 @@ function Signup({ embedded = false, onSwitchToLogin }) {
             {error && (
                 <p
                     className={`text-sm ${
-                        embedded ? "text-red-200" : "text-red-500"
+                        embedded
+                            ? "text-red-200"
+                            : "text-red-500 dark:text-red-400"
                     }`}
                 >
                     {error}
@@ -183,14 +204,20 @@ function Signup({ embedded = false, onSwitchToLogin }) {
 
             <p
                 className={`pt-1 text-xs leading-5 ${
-                    embedded ? "text-white/55" : "text-slate-500"
+                    embedded
+                        ? "text-white/55"
+                        : "text-slate-500 dark:text-slate-400"
                 }`}
             >
                 By creating an account, you agree to our{" "}
                 <Link
-                    to="/privacy" target="_blank" rel="nonopener nonreferrer"
+                    to="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className={`font-medium underline ${
-                        embedded ? "text-green-300" : "text-green-600"
+                        embedded
+                            ? "text-green-300"
+                            : "text-green-600 dark:text-green-400"
                     }`}
                 >
                     Privacy Policy
@@ -216,9 +243,7 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                     <div className="mb-8 flex flex-col items-center text-center">
                         <div className="flex items-center gap-2 text-green-300">
                             <GraduationCap size={24} />
-                            <span className="font-bold text-white">
-                                Takda
-                            </span>
+                            <span className="font-bold text-white">Takda</span>
                         </div>
 
                         <h1 className="mt-8 text-center text-3xl font-black tracking-tight text-white">
@@ -248,7 +273,7 @@ function Signup({ embedded = false, onSwitchToLogin }) {
     }
 
     return (
-        <div className="min-h-screen bg-[#f5faf7] px-6 py-6">
+        <div className="min-h-screen bg-[#f5faf7] px-6 py-6 dark:bg-slate-950">
             <div className="mx-auto max-w-md">
                 <Link
                     to="/"
@@ -256,7 +281,9 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                     className="group flex h-10 w-10 items-center overflow-hidden
                         rounded-full border border-slate-200 bg-white px-3
                         text-slate-500 shadow-sm transition-all duration-300
-                        hover:w-32 hover:border-green-200 hover:text-green-600"
+                        hover:w-32 hover:border-green-200 hover:text-green-600
+                        dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400
+                        dark:hover:border-green-800 dark:hover:text-green-400"
                 >
                     <ChevronLeft
                         size={18}
@@ -276,27 +303,27 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                 <div className="flex min-h-[90vh] items-center">
                     <div className="w-full">
                         <div className="mb-10 text-center">
-                            <div className="flex items-center justify-center gap-2 text-green-500">
+                            <div className="flex items-center justify-center gap-2 text-green-500 dark:text-green-400">
                                 <GraduationCap size={24} />
                                 <span className="font-bold">Takda</span>
                             </div>
 
-                            <h1 className="mt-10 text-3xl font-black tracking-tight">
+                            <h1 className="mt-10 text-3xl font-black tracking-tight text-slate-800 dark:text-white">
                                 Create your account
                             </h1>
 
-                            <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-6 text-slate-500">
+                            <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-6 text-slate-500 dark:text-slate-400">
                                 Start organizing your schoolwork with Takda.
                             </p>
                         </div>
 
                         {form}
 
-                        <p className="mt-8 text-center text-sm text-slate-500">
+                        <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
                             Already have an account?{" "}
                             <Link
                                 to="/login"
-                                className="font-semibold text-green-600"
+                                className="font-semibold text-green-600 dark:text-green-400"
                             >
                                 Sign in
                             </Link>

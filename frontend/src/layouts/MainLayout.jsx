@@ -5,7 +5,7 @@ import MobileNavbar from "../shared/components/navigation/MobileNavBar";
 
 function MainLayout() {
     return (
-        <div className="flex min-h-dvh flex-col bg-[#f5faf7]">
+        <div className="flex min-h-dvh flex-col bg-[#f5faf7] dark:bg-slate-950">
             <Header />
 
             <div className="flex flex-1">

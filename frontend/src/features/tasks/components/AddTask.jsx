@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
 
 import { PRIORITY } from "../constants/taskOptions";
-import { validateTask, INFO_MAX_LENGTH, NAME_MAX_LENGTH } from "../../../shared/utils/validation";
+import {
+    validateTask,
+    INFO_MAX_LENGTH,
+    NAME_MAX_LENGTH,
+} from "../../../shared/utils/validation";
 import { useTaskData } from "../context/TaskContext";
 
 const initialFormData = {
@@ -77,10 +81,10 @@ function AddTask({ isOpen, onClose, onSubmit }) {
     };
 
     const inputClass = (field) =>
-        `w-full rounded-lg border px-3 py-2.5 text-sm text-slate-500 placeholder:text-slate-400 outline-none transition ${
+        `w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 outline-none transition dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500 ${
             errors[field]
-                ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-green-100"
+                ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100 dark:border-red-700 dark:focus:border-red-500 dark:focus:ring-red-950/50"
+                : "border-slate-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:focus:border-green-600 dark:focus:ring-green-950/50"
         }`;
 
     const dateTimeFields = [
@@ -96,14 +100,14 @@ function AddTask({ isOpen, onClose, onSubmit }) {
     ];
 
     return (
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-900/25 p-3 pt-7 sm:flex sm:items-center sm:justify-center sm:p-4">
-            <div className="mx-auto flex max-h-[calc(100dvh-2.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl sm:max-h-[85vh] sm:rounded-2xl">
-                <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-4 py-4 sm:px-6 sm:py-5">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-900/25 p-3 pt-7 dark:bg-slate-950/60 sm:flex sm:items-center sm:justify-center sm:p-4">
+            <div className="mx-auto flex max-h-[calc(100dvh-2.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900 sm:max-h-[85vh] sm:rounded-2xl">
+                <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-4 py-4 dark:border-slate-700 sm:px-6 sm:py-5">
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-800">
+                        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                             Add Task
                         </h2>
-                        <p className="mt-1 text-[10px] leading-none text-slate-400">
+                        <p className="mt-1 text-[10px] leading-none text-slate-400 dark:text-slate-500">
                             Create a new task.
                         </p>
                     </div>
@@ -112,7 +116,7 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                         type="button"
                         onClick={handleClose}
                         aria-label="Close"
-                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
+                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                     >
                         <X size={18} />
                     </button>
@@ -124,7 +128,7 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                 >
                     <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6">
                         <div>
-                            <label className="mb-2 block text-xs font-medium text-slate-600">
+                            <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-300">
                                 Title <span className="text-red-400">*</span>
                             </label>
 
@@ -139,21 +143,21 @@ function AddTask({ isOpen, onClose, onSubmit }) {
 
                             <div className="mt-1.5 flex justify-between">
                                 {errors.title ? (
-                                    <p className="text-xs text-red-500">
+                                    <p className="text-xs text-red-500 dark:text-red-400">
                                         {errors.title}
                                     </p>
                                 ) : (
                                     <span />
                                 )}
 
-                                <span className="text-[10px] leading-none text-slate-400">
+                                <span className="text-[10px] leading-none text-slate-400 dark:text-slate-500">
                                     {formData.title.length}/{NAME_MAX_LENGTH}
                                 </span>
                             </div>
                         </div>
 
                         <div>
-                            <label className="mb-2 block text-xs font-medium text-slate-600">
+                            <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-300">
                                 Description
                             </label>
 
@@ -168,14 +172,14 @@ function AddTask({ isOpen, onClose, onSubmit }) {
 
                             <div className="mt-1.5 flex justify-between">
                                 {errors.description ? (
-                                    <p className="text-xs text-red-500">
+                                    <p className="text-xs text-red-500 dark:text-red-400">
                                         {errors.description}
                                     </p>
                                 ) : (
                                     <span />
                                 )}
 
-                                <span className="text-[10px] leading-none text-slate-400">
+                                <span className="text-[10px] leading-none text-slate-400 dark:text-slate-500">
                                     {formData.description.length}/{INFO_MAX_LENGTH}
                                 </span>
                             </div>
@@ -184,7 +188,7 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                         <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             {dateTimeFields.map(([field, label, type]) => (
                                 <div key={field} className="min-w-0">
-                                    <label className="mb-2 block text-xs font-medium text-slate-600">
+                                    <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-300">
                                         {label}{" "}
                                         <span className="text-red-400">*</span>
                                     </label>
@@ -198,7 +202,7 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                                     />
 
                                     {errors[field] && (
-                                        <p className="mt-1.5 text-xs text-red-500">
+                                        <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">
                                             {errors[field]}
                                         </p>
                                     )}
@@ -208,7 +212,7 @@ function AddTask({ isOpen, onClose, onSubmit }) {
 
                         <div className="grid grid-cols-[minmax(90px,1fr)_minmax(0,2fr)] gap-3 sm:gap-4">
                             <div className="min-w-0">
-                                <label className="mb-2 block text-xs font-medium text-slate-600">
+                                <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-300">
                                     Priority
                                 </label>
 
@@ -228,13 +232,13 @@ function AddTask({ isOpen, onClose, onSubmit }) {
 
                                     <ChevronDown
                                         size={14}
-                                        className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                                        className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
                                     />
                                 </div>
                             </div>
 
                             <div className="min-w-0">
-                                <label className="mb-2 block text-xs font-medium text-slate-600">
+                                <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-300">
                                     Tags
                                 </label>
 
@@ -253,8 +257,8 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                                                 }
                                                 className={`rounded-full border px-2.5 py-1.5 text-[11px] font-medium leading-none transition ${
                                                     selected
-                                                        ? "border-green-400 bg-green-50 text-green-700"
-                                                        : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                                                        ? "border-green-400 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950/50 dark:text-green-400"
+                                                        : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                                                 }`}
                                             >
                                                 {tag.tag_name}
@@ -266,11 +270,11 @@ function AddTask({ isOpen, onClose, onSubmit }) {
                         </div>
                     </div>
 
-                    <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-slate-100 bg-white px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
+                    <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-slate-100 bg-white px-4 py-4 dark:border-slate-700 dark:bg-slate-900 sm:flex-row sm:justify-end sm:px-6">
                         <button
                             type="button"
                             onClick={handleClose}
-                            className="w-full rounded-lg px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 sm:w-auto"
+                            className="w-full rounded-lg px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 sm:w-auto"
                         >
                             Cancel
                         </button>
