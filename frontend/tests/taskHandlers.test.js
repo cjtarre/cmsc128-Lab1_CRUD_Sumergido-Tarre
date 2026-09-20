@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTaskHandlers } from "./taskHandlers";
-import { STATUS } from "../constants/taskOptions";
+import { createTaskHandlers } from "../src/features/tasks/handlers/taskHandlers";
+import { STATUS } from "../src/features/tasks/constants/taskOptions";
 
 vi.mock("sonner", () => {
     const toast = vi.fn();
