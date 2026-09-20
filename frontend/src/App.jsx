@@ -1,13 +1,16 @@
 import AppRoutes from "./routes/AppRoutes";
 import AppToaster from "./shared/components/common/AppToaster";
-import { TaskProvider } from "./shared/context/TaskContext";
+import { TaskProvider } from "./features/tasks/context/TaskContext";
+import { AuthProvider } from "./features/auth/context/AuthContext";
 
 function App() {
     return (
-        <TaskProvider>
-            <AppRoutes />
-            <AppToaster />
-        </TaskProvider>
+        <AuthProvider>
+            <TaskProvider>
+                <AppRoutes />
+                <AppToaster />
+            </TaskProvider>
+        </AuthProvider>
     );
 }
 
