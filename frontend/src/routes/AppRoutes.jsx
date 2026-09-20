@@ -3,9 +3,9 @@ import MainLayout from "../layouts/MainLayout";
 //import ProtectedRoute from "./ProtectedRoute";
 
 import LandingPage from "../pages/LandingPage";
-import Profile from "../pages/Profile";
+import Profile from "../features/profile/pages/Profile";
 import Settings from "../pages/Settings";
-import Notifications from "../pages/Notifications";
+import Notifications from "../features/notifications/pages/Notifications";
 import NotFound from "../pages/NotFound";
 import About from "../pages/About";
 import PrivacyPolicy from "../pages/PrivacyPolicy";

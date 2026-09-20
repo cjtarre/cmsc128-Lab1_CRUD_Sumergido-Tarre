@@ -23,7 +23,6 @@ function TaskRow({
 }) {
     const [isStatusOpen, setIsStatusOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-
     const statusButtonRef = useRef(null);
     const statusMenuRef = useRef(null);
     const isCompleted = status === STATUS.COMPLETED;
@@ -34,10 +33,12 @@ function TaskRow({
     }));
 
     const currentStatus =
-        statusOptions.find((option) => option.value === status) || statusOptions[0];
+        statusOptions.find((option) => option.value === status) ||
+        statusOptions[0];
 
     const getTagStyle = (id) =>
-        taskStyles.tag[Number(id)] || "bg-slate-100 text-slate-500";
+        taskStyles.tag[Number(id)] ||
+        "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400";
 
     const updateMenuPosition = useCallback(() => {
         const rect = statusButtonRef.current?.getBoundingClientRect();
@@ -74,9 +75,7 @@ function TaskRow({
     }, [isStatusOpen]);
 
     return (
-        <div className="group relative grid grid-cols-[minmax(0,2.5fr)_1fr_2fr_44px] items-center gap-4 px-4 py-4 transition-colors duration-150 hover:bg-slate-50/50">
-
-            {/* Task */}
+        <div className="group relative grid min-w-0 grid-cols-1 gap-3 px-4 py-4 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/40 sm:grid-cols-[minmax(0,2.5fr)_minmax(90px,1fr)_minmax(140px,2fr)_44px] sm:items-center sm:gap-4">
             <div className="flex min-w-0 items-start gap-2.5">
                 <button
                     type="button"
@@ -85,42 +84,44 @@ function TaskRow({
                     className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition ${
                         isCompleted
                             ? "border-green-500 bg-green-500 text-white"
-                            : "border-slate-300 hover:border-green-400"
+                            : "border-slate-300 hover:border-green-400 dark:border-slate-600"
                     }`}
                 >
                     {isCompleted && <Check size={9} strokeWidth={3} />}
                 </button>
 
-                <button
-                    type="button"
-                    onClick={onView}
-                    className="w-full min-w-0 text-left"
-                >
+                <button type="button" onClick={onView} className="w-full min-w-0 text-left">
                     <h3
                         className={`truncate text-sm font-semibold ${
                             isCompleted
-                                ? "text-slate-400 line-through"
-                                : "text-slate-800 hover:text-green-600"
+                                ? "text-slate-400 line-through dark:text-slate-500"
+                                : "text-slate-800 hover:text-green-600 dark:text-slate-100 dark:hover:text-green-400"
                         }`}
                     >
                         {title}
                     </h3>
 
                     {description && (
-                        <p className={`mt-1 truncate text-xs ${
-                            isCompleted ? "text-slate-300" : "text-slate-500"
-                        }`}>
+                        <p
+                            className={`mt-1 truncate text-xs ${
+                                isCompleted
+                                    ? "text-slate-300 dark:text-slate-600"
+                                    : "text-slate-500 dark:text-slate-400"
+                            }`}
+                        >
                             {description}
                         </p>
                     )}
 
                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
                         {priority > 0 && (
-                            <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
-                                isCompleted
-                                    ? "bg-slate-100 text-slate-400"
-                                    : taskStyles.priority[priority]
-                            }`}>
+                            <span
+                                className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                                    isCompleted
+                                        ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
+                                        : taskStyles.priority[priority]
+                                }`}
+                            >
                                 {priorityLabels[priority]}
                             </span>
                         )}
@@ -130,7 +131,7 @@ function TaskRow({
                                 key={tag.tag_id}
                                 className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
                                     isCompleted
-                                        ? "bg-slate-100 text-slate-400"
+                                        ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
                                         : getTagStyle(tag.tag_id)
                                 }`}
                             >
@@ -141,28 +142,32 @@ function TaskRow({
                 </button>
             </div>
 
-            {/* Status */}
             <div className="relative min-w-0">
+                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 sm:hidden">
+                    Status
+                </span>
+
                 <button
                     ref={statusButtonRef}
                     type="button"
                     onClick={(event) => {
                         event.stopPropagation();
-                        setIsStatusOpen((previous) => !previous);
+                        setIsStatusOpen((prev) => !prev);
                     }}
                     aria-haspopup="listbox"
                     aria-expanded={isStatusOpen}
                     aria-label={`Change status for ${title}`}
                     className={`flex w-full min-w-0 items-center gap-0.5 font-medium transition focus:outline-none ${
                         status === STATUS.COMPLETED
-                            ? "text-green-600"
+                            ? "text-green-600 dark:text-green-400"
                             : status === STATUS.IN_PROGRESS
-                            ? "text-amber-600"
-                            : "text-slate-500"
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-slate-500 dark:text-slate-400"
                     }`}
                     style={{ fontSize: "12px", lineHeight: "1" }}
                 >
                     <span className="truncate text-left">{currentStatus.label}</span>
+
                     <ChevronDown
                         size={8}
                         strokeWidth={2}
@@ -172,53 +177,57 @@ function TaskRow({
                     />
                 </button>
 
-                {isStatusOpen && createPortal(
-                    <div
-                        ref={statusMenuRef}
-                        style={{
-                            position: "fixed",
-                            top: menuPosition.top,
-                            left: menuPosition.left,
-                        }}
-                        className="z-[9999] min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
-                    >
-                        {statusOptions.map((option) => (
-                            <button
-                                key={option.value}
-                                type="button"
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    onStatusChange(option.value);
-                                    setIsStatusOpen(false);
-                                }}
-                                className={`block w-full rounded-md px-2 py-1 text-left font-medium transition ${
-                                    option.value === status
-                                        ? "bg-green-50 text-green-600"
-                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                                }`}
-                                style={{ fontSize: "12px", lineHeight: "1" }}
-                            >
-                                {option.label}
-                            </button>
-                        ))}
-                    </div>,
-                    document.body
-                )}
+                {isStatusOpen &&
+                    createPortal(
+                        <div
+                            ref={statusMenuRef}
+                            style={{
+                                position: "fixed",
+                                top: menuPosition.top,
+                                left: menuPosition.left,
+                            }}
+                            className="z-[9999] min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                        >
+                            {statusOptions.map((option) => (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        onStatusChange(option.value);
+                                        setIsStatusOpen(false);
+                                    }}
+                                    className={`block w-full rounded-md px-2 py-1 text-left font-medium transition ${
+                                        option.value === status
+                                            ? "bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400"
+                                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                    }`}
+                                    style={{ fontSize: "12px", lineHeight: "1" }}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>,
+                        document.body
+                    )}
             </div>
 
-            {/* Due Date */}
-            <div className={`flex min-w-0 items-start gap-1.5 text-xs ${
-                isCompleted ? "text-slate-300" : "text-slate-400"
-            }`}>
+            <div
+                className={`flex min-w-0 items-start gap-1.5 text-xs ${
+                    isCompleted
+                        ? "text-slate-300 dark:text-slate-600"
+                        : "text-slate-400 dark:text-slate-500"
+                }`}
+            >
                 <CalendarDays size={14} className="mt-0.5 shrink-0" />
+
                 <div className="min-w-0 truncate">
                     {dueDate ? formatDueDate(dueDate) : "No due date"}
                     {dueTime && ` - ${dueTime}`}
                 </div>
             </div>
 
-            {/* Actions */}
-            <div className="sticky right-4 z-10 flex items-center justify-self-end bg-gradient-to-l from-white via-white pl-4 opacity-0 pointer-events-none transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100">
+            <div className="flex items-center justify-end sm:sticky sm:right-4 sm:z-10 sm:bg-gradient-to-l sm:from-white sm:via-white sm:pl-4 sm:opacity-0 sm:pointer-events-none sm:transition-all sm:duration-150 sm:group-hover:pointer-events-auto sm:group-hover:opacity-100 dark:sm:bg-gradient-to-l dark:sm:from-slate-900 dark:sm:via-slate-900">
                 <ActionButtons onEdit={onEdit} onDelete={onDelete} />
             </div>
         </div>
