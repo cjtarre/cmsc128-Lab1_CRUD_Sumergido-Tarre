@@ -3,11 +3,7 @@ import { taskService } from "../services/taskService";
 
 const toApiTask = (task, includeTags = true) => {
     const [day, month, year] = (task.dueDate || "").split("/");
-
-    const dueDate =
-        day && month && year
-            ? `${year}-${month}-${day}T${task.dueTime || "00:00"}`
-            : null;
+    const dueDate = day && month && year ? `${year}-${month}-${day}T${task.dueTime || "00:00"}` : null;
 
     return {
         task_name: task.title?.trim() || "",
@@ -16,17 +12,13 @@ const toApiTask = (task, includeTags = true) => {
         status: task.status ?? STATUS.NOT_STARTED,
         due_date: dueDate,
 
-        ...(includeTags && {
-            tag_ids: (task.tags || []).map((tag) => typeof tag === "object" ? tag.tag_id : tag),
-        }),
+        ...(includeTags && { tag_ids: (task.tags || []).map((tag) => typeof tag === "object" ? tag.tag_id : tag),}),
     };
 };
 
 const convertApiTask = (task) => {
     const due = task.due_date ? new Date(task.due_date) : null;
-
-    const tags =
-        task.task_tag?.map((item) => item.tags).filter(Boolean) || [];
+    const tags = task.task_tag?.map((item) => item.tags).filter(Boolean) || [];
 
     return {
         id: task.task_id,
@@ -50,73 +42,47 @@ const convertApiTask = (task) => {
 
 function useTasks(tasks, setTasks) {
     const getTask = (id) => tasks.find((task) => task.id === id);
-
     const addTask = async (task) => {
         const created = await taskService.createTask(toApiTask(task));
 
-        setTasks((prev) => [
-            ...prev,
-            convertApiTask(created),
-        ]);
-
+        setTasks((prev) => [ ...prev, convertApiTask(created),]);
         return created;
     };
 
     const updateTask = async (task) => {
-        const updated = await taskService.updateTask(
-            task.id,
-            toApiTask(task)
-        );
+        const updated = await taskService.updateTask(task.id, toApiTask(task));
 
-        setTasks((prev) =>
-            prev.map((item) =>
-                item.id === task.id
-                    ? convertApiTask(updated)
-                    : item
-            )
-        );
-
+        setTasks((prev) => prev.map((item) => item.id === task.id ? convertApiTask(updated): item));
         return updated;
     };
 
     const deleteTask = async (id) => {
         await taskService.deleteTask(id);
-
-        setTasks((prev) =>
-            prev.filter((task) => task.id !== id)
-        );
+        setTasks((prev) => prev.filter((task) => task.id !== id));
     };
+
+
+    const restoreTask = async (id) => {
+        const restored = await taskService.restoreTask(id);
+        setTasks((prev) => [ ...prev, convertApiTask(restored),]);
+        return restored;
+    };
+
 
     const updateTaskStatus = async (id, status) => {
         const task = getTask(id);
-
         if (!task) return;
 
         // Status changes do not need to modify task tags.
-        const updated = await taskService.updateTask(id, {
-            ...toApiTask(task, false),
-            status,
-        });
-
-        setTasks((prev) =>
-            prev.map((item) =>
-                item.id === id
-                    ? convertApiTask(updated)
-                    : item
-            )
-        );
+        const updated = await taskService.updateTask(id, { ...toApiTask(task, false), status, });
+        setTasks((prev) => prev.map((item) => item.id === id ? convertApiTask(updated) : item));
     };
 
     const toggleTaskComplete = async (id) => {
         const task = getTask(id);
-
         if (!task) return;
 
-        const status =
-            task.status === STATUS.COMPLETED
-                ? STATUS.NOT_STARTED
-                : STATUS.COMPLETED;
-
+        const status = task.status === STATUS.COMPLETED ? STATUS.NOT_STARTED : STATUS.COMPLETED;
         await updateTaskStatus(id, status);
     };
 
@@ -125,6 +91,7 @@ function useTasks(tasks, setTasks) {
         addTask,
         updateTask,
         deleteTask,
+        restoreTask,
         updateTaskStatus,
         toggleTaskComplete,
     };

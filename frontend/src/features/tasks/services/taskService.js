@@ -19,5 +19,9 @@ export const taskService = {
     deleteTask: async (taskId) => {
         const response = await axios.delete(`${API_URL}/${taskId}`);
         return response.data;
-    }
+    },
+    restoreTask: async (taskId) => {
+        const response = await axios.patch(`${API_URL}/${taskId}/restore`);
+        return response.data;
+    },
 };

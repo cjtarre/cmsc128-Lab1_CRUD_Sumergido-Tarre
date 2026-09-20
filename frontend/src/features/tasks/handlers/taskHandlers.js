@@ -8,7 +8,7 @@ const formatDate = (date) => {
 };
 
 export function createTaskHandlers({
-    getTask, addTask, updateTask, deleteTask, updateTaskStatus, toggleTaskComplete,
+    getTask, addTask, updateTask, deleteTask, restoreTask, updateTaskStatus, toggleTaskComplete,
     setSelectedTask, setTaskToEdit, setTaskToDelete, setIsAddTaskOpen,
 }) {
     return {
@@ -93,14 +93,9 @@ export function createTaskHandlers({
 
         handleConfirmDelete: async (task) => {
             if (!task) return;
-
             try {
                 await deleteTask(task.id);
-
-                setSelectedTask((selected) =>
-                    selected?.id === task.id ? null : selected
-                );
-
+                setSelectedTask((selected) =>selected?.id === task.id ? null : selected);
                 setTaskToDelete(null);
 
                 let undoing = false;
@@ -114,7 +109,7 @@ export function createTaskHandlers({
                             undoing = true;
 
                             try {
-                                await addTask(task);
+                                await restoreTask(task.id);
                                 toast.success("Task restored!");
                             } catch (error) {
                                 console.error("Error restoring task:", error);
@@ -122,9 +117,7 @@ export function createTaskHandlers({
                             }
                         },
                     },
-                    classNames: {
-                        actionButton: "!bg-green-50 !text-green-600 hover:!bg-green-100",
-                    },
+                    classNames: {actionButton: "!bg-green-50 !text-green-600 hover:!bg-green-100",},
                     duration: 5000,
                 });
             } catch (error) {
