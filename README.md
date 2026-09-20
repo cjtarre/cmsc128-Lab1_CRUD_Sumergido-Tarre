@@ -10,7 +10,6 @@ The application uses a React frontend, an Express backend, and Supabase PostgreS
 
 ### Task Management
 * Add tasks with:
-
   * Title
   * Description
   * Due date and time
@@ -28,17 +27,32 @@ The application uses a React frontend, an Express backend, and Supabase PostgreS
 * Calendar view
 * Pagination
 * Persistent task data
+* Completed tasks remain visible and are visually distinguished
 
 ### Authentication
+* User registration
+* User login
+* Password visibility controls
+* Password confirmation during registration
+* Form validation and error feedback
+* Session persistence across page refreshes
+* Protected application routes
+* Logout with confirmation
+* Profile page
+* Account information display
+* Forgot password navigation
+* Privacy Policy
 
-- User registration interface
-- User login interface
-- Password visibility controls
-- Password confirmation during registration
-- Form validation and error feedback
-- Forgot password navigation
-- Privacy Policy
-- Authentication frontend prepared for backend integration
+### Notifications
+* View task-related notifications
+* Display task activity and relevant reminders through the Notifications page
+
+### Appearance
+* Light and dark themes
+* Persistent theme preference
+* Responsive layouts for desktop, tablet, and mobile devices
+* Desktop sidebar navigation
+* Mobile bottom navigation
 
 ---
 
@@ -69,8 +83,7 @@ The application uses a React frontend, an Express backend, and Supabase PostgreS
 ---
 
 ## Project Architecture
-
-Takda follows a frontend-backend architecture where the React frontend communicates with the Express backend through REST API endpoints. The backend handles application logic and communicates with Supabase for persistent data storage.
+Takda follows a frontend-backend architecture where the React frontend communicates with the Express backend through REST API endpoints. The backend handles application logic and communicates with Supabase for persistent data storage and authentication.
 
 ```mermaid
 flowchart TD
@@ -79,7 +92,7 @@ flowchart TD
     B --> C[Pages / Components]
     C --> D[Task Handlers]
 
-    D --> E[useTasks Hook]
+    D --> E[Task Context]
     E --> F[Task Services]
 
     F -->|HTTP Requests| G[Express Backend]
@@ -90,16 +103,16 @@ flowchart TD
     I --> J[Supabase]
     J --> K[(PostgreSQL Database)]
 
-    K --> L[tasks]
-    K --> M[tags]
-    K --> N[task_tag]
+    B --> L[Auth Context] 
+    L --> M[Auth Service] 
+    M --> G
 
-    B -.-> O[Task Context]
-    O -.-> C
+    K --> N[tasks] 
+    K --> O[tags] 
+    K --> P[task_tag]
 ```
 
 ### CRUD Data Flow
-
 ```text
 User
  ↓
@@ -107,7 +120,7 @@ React Component
  ↓
 Task Handler
  ↓
-useTasks Hook
+Task Context / useTasks
  ↓
 taskService.js
  ↓
@@ -120,6 +133,24 @@ Supabase
 PostgreSQL Database
 ```
 
+### Authentication Data Flow
+```text
+User
+  ↓
+Login / Signup
+  ↓
+React Auth Context
+  ↓
+authService.js
+  ↓
+Express Authentication Route
+  ↓
+Supabase Authentication
+  ↓
+Authentication Session
+  ↓
+Authenticated Use
+```
 ---
 
 ## Project Structure
@@ -145,12 +176,9 @@ cmsc128-Lab1_CRUD_Sumergido-Tarre/
 │   ├── src/
 │   │   ├── features/
 │   │   │   ├── auth/
-│   │   │   │   ├── components/
-│   │   │   │   ├── context/
-│   │   │   │   ├── hooks/
-│   │   │   │   ├── pages/
-│   │   │   │   └── services/
 │   │   │   ├── calendar/
+│   │   │   ├── notifications/
+│   │   │   ├── profile/
 │   │   │   └── tasks/
 │   │   │
 │   │   ├── layouts/
@@ -159,6 +187,7 @@ cmsc128-Lab1_CRUD_Sumergido-Tarre/
 │   │   └── shared/
 │   │       ├── components/
 │   │       ├── constants/
+│   │       ├── context/
 │   │       ├── services/
 │   │       └── utils/
 │   │
@@ -277,7 +306,6 @@ The database is hosted in Supabase and consists of three main tables:
 * **`task_tag`** – connects tasks and tags
 
 The `task_tag` table manages the **many-to-many relationship** between tasks and tags.
-
 ![A relational schema hosted in Supabase managing a many-to-many (M-M) relationship between tasks and tags.](database_erd.png)
 
 ### Main Task Fields
@@ -306,41 +334,51 @@ The `task_tag` table manages the **many-to-many relationship** between tasks and
 All CRUD operations communicate with the Express backend and Supabase database.
 
 ---
+---
+## Authentication
+Takda provides account authentication through the backend and Supabase authentication services.
+
+### Registration
+Users can create an account through the registration interface. The registration form includes password confirmation and validation feedback.
+
+### Login
+Users can log in using their account credentials. Successful authentication creates a session that is used to access protected application features.
+
+### Session Persistence
+
+
+### Protected Routes
+Authenticated application pages are protected through ProtectedRoute. Users without an authenticated session are redirected to the login page.
+
+Protected pages include:
+- Dashboard
+- Calendar
+- Notifications
+- Profile
+- Settings
+
+### Logout
+Users can log out through:
+
+* Desktop navigation
+* Profile menu
+* Profile page
+
+Each logout action uses a confirmation dialog before invalidating the session and returning the user to the public landing page.
+Passwords are not stored as plaintext by the application.
+---
 
 ## Expanded Features
 
-### Filter and Sort
+### Lab 1 - Task Organization
+Tasks can be searched, filtered by category, status, priority, and tag, and sorted by title, priority, due date, or date added. The Calendar View organizes tasks by due date, while the Undo option allows recently deleted tasks to be restored.
 
-Tasks can be filtered by:
-
-* Category
-* Status
-* Priority
-* Tag
-* Search term
-
-Tasks can also be sorted by:
-
-* Title
-* Priority
-* Due date
-* Date added
-
-### Calendar View
-
-The Calendar View displays tasks according to their due dates, allowing users to view scheduled tasks by date.
-
-### Additional Feature: Undo Delete
-
-After deleting a task, a temporary notification provides an **Undo** option that restores the deleted task.
+### Lab 2 - Task Organization
 
 ---
 
 ## Data Persistence
-
-Task data is stored in the Supabase PostgreSQL database rather than only in the browser.
-
-This allows task data to remain available after refreshing the page or restarting the frontend and backend servers.
+Task data is stored in the Supabase PostgreSQL database rather than only in the browser. This allows task data to remain available after refreshing the page or restarting the frontend and backend servers.
 
 ---
 
@@ -353,29 +391,22 @@ This allows task data to remain available after refreshing the page or restartin
 ![Takda Dashboard Empty State](screenshots/dashboard-empty-state.png)
 
 ### Add Task
-
 ![Add Task](screenshots/add-task.png)
 
 ### Edit Task
-
 ![Edit Task](screenshots/edit-task.png)
 
 ### Delete Confirmation
-
 ![Delete Confirmation](screenshots/delete-confirmation.png)
 
 ### Undo Delete
-
 ![Undo Delete](screenshots/undo-delete.png)
 
 ### Task Retrieval Update
-
 ![Task Retrieval Update](screenshots/task-retrieval-update.png)
 
 ### Calendar View
-
 ![Calendar Widget](screenshots/calendar-widget.png)
-
 ![Calendar View](screenshots/calendar-view.png)
 
 ---
@@ -407,7 +438,5 @@ Takda applies basic HCI principles through:
 ## Course Information
 
 **CMSC 128 – Software Engineering**
-
 **University of the Philippines Visayas**
-
 **1st Semester, AY 2026–2027**
