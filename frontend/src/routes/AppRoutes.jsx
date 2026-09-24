@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-//import ProtectedRoute from "./ProtectedRoute";
+import ProtectedRoute from "./ProtectedRoute";
+import { TaskProvider } from "../features/tasks/context/TaskContext";
 
 import LandingPage from "../pages/LandingPage";
 import Profile from "../features/profile/pages/Profile";
@@ -29,13 +30,19 @@ function AppRoutes() {
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
+                    <Route element={
+                        <ProtectedRoute>
+                            <TaskProvider></TaskProvider>
+                        </ProtectedRoute>
+                    }> 
 
-                    <Route element={<MainLayout />}>
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/calendar" element={<Calendar />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/settings" element={<Settings />} />
-                        <Route path="/notifications" element={<Notifications />}/>
+                        <Route element={<MainLayout />}>
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/calendar" element={<Calendar />} />
+                            <Route path="/profile" element={<Profile />} />
+                            <Route path="/settings" element={<Settings />} />
+                            <Route path="/notifications" element={<Notifications />}/>
+                        </Route>
                     </Route>
 
                     <Route path="*" element={<NotFound />} />

@@ -1,6 +1,6 @@
-import api from './api';
+import api from "../../../shared/services/api";
 
-const API_URL = '/api/tags';
+const API_URL = '/api/tasks';
 
 export const taskService = {
     getTasks: async () => {
