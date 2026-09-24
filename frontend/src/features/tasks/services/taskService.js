@@ -20,7 +20,7 @@ export const taskService = {
         return response.data;
     },
     restoreTask: async (taskId) => {
-        const response = await axios.patch(`${API_URL}/${taskId}/restore`);
+        const response = await api.patch(`${API_URL}/${taskId}/restore`);
         return response.data;
     },
 };
