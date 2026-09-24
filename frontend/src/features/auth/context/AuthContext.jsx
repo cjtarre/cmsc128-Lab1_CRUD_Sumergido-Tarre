@@ -35,7 +35,6 @@ export function AuthProvider({ children }) {
         localStorage.setItem("refreshToken", data.session.refresh_token);
 
         setUser(data.user);
-
         return data;
     };
 
@@ -60,7 +59,7 @@ export function AuthProvider({ children }) {
             value={{
                 user,
                 authLoading,
-                isAuthenticated: user !== null,
+                isAuthenticated: !!user,
                 login,
                 signup,
                 logout,
