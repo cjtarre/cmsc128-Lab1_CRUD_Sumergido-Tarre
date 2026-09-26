@@ -121,4 +121,61 @@ const refreshToken = async (req, res) => {
     }
 }
 
-module.exports = { requireAuth, signUpUser, logInUser, logOutUser, getCurrentUser, refreshToken };
+// Public — sends a recovery email. Always responds with the same generic
+// message so callers can't use this to discover which emails are registered.
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    const genericResponse = () =>
+        res.status(200).json({ message: 'If that email is registered, a reset link has been sent.' });
+
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${process.env.FRONTEND_URL}/reset-password`,
+        });
+        if (error) console.error('Error requesting password reset:', error);
+    } catch (error) {
+        console.error('Error requesting password reset:', error);
+    }
+
+    genericResponse();
+};
+
+// Public — completes the recovery flow using the access_token + refresh_token
+// the frontend pulled out of the emailed reset link. Not behind requireAuth:
+// the user isn't logged in yet, possession of those tokens IS the proof.
+const resetPassword = async (req, res) => {
+    try {
+        const { access_token, refresh_token, password } = req.body;
+        if (!access_token || !refresh_token || !password) {
+            return res.status(400).json({ error: 'access_token, refresh_token, and password are required' });
+        }
+
+        const requestClient = createClient(supabaseUrl, supabaseKey, {
+            auth: { persistSession: false },
+        });
+
+        const { error: setSessionError } = await requestClient.auth.setSession({ access_token, refresh_token });
+        if (setSessionError) throw setSessionError;
+
+        const { error: updateError } = await requestClient.auth.updateUser({ password });
+        if (updateError) throw updateError;
+
+        res.status(200).json({ message: 'Password reset successfully' });
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(400).json({ error: 'Invalid or expired reset link' });
+    }
+};
+
+module.exports = {
+    requireAuth,
+    signUpUser,
+    logInUser,
+    logOutUser,
+    getCurrentUser,
+    refreshToken,
+    forgotPassword,
+    resetPassword,
+};

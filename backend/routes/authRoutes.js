@@ -7,14 +7,19 @@ const {
     logOutUser, 
     signUpUser, 
     getCurrentUser, 
-    refreshToken 
+    refreshToken,
+    forgotPassword,
+    resetPassword,
 } = require('../controllers/authController');
+
+router.get('/me', requireAuth, getCurrentUser);
 
 router.post('/signup', signUpUser);
 router.post('/login', logInUser);
 router.post('/logout', logOutUser);
-router.get('/me', requireAuth, getCurrentUser);
 router.post('/refresh', refreshToken);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 router.get('/protected', requireAuth, (req, res) => {
     res.status(200).json({ message: 'Access granted to protected route', user: req.user });
