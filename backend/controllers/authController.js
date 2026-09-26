@@ -26,14 +26,22 @@ const requireAuth = async (req, res, next) => {
     }
 }
 
+// expects a username field during sign up. remove if you don't want to require it.
 const signUpUser = async (req, res) => {
     try {
         const { email, password } = req.body;
+        const { email, password, username } = req.body;
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password are required' });
         }
 
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { username },
+            },
+        });
         if (error) return res.status(400).json({ error: error.message });
 
         return res.status(201).json({ 
