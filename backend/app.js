@@ -11,6 +11,7 @@ const cors = require("cors");
 const taskRoutes = require("./routes/taskRoutes");
 const tagRoutes = require("./routes/tagRoutes");
 const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 // Middleware
 const app = express();
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/tags", tagRoutes);
+app.use("/api/user", userRoutes);
 
 // Define your local hosting port
 const PORT = process.env.PORT || 5000;
