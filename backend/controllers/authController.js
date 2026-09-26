@@ -1,4 +1,5 @@
-const supabase = require('../config/supabaseClient');
+const { supabase, supabaseUrl, supabaseKey } = require('../config/supabaseClient');
+const { createClient } = require('@supabase/supabase-js');
 
 const requireAuth = async (req, res, next) => {
     try {
@@ -73,19 +74,22 @@ const logOutUser = async (req, res) => {
 
         // Fresh, request-scoped client — never shared across requests
         const requestClient = createClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_ANON_KEY,
+            supabaseUrl,
+            supabaseKey,
             { auth: { persistSession: false } }
         );
 
-        await requestClient.auth.setSession({
+        const {error: setSessionError} = await requestClient.auth.setSession({
             access_token: token,
             refresh_token: req.body.refresh_token,
         });
-        await requestClient.auth.signOut();
-
+        if (setSessionError) throw setSessionError;
+        const { error: signOutError } = await requestClient.auth.signOut();
+        if (signOutError) throw signOutError;
         res.status(200).json({ message: 'User logged out successfully' });
+
     } catch (error) {
+        console.error('Error logging out user:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
@@ -98,7 +102,7 @@ const refreshToken = async (req, res) => {
         if (!refresh_token ) {
             return res.status(400).json({ error: 'Refresh token is required' });
         }
-        const { data, error } = await supabase.auth.refreshSession(refresh_token);
+        const { data, error } = await supabase.auth.refreshSession({ refresh_token });
         if (error) return res.status(400).json({ error: error.message });
 
         return res.status(200).json({ 

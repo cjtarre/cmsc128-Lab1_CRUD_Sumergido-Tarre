@@ -13,4 +13,4 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
     }
 });
 
-module.exports = supabase;
+module.exports = {supabase, supabaseUrl, supabaseKey};
