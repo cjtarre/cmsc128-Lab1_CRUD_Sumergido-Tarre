@@ -29,7 +29,6 @@ const requireAuth = async (req, res, next) => {
 // expects a username field during sign up. remove if you don't want to require it.
 const signUpUser = async (req, res) => {
     try {
-        const { email, password } = req.body;
         const { email, password, username } = req.body;
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password are required' });
