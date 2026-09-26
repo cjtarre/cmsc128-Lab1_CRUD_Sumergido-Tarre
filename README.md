@@ -40,7 +40,10 @@ The application uses a React frontend, an Express backend, and Supabase PostgreS
 * Logout with confirmation
 * Profile page
 * Account information display
-* Forgot password navigation
+* Update username
+* Change email address (with confirmation)
+* Change password
+* Forgot password / password recovery via email
 * Privacy Policy
 
 ### Notifications
@@ -151,6 +154,12 @@ Authentication Session
   ↓
 Authenticated Use
 ```
+
+The backend uses two Supabase clients depending on the operation:
+
+* **Anon-key client** (`config/supabaseClient.js`) — used for anything acting *as* a specific user (login, session refresh, logout, email/password changes). These respect Row Level Security.
+* **Service-role client** (`config/supabaseAdmin.js`) — used for task/tag writes and profile updates, where `requireAuth` has already verified identity and the controller enforces ownership in code (`req.user.id`) rather than relying on RLS.
+
 ---
 
 ## Project Structure
@@ -161,13 +170,18 @@ cmsc128-Lab1_CRUD_Sumergido-Tarre/
 │
 ├── backend/
 │   ├── config/
-│   │   └── supabaseClient.js
+│   │   ├── supabaseClient.js
+│   │   └── supabaseAdmin.js
 │   ├── controllers/
+│   │   ├── authController.js
 │   │   ├── taskController.js
-│   │   └── tagController.js
+│   │   ├── tagController.js
+│   │   └── userController.js
 │   ├── routes/
+│   │   ├── authRoutes.js
 │   │   ├── taskRoutes.js
-│   │   └── tagRoutes.js
+│   │   ├── tagRoutes.js
+│   │   └── userRoutes.js
 │   ├── app.js
 │   ├── package.json
 │   └── .env
@@ -209,14 +223,29 @@ cmsc128-Lab1_CRUD_Sumergido-Tarre/
 
 ### Preliminary
 
-Create a `.env` file in `/backend` with `SUPABASE_URL` and `SUPABASE_ANON_KEY` (or `SUPABASE_KEY`) to ensure that the backend can fetch data properly.
+Create a `.env` file in `/backend`:
 
 ```env
+PORT=5000
+FRONTEND_URL=http://localhost:5173
+
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
+* `SUPABASE_ANON_KEY` (or `SUPABASE_KEY`) — public-safe key; required for the backend to authenticate as a user and fetch data.
+* `SUPABASE_SERVICE_ROLE_KEY` — required for task/tag writes and profile updates, which bypass Row Level Security. **Never expose this key to the frontend or commit it to version control.**
+* `FRONTEND_URL` — used to build the password-reset link emailed by Supabase.
+
 Do not commit the actual `.env` file or expose your credentials.
+
+#### Supabase Dashboard configuration
+
+Two settings must also be configured directly in the Supabase Dashboard:
+
+* **Authentication → URL Configuration → Redirect URLs** — add `<FRONTEND_URL>/reset-password` and `<FRONTEND_URL>/verify-email`, or redirect links will be rejected.
+* **Authentication → Providers → Email → "Secure email change"** — controls whether an email change requires confirmation from both the old and new address, or just the new one.
 
 ### 1. Install Dependencies
 
@@ -260,6 +289,8 @@ The backend runs on:
 http://localhost:5000
 ```
 
+There is no `nodemon` configured — the server does not reload automatically on code or `.env` changes and must be restarted manually.
+
 ### 3. Start the Frontend
 
 From the `/frontend` directory:
@@ -280,20 +311,41 @@ Open the frontend URL in a browser to use Takda.
 
 ## API Endpoints
 
-### Tasks
+### Auth (`/api/auth`)
 
-| Method   | Endpoint              | Description        |
-| -------- | --------------------- | ------------------ |
-| `GET`    | `/api/tasks`          | Retrieve all tasks |
-| `POST`   | `/api/tasks`          | Create a task      |
-| `PUT`    | `/api/tasks/:task_id` | Update a task      |
-| `DELETE` | `/api/tasks/:task_id` | Delete a task      |
+| Method | Endpoint | Auth | Description |
+| ------ | -------- | ---- | ----------- |
+| `POST` | `/api/auth/signup` | — | Register a new account (`email`, `password`, optional `username`) |
+| `POST` | `/api/auth/login` | — | Log in and receive a session |
+| `POST` | `/api/auth/logout` | — | Invalidate the current session |
+| `POST` | `/api/auth/refresh` | — | Refresh an expired access token |
+| `GET` | `/api/auth/me` | Required | Retrieve the current authenticated user |
+| `POST` | `/api/auth/forgot-password` | — | Send a password reset email |
+| `POST` | `/api/auth/reset-password` | — | Complete a password reset using the tokens from the reset email |
 
-### Tags
+### Tasks (`/api/tasks`)
 
-| Method | Endpoint    | Description             |
-| ------ | ----------- | ----------------------- |
-| `GET`  | `/api/tags` | Retrieve available tags |
+| Method   | Endpoint              | Auth | Description        |
+| -------- | ---------------------- | ---- | ------------------ |
+| `GET`    | `/api/tasks`            | Required | Retrieve all tasks for the current user |
+| `POST`   | `/api/tasks`            | Required | Create a task      |
+| `PUT`    | `/api/tasks/:task_id`   | Required | Update a task      |
+| `DELETE` | `/api/tasks/:task_id`   | Required | Soft-delete a task |
+| `PATCH`  | `/api/tasks/:task_id/restore` | Required | Restore a soft-deleted task |
+
+### Tags (`/api/tags`)
+
+| Method | Endpoint    | Auth | Description             |
+| ------ | ----------- | ---- | ------------------------ |
+| `GET`  | `/api/tags` | Required | Retrieve available tags |
+
+### User (`/api/user`)
+
+| Method | Endpoint | Auth | Description |
+| ------ | -------- | ---- | ----------- |
+| `PATCH` | `/api/user/me` | Required | Update display name and/or username |
+| `PATCH` | `/api/user/me/email` | Required | Change email address (sends confirmation) |
+| `PATCH` | `/api/user/me/password` | Required | Change password |
 
 ---
 
@@ -316,27 +368,29 @@ The `task_tag` table manages the **many-to-many relationship** between tasks and
 | `task_name`      | Task title              |
 | `task_info`      | Task description        |
 | `priority_level` | Task priority           |
+| `user_id`        | UUID that owns the task |
 | `status`         | Current task status     |
 | `due_date`       | Task due date and time  |
 | `created_at`     | Task creation timestamp |
+| `deleted_at`     | Soft-delete timestamp; `null` when the task is active |
 
 ---
 
 ## CRUD Operations
 
-| Operation  | Description                         |
-| ---------- | ----------------------------------- |
-| **Create** | Adds a new task to the database     |
-| **Read**   | Retrieves and displays saved tasks  |
-| **Update** | Modifies task information or status |
-| **Delete** | Removes a task after confirmation   |
+| Operation  | Description                                    |
+| ---------- | ---------------------------------------------- |
+| **Create** | Adds a new entity entry to the database        |
+| **Read**   | Retrieves and displays requested entity info   |
+| **Update** | Modifies an existing entity in database        |
+| **Delete** | Soft-deletes a task after confirmation, with the option to restore it |
 
 All CRUD operations communicate with the Express backend and Supabase database.
 
 ---
 ---
 ## Authentication
-Takda provides account authentication through the backend and Supabase authentication services.
+Takda provides account authentication and account management through the backend and Supabase authentication services.
 
 ### Registration
 Users can create an account through the registration interface. The registration form includes password confirmation and validation feedback.
@@ -345,7 +399,7 @@ Users can create an account through the registration interface. The registration
 Users can log in using their account credentials. Successful authentication creates a session that is used to access protected application features.
 
 ### Session Persistence
-
+Takda uses a client-side, token-based session persistence. Doesn't use cookies and instead uses tokens generated upon user login, and saved in the device's `localStorage`. Validated and refreshed against the backend as needed and repopulates `user` state. Invalid/expired tokens will treat it as a logout, clearing both tokens from `localStorage` and revokes the session on the backend side. 
 
 ### Protected Routes
 Authenticated application pages are protected through ProtectedRoute. Users without an authenticated session are redirected to the login page.
@@ -366,6 +420,16 @@ Users can log out through:
 
 Each logout action uses a confirmation dialog before invalidating the session and returning the user to the public landing page.
 Passwords are not stored as plaintext by the application.
+
+### Profile Management
+Users can update their display name and username from the Profile page. Changes are saved to the user's account metadata.
+
+### Email and Password Changes
+Users can change their email address and password from account settings. Changing an email address triggers a confirmation step handled by Supabase before the change takes effect.
+
+### Forgot Password
+Users who cannot log in can request a password reset email from the login page. The email contains a link that allows the user to set a new password without needing their old one.
+
 ---
 
 ## Expanded Features
