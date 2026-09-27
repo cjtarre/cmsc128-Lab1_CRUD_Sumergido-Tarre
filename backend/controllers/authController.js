@@ -30,17 +30,21 @@ const requireAuth = async (req, res, next) => {
 const signUpUser = async (req, res) => {
     try {
         const { email, password, username } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
+        if (!email || !password || !username?.trim()) {
+            return res.status(400).json({ error: 'Email, password, and username are required' });
         }
 
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
-                data: { username },
+                data: {
+                    username: username.trim(),
+                    display_name: username.trim(),
+                },
             },
         });
+
         if (error) return res.status(400).json({ error: error.message });
 
         return res.status(201).json({ 

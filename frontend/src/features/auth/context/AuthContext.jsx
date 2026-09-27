@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState } from "react";
 import { authService } from "../services/authService";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -38,8 +39,8 @@ export function AuthProvider({ children }) {
         return data;
     };
 
-    const signup = async (email, password) => {
-        return authService.signup(email, password);
+    const signup = async (email, password, username) => {
+        return authService.signup(email, password, username);
     };
 
     const logout = async () => {

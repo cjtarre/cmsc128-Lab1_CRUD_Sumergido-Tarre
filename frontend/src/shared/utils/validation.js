@@ -31,3 +31,54 @@ export function validateTask(task) {
 
     return errors;
 }
+
+
+export const PASSWORD_MIN_LENGTH = 6;
+
+export function validateSignup({ username, email, password, confirmPassword }) {
+    const errors = {};
+
+    if (!username?.trim()) {
+        errors.username = "Display name is required.";
+        return errors;
+    }
+
+    if (username.trim().length > NAME_MAX_LENGTH) {
+        errors.username = `Display name must be ${NAME_MAX_LENGTH} characters or fewer.`;
+        return errors;
+    }
+
+    if (!email?.trim()) {
+        errors.email = "Email address is required.";
+        return errors;
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailPattern.test(email.trim())) {
+        errors.email = "Please enter a valid email address.";
+        return errors;
+    }
+
+    if (!password) {
+        errors.password = "Password is required.";
+        return errors;
+    }
+
+    if (password.length < PASSWORD_MIN_LENGTH) {
+        errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
+        return errors;
+    }
+
+    if (!confirmPassword) {
+        errors.confirmPassword = "Please confirm your password.";
+        return errors;
+    }
+
+    if (password !== confirmPassword) {
+        errors.confirmPassword = "Passwords do not match.";
+        return errors;
+    }
+
+    return errors;
+}

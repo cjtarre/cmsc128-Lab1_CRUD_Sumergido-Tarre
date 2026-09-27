@@ -3,12 +3,8 @@ import api from "../../../shared/services/api";
 const API_URL = '/api/auth';
 
 export const authService = {
-    signup: async (email, password) => {
-        const response = await api.post(`${API_URL}/signup`, {
-            email,
-            password,
-        });
-
+    signup: async (email, password, username) => {
+        const response = await api.post(`${API_URL}/signup`, { email, password, username });
         return response.data;
     },
 
