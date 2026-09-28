@@ -5,6 +5,7 @@ import { STATUS } from "../../tasks/constants/taskOptions";
 import taskStyles from "../../tasks/styles/taskStyles";
 
 function SelectedDayPanel({ date, tasks, onTaskClick }) {
+    // Format the selected date for display
     const dateLabel = date.toLocaleDateString("default", {
         month: "long",
         day: "numeric",
@@ -17,6 +18,7 @@ function SelectedDayPanel({ date, tasks, onTaskClick }) {
 
     return (
         <aside className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:rounded-2xl">
+            {/* Selected date header */}
             <div className="border-b border-slate-100 px-4 py-4 dark:border-slate-700 sm:px-5">
                 <div className="flex items-center gap-2">
                     <CalendarDays
@@ -36,6 +38,7 @@ function SelectedDayPanel({ date, tasks, onTaskClick }) {
                 </div>
             </div>
 
+            {/* Tasks scheduled for the selected date */}
             <div className="p-4 sm:p-5">
                 <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                     {tasks.length}{" "}
@@ -56,6 +59,7 @@ function SelectedDayPanel({ date, tasks, onTaskClick }) {
                                     className="w-full rounded-lg border border-slate-100 bg-slate-50/60 p-3 text-left transition hover:border-green-200 hover:bg-green-50/40 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-green-800 dark:hover:bg-green-950/30"
                                 >
                                     <div className="flex items-start gap-2.5">
+                                        {/* Completion indicator */}
                                         <span
                                             className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
                                                 isCompleted
@@ -71,6 +75,7 @@ function SelectedDayPanel({ date, tasks, onTaskClick }) {
                                             )}
                                         </span>
 
+                                        {/* Task information */}
                                         <div className="min-w-0 flex-1">
                                             <p
                                                 className={`truncate text-xs font-semibold ${
@@ -114,6 +119,7 @@ function SelectedDayPanel({ date, tasks, onTaskClick }) {
                         })}
                     </div>
                 ) : (
+                    /* Empty selected date */
                     <div className="py-6 text-center">
                         <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
                             No activities
