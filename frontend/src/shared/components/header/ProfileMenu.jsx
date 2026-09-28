@@ -1,6 +1,6 @@
 import { Bell, LogOut, Settings, User } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import ConfirmDialog from "../common/ConfirmDialog";
 import { useAuth } from "../../../features/auth/hooks/useAuth";
 
@@ -8,7 +8,6 @@ function ProfileMenu() {
     const { user, logout } = useAuth();
     const [open, setOpen] = useState(false);
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-    const navigate = useNavigate();
 
     const handleLogoutClick = () => {
         setOpen(false);
@@ -21,7 +20,7 @@ function ProfileMenu() {
         try {
             await logout();
         } finally {
-            navigate("/", { replace: true });
+            window.location.replace("/");
         }
     };
 

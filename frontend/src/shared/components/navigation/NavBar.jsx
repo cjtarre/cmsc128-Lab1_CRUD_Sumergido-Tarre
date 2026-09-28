@@ -6,7 +6,7 @@ import {
     LogOut,
 } from "lucide-react";
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAuth } from "../../../features/auth/hooks/useAuth";
 
 import ConfirmDialog from "../common/ConfirmDialog";
@@ -15,7 +15,6 @@ function Navbar() {
     const [collapsed, setCollapsed] = useState(true);
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
     const { logout } = useAuth();
-    const navigate = useNavigate();
 
     const navigationItems = [
         { to: "/dashboard", label: "Dashboard", icon: ListTodo },
@@ -28,7 +27,7 @@ function Navbar() {
         try {
             await logout();
         } finally {
-            navigate("/", { replace: true });
+            window.location.replace("/");
         }
     };
 
