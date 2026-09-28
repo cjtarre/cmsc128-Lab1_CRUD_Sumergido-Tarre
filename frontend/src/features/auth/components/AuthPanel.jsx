@@ -62,15 +62,7 @@ function AuthPanel({ isOpen, onClose }) {
                 <X size={18} />
             </button>
 
-            <div
-                className={`min-h-screen w-full overflow-y-auto
-                    transition-all duration-500
-                    ${
-                        isOpen
-                            ? "translate-y-0 opacity-100"
-                            : "translate-y-4 opacity-0"
-                    }`}
-            >
+            <div className={`h-screen w-full overflow-y-auto transition-all duration-500 ${isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}>
                 {isSignup ? (
                     <Signup
                         embedded
