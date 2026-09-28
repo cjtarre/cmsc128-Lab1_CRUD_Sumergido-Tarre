@@ -16,6 +16,8 @@ import Dashboard from "../features/tasks/pages/Dashboard";
 import Calendar from "../features/calendar/pages/Calendar";
 import Login from "../features/auth/pages/Login";
 import Signup from "../features/auth/pages/Signup";
+import ForgotPassword from "../features/auth/pages/ForgotPassword";
+import ResetPassword from "../features/auth/pages/ResetPassword";
 
 import { AnimatePresence } from "motion/react";
 import PageTransition from "../shared/components/effects/PageTransition";
@@ -42,6 +44,8 @@ function AppRoutes() {
 
                     <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
                     <Route path="/signup" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Signup />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
 
                     <Route
                         element={
