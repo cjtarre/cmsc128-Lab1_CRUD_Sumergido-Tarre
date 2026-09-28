@@ -109,7 +109,7 @@ function EditTask({ task, isOpen, onClose, onSave }) {
 
     return (
         <div
-            className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-900/25 p-3 pt-7 dark:bg-black/50 sm:flex sm:items-center sm:justify-center sm:p-4"
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-900/25 p-3 dark:bg-black/50 sm:p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-task-title"

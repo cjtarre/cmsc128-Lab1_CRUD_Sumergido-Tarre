@@ -50,10 +50,10 @@ export function filterTasks(
         if (filter === "completed") {
             return task.status === STATUS.COMPLETED;
         }
-
-        if (task.status === STATUS.COMPLETED) {
-            return false;
-        }
+        // un/comment to toggle inclusion of completed tasks from other filters
+        // if (task.status === STATUS.COMPLETED) {
+        //     return false;
+        // }
 
         if (filter === "all") {
             return true;

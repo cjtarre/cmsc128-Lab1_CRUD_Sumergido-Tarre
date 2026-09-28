@@ -25,6 +25,7 @@ function TaskRow({
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
     const statusButtonRef = useRef(null);
     const statusMenuRef = useRef(null);
+
     const isCompleted = status === STATUS.COMPLETED;
 
     const statusOptions = Object.values(STATUS).map((value) => ({
@@ -40,6 +41,7 @@ function TaskRow({
         taskStyles.tag[Number(id)] ||
         "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400";
 
+    // Keep status dropdown aligned with its trigger.
     const updateMenuPosition = useCallback(() => {
         const rect = statusButtonRef.current?.getBoundingClientRect();
         if (rect) setMenuPosition({ top: rect.bottom + 4, left: rect.left });
@@ -58,6 +60,7 @@ function TaskRow({
         };
     }, [isStatusOpen, updateMenuPosition]);
 
+    // Close status dropdown when clicking outside.
     useEffect(() => {
         if (!isStatusOpen) return;
 
@@ -75,24 +78,26 @@ function TaskRow({
     }, [isStatusOpen]);
 
     return (
-        <div className="group relative grid min-w-0 grid-cols-1 gap-3 px-4 py-4 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/40 sm:grid-cols-[minmax(0,2.5fr)_minmax(90px,1fr)_minmax(140px,2fr)_44px] sm:items-center sm:gap-4">
+        <div className="group relative grid min-w-0 grid-cols-1 gap-2 px-4 py-3.5 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/40 sm:grid-cols-[minmax(0,2.3fr)_minmax(110px,0.9fr)_minmax(180px,1.2fr)_44px] sm:items-center sm:gap-4 sm:py-4">
+
+            {/* Task */}
             <div className="flex min-w-0 items-start gap-2.5">
                 <button
                     type="button"
                     onClick={onToggleComplete}
                     aria-label={isCompleted ? "Mark as incomplete" : "Mark as complete"}
-                    className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition ${
+                    className={`mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border transition sm:h-4 sm:w-4 ${
                         isCompleted
                             ? "border-green-500 bg-green-500 text-white"
                             : "border-slate-300 hover:border-green-400 dark:border-slate-600"
                     }`}
                 >
-                    {isCompleted && <Check size={9} strokeWidth={3} />}
+                    {isCompleted && <Check size={8} strokeWidth={3} />}
                 </button>
 
                 <button type="button" onClick={onView} className="w-full min-w-0 text-left">
                     <h3
-                        className={`truncate text-sm font-semibold ${
+                        className={`truncate text-[13px] font-semibold sm:text-sm ${
                             isCompleted
                                 ? "text-slate-400 line-through dark:text-slate-500"
                                 : "text-slate-800 hover:text-green-600 dark:text-slate-100 dark:hover:text-green-400"
@@ -103,7 +108,7 @@ function TaskRow({
 
                     {description && (
                         <p
-                            className={`mt-1 truncate text-xs ${
+                            className={`mt-0.5 truncate text-[11px] sm:text-xs ${
                                 isCompleted
                                     ? "text-slate-300 dark:text-slate-600"
                                     : "text-slate-500 dark:text-slate-400"
@@ -113,10 +118,11 @@ function TaskRow({
                         </p>
                     )}
 
-                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    {/* Priority and tags */}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 sm:gap-2">
                         {priority > 0 && (
                             <span
-                                className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                                className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:text-[10px] ${
                                     isCompleted
                                         ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
                                         : taskStyles.priority[priority]
@@ -129,7 +135,7 @@ function TaskRow({
                         {tags.map((tag) => (
                             <span
                                 key={tag.tag_id}
-                                className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
+                                className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-medium sm:text-[10px] ${
                                     isCompleted
                                         ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
                                         : getTagStyle(tag.tag_id)
@@ -142,11 +148,11 @@ function TaskRow({
                 </button>
             </div>
 
-            <div className="relative min-w-0">
-                <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 sm:hidden">
-                    Status
-                </span>
+            {/* Mobile footer aligns with title/tags; desktop restores columns. */}
+            <div className="ml-6 flex min-w-0 items-center gap-2 sm:ml-0 sm:contents">
 
+            {/* Status */}
+            <div className="relative min-w-0 shrink-0">
                 <button
                     ref={statusButtonRef}
                     type="button"
@@ -157,7 +163,7 @@ function TaskRow({
                     aria-haspopup="listbox"
                     aria-expanded={isStatusOpen}
                     aria-label={`Change status for ${title}`}
-                    className={`flex w-full min-w-0 items-center gap-0.5 font-medium transition focus:outline-none ${
+                    className={`flex min-w-0 items-center gap-0.5 font-medium transition focus:outline-none ${
                         status === STATUS.COMPLETED
                             ? "text-green-600 dark:text-green-400"
                             : status === STATUS.IN_PROGRESS
@@ -166,69 +172,73 @@ function TaskRow({
                     }`}
                     style={{ fontSize: "12px", lineHeight: "1" }}
                 >
-                    <span className="truncate text-left">{currentStatus.label}</span>
+                    <span className="truncate">{currentStatus.label}</span>
 
                     <ChevronDown
                         size={8}
                         strokeWidth={2}
-                        className={`transition-transform duration-200 ${
+                        className={`transition-transform ${
                             isStatusOpen ? "rotate-180" : ""
                         }`}
                     />
                 </button>
-
-                {isStatusOpen &&
-                    createPortal(
-                        <div
-                            ref={statusMenuRef}
-                            style={{
-                                position: "fixed",
-                                top: menuPosition.top,
-                                left: menuPosition.left,
-                            }}
-                            className="z-[9999] min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
-                        >
-                            {statusOptions.map((option) => (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    onClick={(event) => {
-                                        event.stopPropagation();
-                                        onStatusChange(option.value);
-                                        setIsStatusOpen(false);
-                                    }}
-                                    className={`block w-full rounded-md px-2 py-1 text-left font-medium transition ${
-                                        option.value === status
-                                            ? "bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400"
-                                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                                    }`}
-                                    style={{ fontSize: "12px", lineHeight: "1" }}
-                                >
-                                    {option.label}
-                                </button>
-                            ))}
-                        </div>,
-                        document.body
-                    )}
-            </div>
-
-            <div
-                className={`flex min-w-0 items-start gap-1.5 text-xs ${
-                    isCompleted
-                        ? "text-slate-300 dark:text-slate-600"
-                        : "text-slate-400 dark:text-slate-500"
-                }`}
-            >
-                <CalendarDays size={14} className="mt-0.5 shrink-0" />
-
-                <div className="min-w-0 truncate">
-                    {dueDate ? formatDueDate(dueDate) : "No due date"}
-                    {dueTime && ` - ${dueTime}`}
+                
+                    {/* Status dropdown */}
+                    {isStatusOpen &&
+                        createPortal(
+                            <div
+                                ref={statusMenuRef}
+                                style={{
+                                    position: "fixed",
+                                    top: menuPosition.top,
+                                    left: menuPosition.left,
+                                }}
+                                className="z-[9999] min-w-[110px] overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                            >
+                                {statusOptions.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            onStatusChange(option.value);
+                                            setIsStatusOpen(false);
+                                        }}
+                                        className={`block w-full rounded-md px-2 py-1 text-left font-medium transition ${
+                                            option.value === status
+                                                ? "bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400"
+                                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                        }`}
+                                        style={{ fontSize: "12px", lineHeight: "1" }}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </div>,
+                            document.body
+                        )}
                 </div>
-            </div>
 
-            <div className="flex items-center justify-end sm:sticky sm:right-4 sm:z-10 sm:bg-gradient-to-l sm:from-white sm:via-white sm:pl-4 sm:opacity-0 sm:pointer-events-none sm:transition-all sm:duration-150 sm:group-hover:pointer-events-auto sm:group-hover:opacity-100 dark:sm:bg-gradient-to-l dark:sm:from-slate-900 dark:sm:via-slate-900">
-                <ActionButtons onEdit={onEdit} onDelete={onDelete} />
+                {/* Due date */}
+                <div
+                    className={`ml-auto flex min-w-0 items-center gap-1 whitespace-nowrap text-[10px] sm:ml-0 sm:gap-1.5 sm:text-xs ${
+                        isCompleted
+                            ? "text-slate-300 dark:text-slate-600"
+                            : "text-slate-500 dark:text-slate-400"
+                    }`}
+                >
+                    <CalendarDays size={12} className="shrink-0 sm:hidden" />
+                    <CalendarDays size={13} className="hidden shrink-0 sm:block" />
+                    <span className="truncate">
+                        {dueDate ? formatDueDate(dueDate) : "No due date"}
+                        {dueTime && ` · ${dueTime}`}
+                    </span>
+                </div>
+
+                {/* Mobile: visible. Desktop: reveal on hover. */}
+                <div className="flex shrink-0 items-center justify-end sm:sticky sm:right-4 sm:z-10 sm:bg-gradient-to-l sm:from-white sm:via-white sm:pl-4 sm:opacity-0 sm:pointer-events-none sm:transition-all sm:duration-150 sm:group-hover:pointer-events-auto sm:group-hover:opacity-100 dark:sm:bg-gradient-to-l dark:sm:from-slate-900 dark:sm:via-slate-900">
+                    <ActionButtons onEdit={onEdit} onDelete={onDelete} />
+                </div>
             </div>
         </div>
     );

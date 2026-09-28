@@ -1,0 +1,12 @@
+{
+    "name": "root",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "install": "concurrently \"cd backend && npm install\" \"cd frontend && npm install\"",
+        "takda": "concurrently \"cd backend && npm start\" \"cd frontend && npm run dev\""
+    },
+    "devDependencies": {
+        "concurrently": "^9.2.1"
+    }
+}

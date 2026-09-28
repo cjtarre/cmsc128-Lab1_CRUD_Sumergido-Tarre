@@ -17,21 +17,10 @@ export function createTaskHandlers({
 
         handleAddTaskSubmit: async (event, formData) => {
             event.preventDefault();
-
-            if (!formData.title.trim()) {
-                toast.error("Task title is required.");
-                return;
-            }
+            if (!formData.title.trim()) return toast.error("Task title is required.");
 
             try {
-                await addTask({
-                    ...formData,
-                    title: formData.title.trim(),
-                    description: formData.description.trim(),
-                    dueDate: formatDate(formData.dueDate),
-                    status: STATUS.NOT_STARTED,
-                });
-
+                await addTask({ ...formData, title: formData.title.trim(), description: formData.description.trim(), dueDate: formatDate(formData.dueDate), status: STATUS.NOT_STARTED });
                 setIsAddTaskOpen(false);
                 toast.success("Task added successfully!");
             } catch (error) {
@@ -42,30 +31,16 @@ export function createTaskHandlers({
 
         handleViewTask: (id) => setSelectedTask(getTask(id)),
         handleCloseTaskDetails: () => setSelectedTask(null),
-
         handleEditTask: (id) => setTaskToEdit(getTask(id)),
         handleCloseEditTask: () => setTaskToEdit(null),
 
         handleUpdateTask: async (task) => {
-            if (!task.title.trim()) {
-                toast.error("Task title is required.");
-                return;
-            }
+            if (!task.title.trim()) return toast.error("Task title is required.");
 
             try {
-                const updatedTask = {
-                    ...task,
-                    title: task.title.trim(),
-                    description: task.description.trim(),
-                    dueDate: formatDate(task.dueDate),
-                };
-
-                await updateTask(updatedTask);
-
-                setSelectedTask((selected) =>
-                    selected?.id === updatedTask.id ? updatedTask : selected
-                );
-
+                const updatedTask = { ...task, title: task.title.trim(), description: task.description.trim(), dueDate: formatDate(task.dueDate) };
+                const savedTask = await updateTask(updatedTask);
+                setSelectedTask((selected) => selected?.id === savedTask.id ? savedTask : selected);
                 setTaskToEdit(null);
                 toast.success("Task updated successfully!");
             } catch (error) {
@@ -77,11 +52,7 @@ export function createTaskHandlers({
         handleStatusChange: async (id, status) => {
             try {
                 await updateTaskStatus(id, status);
-
-                setSelectedTask((selected) =>
-                    selected?.id === id ? { ...selected, status } : selected
-                );
-
+                setSelectedTask((selected) => selected?.id === id ? { ...selected, status } : selected);
                 toast.success("Task status updated!");
             } catch (error) {
                 console.error("Error updating status:", error);
@@ -93,13 +64,13 @@ export function createTaskHandlers({
 
         handleConfirmDelete: async (task) => {
             if (!task) return;
+
             try {
                 await deleteTask(task.id);
-                setSelectedTask((selected) =>selected?.id === task.id ? null : selected);
+                setSelectedTask((selected) => selected?.id === task.id ? null : selected);
                 setTaskToDelete(null);
 
                 let undoing = false;
-
                 toast("Task deleted.", {
                     position: "top-center",
                     action: {
@@ -107,7 +78,6 @@ export function createTaskHandlers({
                         onClick: async () => {
                             if (undoing) return;
                             undoing = true;
-
                             try {
                                 await restoreTask(task.id);
                                 toast.success("Task restored!");
@@ -117,7 +87,7 @@ export function createTaskHandlers({
                             }
                         },
                     },
-                    classNames: {actionButton: "!bg-green-50 !text-green-600 hover:!bg-green-100",},
+                    classNames: { actionButton: "!bg-green-50 !text-green-600 hover:!bg-green-100" },
                     duration: 5000,
                 });
             } catch (error) {
@@ -133,14 +103,8 @@ export function createTaskHandlers({
                 await toggleTaskComplete(id);
                 toast.success("Task status updated!");
             } catch (error) {
-                console.error(
-                    "Error toggling task:",
-                    error.response?.data || error
-                );
-                toast.error(
-                    error.response?.data?.error ||
-                    "Failed to update task status."
-                );
+                console.error("Error toggling task:", error.response?.data || error);
+                toast.error(error.response?.data?.error || "Failed to update task status.");
             }
         },
     };

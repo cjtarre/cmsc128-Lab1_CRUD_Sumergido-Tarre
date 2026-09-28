@@ -11,7 +11,6 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         const restoreSession = async () => {
             const accessToken = localStorage.getItem("accessToken");
-
             if (!accessToken) { setAuthLoading(false); return; }
 
             try {
@@ -31,18 +30,27 @@ export function AuthProvider({ children }) {
 
     const login = async (email, password) => {
         const data = await authService.login(email, password);
-
         localStorage.setItem("accessToken", data.session.access_token);
         localStorage.setItem("refreshToken", data.session.refresh_token);
-
         setUser(data.user);
-
         return data;
     };
 
-    const signup = async (email, password) => {
-        return authService.signup(email, password);
+    const signup = async (email, password, username) => authService.signup(email, password, username);
+
+    const updateProfile = async (username) => {
+        const data = await authService.updateProfile(username);
+        setUser(data.user);
+        return data;
     };
+
+    const updateEmail = async (email) => {
+        const data = await authService.updateEmail(email);
+        if (data.user) setUser(data.user);
+        return data;
+    };
+
+    const updatePassword = async (password) => authService.updatePassword(password);
 
     const logout = async () => {
         const refreshToken = localStorage.getItem("refreshToken");
@@ -57,16 +65,7 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider
-            value={{
-                user,
-                authLoading,
-                isAuthenticated: user !== null,
-                login,
-                signup,
-                logout,
-            }}
-        >
+        <AuthContext.Provider value={{ user, authLoading, isAuthenticated: !!user, login, signup, logout, updateProfile, updateEmail, updatePassword }}>
             {children}
         </AuthContext.Provider>
     );
