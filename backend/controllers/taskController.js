@@ -190,7 +190,8 @@ const restoreTask = async (req, res) => {
             .update({
                 deleted_at: null
             })
-            .eq("task_id", task_id);
+            .eq("task_id", task_id)
+            .eq("user_id", req.user.id);
 
         if (error) throw error;
 
@@ -207,6 +208,7 @@ const restoreTask = async (req, res) => {
                 )
             `)
             .eq("task_id", task_id)
+            .eq("user_id", req.user.id)
             .single();
 
         if (fetchError) throw fetchError;
