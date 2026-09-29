@@ -16,14 +16,16 @@ import Dashboard from "../features/tasks/pages/Dashboard";
 import Calendar from "../features/calendar/pages/Calendar";
 import Login from "../features/auth/pages/Login";
 import Signup from "../features/auth/pages/Signup";
+import ForgotPassword from "../features/auth/pages/ForgotPassword";
+import ResetPassword from "../features/auth/pages/ResetPassword";
 
 import { AnimatePresence } from "motion/react";
 import PageTransition from "../shared/components/effects/PageTransition";
 
 function AppRoutes() {
     const location = useLocation();
-    const { user, isAuthenticated, authLoading } = useAuth();
-    
+    const { isAuthenticated, authLoading } = useAuth();
+
     if (authLoading) {
         return (
             <div className="flex min-h-screen items-center justify-center">
@@ -35,30 +37,30 @@ function AppRoutes() {
     return (
         <AnimatePresence mode="wait">
             <PageTransition key={location.pathname}>
-                <Routes location={location} >
-                    <Route element={
-                        user && isAuthenticated 
-                        ? <Navigate to="/dashboard" replace /> 
-                        : null}>
-                        <Route path="/" element={<LandingPage />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/signup" element={<Signup />} />
-                        <Route path="/about" element={<About />} />
-                        <Route path="/privacy" element={<PrivacyPolicy />} />
-                    </Route>
+                <Routes location={location}>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/privacy" element={<PrivacyPolicy />} />
 
-                    <Route element={
-                        <ProtectedRoute>
-                            <TaskProvider>
-                                <MainLayout />
-                            </TaskProvider>
-                        </ProtectedRoute>
-                    }> 
+                    <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+                    <Route path="/signup" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Signup />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+
+                    <Route
+                        element={
+                            <ProtectedRoute>
+                                <TaskProvider>
+                                    <MainLayout />
+                                </TaskProvider>
+                            </ProtectedRoute>
+                        }
+                    >
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/calendar" element={<Calendar />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/settings" element={<Settings />} />
-                        <Route path="/notifications" element={<Notifications />}/>
+                        <Route path="/notifications" element={<Notifications />} />
                     </Route>
 
                     <Route path="*" element={<NotFound />} />

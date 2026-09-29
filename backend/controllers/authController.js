@@ -4,71 +4,88 @@ const { createClient } = require('@supabase/supabase-js');
 const requireAuth = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
+
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({ error: 'Access token missing or invalid' });
         }
 
         const token = authHeader.split(' ')[1];
+
         if (!token) {
             return res.status(401).json({ error: 'Access token missing or invalid' });
         }
 
-        const { data: {user}, error } = await supabase.auth.getUser(token);
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+
         if (error || !user) {
             return res.status(401).json({ error: 'Access token missing or invalid' });
         }
 
         req.user = user;
         next();
-
     } catch (error) {
+        console.error('Error authenticating user:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
-}
+};
 
-// expects a username field during sign up. remove if you don't want to require it.
+// Expects a username field during sign up. Remove if you don't want to require it.
 const signUpUser = async (req, res) => {
     try {
         const { email, password, username } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
+
+        if (!email?.trim() || !password || !username?.trim()) {
+            return res.status(400).json({ error: 'Email, password, and username are required' });
         }
 
         const { data, error } = await supabase.auth.signUp({
-            email,
+            email: email.trim(),
             password,
             options: {
-                data: { username },
+                data: {
+                    username: username.trim(),
+                    display_name: username.trim(),
+                },
             },
         });
+
         if (error) return res.status(400).json({ error: error.message });
 
-        return res.status(201).json({ 
-            message: 'User signed up successfully', 
-            user: data.user });
+        return res.status(201).json({
+            message: 'User signed up successfully',
+            user: data.user,
+        });
     } catch (error) {
+        console.error('Error signing up user:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
-}
+};
 
 const logInUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-        if (!email || !password) {
+
+        if (!email?.trim() || !password) {
             return res.status(400).json({ error: 'Email and password are required' });
         }
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+        });
+
         if (error) return res.status(400).json({ error: error.message });
 
-        return res.status(200).json({ 
-            message: 'User signed in successfully', 
+        return res.status(200).json({
+            message: 'User signed in successfully',
             user: data.user,
-            session: data.session
+            session: data.session,
         });
     } catch (error) {
+        console.error('Error logging in user:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
-}
+};
 
 const logOutUser = async (req, res) => {
     try {
@@ -80,66 +97,92 @@ const logOutUser = async (req, res) => {
         }
 
         // Fresh, request-scoped client — never shared across requests
-        const requestClient = createClient(
-            supabaseUrl,
-            supabaseKey,
-            { auth: { persistSession: false } }
-        );
+        const requestClient = createClient(supabaseUrl, supabaseKey, {
+            auth: { persistSession: false },
+        });
 
-        const {error: setSessionError} = await requestClient.auth.setSession({
+        const { error: setSessionError } = await requestClient.auth.setSession({
             access_token: token,
             refresh_token: req.body.refresh_token,
         });
+
         if (setSessionError) throw setSessionError;
+
         const { error: signOutError } = await requestClient.auth.signOut();
         if (signOutError) throw signOutError;
-        res.status(200).json({ message: 'User logged out successfully' });
 
+        res.status(200).json({ message: 'User logged out successfully' });
     } catch (error) {
         console.error('Error logging out user:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
-const getCurrentUser = async (req, res) => { res.status(200).json({ user: req.user }); }
+const getCurrentUser = async (req, res) => {
+    res.status(200).json({ user: req.user });
+};
 
 const refreshToken = async (req, res) => {
     try {
         const { refresh_token } = req.body;
-        if (!refresh_token ) {
+
+        if (!refresh_token) {
             return res.status(400).json({ error: 'Refresh token is required' });
         }
+
         const { data, error } = await supabase.auth.refreshSession({ refresh_token });
         if (error) return res.status(400).json({ error: error.message });
 
-        return res.status(200).json({ 
-            message: 'Session refreshed successfully', 
-            session: data.session
+        return res.status(200).json({
+            message: 'Session refreshed successfully',
+            session: data.session,
         });
     } catch (error) {
+        console.error('Error refreshing session:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
-}
+};
 
-// Public — sends a recovery email. Always responds with the same generic
-// message so callers can't use this to discover which emails are registered.
+// Public — sends a recovery email. Uses a generic success message so callers
+// can't use this endpoint to discover which email addresses are registered.
 const forgotPassword = async (req, res) => {
-    const { email } = req.body;
-    const genericResponse = () =>
-        res.status(200).json({ message: 'If that email is registered, a reset link has been sent.' });
+    const email = req.body.email?.trim();
 
-    if (!email) return res.status(400).json({ error: 'Email is required' });
+    if (!email) {
+        return res.status(400).json({ error: 'Email address is required' });
+    }
 
     try {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: `${process.env.FRONTEND_URL}/reset-password`,
         });
-        if (error) console.error('Error requesting password reset:', error);
+
+        // Give clear feedback when Supabase temporarily limits recovery emails.
+        if (error?.code === 'over_email_send_rate_limit') {
+            return res.status(429).json({
+                error: 'Too many reset requests. Please wait a few minutes before trying again.',
+            });
+        }
+
+        // Keep unexpected recovery failures generic.
+        if (error) {
+            console.error('Error requesting password reset:', error);
+
+            return res.status(500).json({
+                error: 'Unable to send a reset link right now. Please try again later.',
+            });
+        }
+
+        return res.status(200).json({
+            message: 'If that email is registered, a reset link has been sent.',
+        });
     } catch (error) {
         console.error('Error requesting password reset:', error);
-    }
 
-    genericResponse();
+        return res.status(500).json({
+            error: 'Unable to send a reset link right now. Please try again later.',
+        });
+    }
 };
 
 // Public — completes the recovery flow using the access_token + refresh_token
@@ -148,18 +191,36 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
     try {
         const { access_token, refresh_token, password } = req.body;
+
         if (!access_token || !refresh_token || !password) {
-            return res.status(400).json({ error: 'access_token, refresh_token, and password are required' });
+            return res.status(400).json({
+                error: 'access_token, refresh_token, and password are required',
+            });
         }
 
+        // Enforce the same minimum password length as the frontend.
+        if (password.length < 6) {
+            return res.status(400).json({
+                error: 'Password must be at least 6 characters',
+            });
+        }
+
+        // Fresh, request-scoped client for the recovery session.
         const requestClient = createClient(supabaseUrl, supabaseKey, {
             auth: { persistSession: false },
         });
 
-        const { error: setSessionError } = await requestClient.auth.setSession({ access_token, refresh_token });
+        const { error: setSessionError } = await requestClient.auth.setSession({
+            access_token,
+            refresh_token,
+        });
+
         if (setSessionError) throw setSessionError;
 
-        const { error: updateError } = await requestClient.auth.updateUser({ password });
+        const { error: updateError } = await requestClient.auth.updateUser({
+            password,
+        });
+
         if (updateError) throw updateError;
 
         res.status(200).json({ message: 'Password reset successfully' });

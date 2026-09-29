@@ -2,6 +2,9 @@ const { supabaseUrl, supabaseKey } = require('../config/supabaseClient');
 const supabaseAdmin = require('../config/supabaseAdmin');
 const { createClient } = require('@supabase/supabase-js');
 
+const PASSWORD_MIN_LENGTH = 6;
+const NAME_MAX_LENGTH = 50;
+
 // Builds an admin client authenticated as the calling user per request only.
 const buildUserScopedClient = async (req) => {
     const authHeader = req.headers.authorization;
@@ -29,13 +32,44 @@ const buildUserScopedClient = async (req) => {
 const updateProfile = async (req, res) => {
     try {
         const { display_name, username } = req.body;
+
         if (display_name === undefined && username === undefined) {
             return res.status(400).json({ error: 'Nothing to update' });
         }
 
         const user_metadata = { ...req.user.user_metadata };
-        if (display_name !== undefined) user_metadata.display_name = display_name;
-        if (username !== undefined) user_metadata.username = username;
+
+        if (display_name !== undefined) {
+            const trimmedDisplayName = display_name.trim();
+
+            if (!trimmedDisplayName) {
+                return res.status(400).json({ error: 'Display name is required' });
+            }
+
+            if (trimmedDisplayName.length > NAME_MAX_LENGTH) {
+                return res.status(400).json({
+                    error: `Display name must be ${NAME_MAX_LENGTH} characters or fewer`,
+                });
+            }
+
+            user_metadata.display_name = trimmedDisplayName;
+        }
+
+        if (username !== undefined) {
+            const trimmedUsername = username.trim();
+
+            if (!trimmedUsername) {
+                return res.status(400).json({ error: 'Username is required' });
+            }
+
+            if (trimmedUsername.length > NAME_MAX_LENGTH) {
+                return res.status(400).json({
+                    error: `Username must be ${NAME_MAX_LENGTH} characters or fewer`,
+                });
+            }
+
+            user_metadata.username = trimmedUsername;
+        }
 
         const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
             req.user.id,
@@ -43,10 +77,15 @@ const updateProfile = async (req, res) => {
         );
         if (error) throw error;
 
-        res.status(200).json({ message: 'Profile updated successfully', user: data.user });
+        res.status(200).json({
+            message: 'Profile updated successfully',
+            user: data.user,
+        });
     } catch (error) {
         console.error('Error updating profile:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(error.status || 500).json({
+            error: error.status ? error.message : 'Internal Server Error',
+        });
     }
 };
 
@@ -54,8 +93,19 @@ const updateProfile = async (req, res) => {
 // address) rather than overwriting the email immediately.
 const updateEmail = async (req, res) => {
     try {
-        const { email } = req.body;
-        if (!email) return res.status(400).json({ error: 'Email is required' });
+        const email = req.body.email?.trim();
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailPattern.test(email)) {
+            return res.status(400).json({
+                error: 'Please enter a valid email address',
+            });
+        }
 
         const requestClient = await buildUserScopedClient(req);
         const { data, error } = await requestClient.auth.updateUser({ email });
@@ -67,7 +117,9 @@ const updateEmail = async (req, res) => {
         });
     } catch (error) {
         console.error('Error updating email:', error);
-        res.status(error.status || 500).json({ error: error.status ? error.message : 'Internal Server Error' });
+        res.status(error.status || 500).json({
+            error: error.status ? error.message : 'Internal Server Error',
+        });
     }
 };
 
@@ -75,7 +127,16 @@ const updateEmail = async (req, res) => {
 const updatePassword = async (req, res) => {
     try {
         const { password } = req.body;
-        if (!password) return res.status(400).json({ error: 'New password is required' });
+
+        if (!password) {
+            return res.status(400).json({ error: 'New password is required' });
+        }
+
+        if (password.length < PASSWORD_MIN_LENGTH) {
+            return res.status(400).json({
+                error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters`,
+            });
+        }
 
         const requestClient = await buildUserScopedClient(req);
         const { error } = await requestClient.auth.updateUser({ password });
@@ -84,7 +145,9 @@ const updatePassword = async (req, res) => {
         res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {
         console.error('Error updating password:', error);
-        res.status(error.status || 500).json({ error: error.status ? error.message : 'Internal Server Error' });
+        res.status(error.status || 500).json({
+            error: error.status ? error.message : 'Internal Server Error',
+        });
     }
 };
 
