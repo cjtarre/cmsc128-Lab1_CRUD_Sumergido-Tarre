@@ -32,7 +32,7 @@ api.interceptors.response.use(
                 const refreshToken = localStorage.getItem("refreshToken");
                 if (!refreshToken) throw new Error("No refresh token available");
 
-                const { data } = await api.post("api/auth/refresh", { 
+                const { data } = await api.post("/api/auth/refresh", { 
                     refresh_token : refreshToken 
                 });
 
@@ -41,6 +41,7 @@ api.interceptors.response.use(
 
                 originalRequest.headers.Authorization = `Bearer ${data.session.access_token}`;
                 return api(originalRequest);
+            // eslint-disable-next-line no-unused-vars
             } catch (refreshError) {
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("refreshToken");
