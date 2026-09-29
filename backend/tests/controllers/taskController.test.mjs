@@ -486,7 +486,7 @@ describe("deleteTask", () => {
 });
 
 describe("restoreTask", () => {
-    it("should restore a deleted task", async () => {
+    it("should restore a deleted task belonging to the authenticated user", async () => {
         const req = {
             user: mockUser,
             params: { task_id: "1" },
@@ -495,9 +495,11 @@ describe("restoreTask", () => {
         const res = createResponse();
 
         mockQuery.eq
+            .mockReturnValueOnce(mockQuery)
             .mockResolvedValueOnce({
                 error: null,
             })
+            .mockReturnValueOnce(mockQuery)
             .mockReturnValueOnce(mockQuery);
 
         mockQuery.single.mockResolvedValueOnce({
@@ -516,6 +518,8 @@ describe("restoreTask", () => {
         });
 
         expect(mockQuery.eq).toHaveBeenCalledWith("task_id", "1");
+        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
+
         expect(res.status).toHaveBeenCalledWith(200);
 
         expect(res.json).toHaveBeenCalledWith({
@@ -525,7 +529,7 @@ describe("restoreTask", () => {
         });
     });
 
-    it("should return 400 when restoring a task fails", async () => {
+    it("should return 400 when restoring a task belonging to the authenticated user fails", async () => {
         const req = {
             user: mockUser,
             params: { task_id: "1" },
@@ -533,9 +537,11 @@ describe("restoreTask", () => {
 
         const res = createResponse();
 
-        mockQuery.eq.mockResolvedValueOnce({
-            error: new Error("Restore failed"),
-        });
+        mockQuery.eq
+            .mockReturnValueOnce(mockQuery)
+            .mockResolvedValueOnce({
+                error: new Error("Restore failed"),
+            });
 
         await restoreTask(req, res);
 
@@ -544,6 +550,8 @@ describe("restoreTask", () => {
         });
 
         expect(mockQuery.eq).toHaveBeenCalledWith("task_id", "1");
+        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
+
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith({
             error: "Restore failed",

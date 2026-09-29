@@ -1,13 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import axios from "axios";
 
-import { tagService } from "../src/features/tasks/services/tagService";
+const mocks = vi.hoisted(() => ({
+    apiInstance: {
+        get: vi.fn(),
+
+        interceptors: {
+            request: {
+                use: vi.fn(),
+            },
+            response: {
+                use: vi.fn(),
+            },
+        },
+    },
+}));
 
 vi.mock("axios", () => ({
     default: {
-        get: vi.fn(),
+        create: vi.fn(() => mocks.apiInstance),
     },
 }));
+
+import { tagService } from "../src/features/tasks/services/tagService";
 
 describe("tagService", () => {
     beforeEach(() => {
@@ -28,16 +42,13 @@ describe("tagService", () => {
             },
         ];
 
-        axios.get.mockResolvedValue({
+        mocks.apiInstance.get.mockResolvedValue({
             data: tags,
         });
 
         const result = await tagService.getTags();
 
-        expect(axios.get).toHaveBeenCalledWith(
-            expect.stringContaining("/api/tags")
-        );
-
+        expect(mocks.apiInstance.get).toHaveBeenCalledWith("/api/tags");
         expect(result).toEqual(tags);
     });
 });

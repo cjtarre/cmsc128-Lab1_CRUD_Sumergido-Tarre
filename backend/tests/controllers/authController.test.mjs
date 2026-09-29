@@ -191,7 +191,7 @@ describe("signUpUser", () => {
         });
     });
 
-    it("should return 400 when Supabase rejects signup", async () => {
+    it("should reject signup when the email is already registered", async () => {
         const req = {
             body: {
                 email: "user@example.com",

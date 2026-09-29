@@ -135,23 +135,32 @@ describe("createTaskHandlers", () => {
 
     it("updates the selected task after editing", async () => {
         const mocks = createMocks();
-
-        mocks.updateTask.mockResolvedValue({});
-
+    
+        mocks.updateTask.mockResolvedValue({
+            id: 1,
+            title: "Updated Task",
+            description: "",
+            priority: 1,
+            status: STATUS.NOT_STARTED,
+            dueDate: "",
+            dueTime: "",
+            tags: [],
+        });
+    
         let selectedTask = {
             id: 1,
             title: "Old Task",
         };
-
+    
         mocks.setSelectedTask.mockImplementation((update) => {
             selectedTask =
                 typeof update === "function"
                     ? update(selectedTask)
                     : update;
         });
-
+    
         const handlers = createTaskHandlers(mocks);
-
+    
         await handlers.handleUpdateTask({
             id: 1,
             title: "Updated Task",
@@ -162,7 +171,7 @@ describe("createTaskHandlers", () => {
             dueTime: "",
             tags: [],
         });
-
+    
         expect(selectedTask.title).toBe("Updated Task");
     });
 
