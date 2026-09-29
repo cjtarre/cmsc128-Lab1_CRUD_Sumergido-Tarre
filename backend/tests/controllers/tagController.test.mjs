@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const supabase = (await import("../../config/supabaseAdmin.js")).default;
+const { getAllTags } = await import("../../controllers/tagController.js");
+
 const mockQuery = {
     select: vi.fn(),
     order: vi.fn(),
 };
-
-const supabase = (await import("../../config/supabaseClient.js")).default;
-const { getAllTags } = await import("../../controllers/tagController.js");
 
 describe("getAllTags", () => {
     beforeEach(() => {
