@@ -1,8 +1,8 @@
 const { supabaseUrl, supabaseKey } = require('../config/supabaseClient');
 const supabaseAdmin = require('../config/supabaseAdmin');
 const { createClient } = require('@supabase/supabase-js');
+const { validatePassword } = require('../utils/validation');
 
-const PASSWORD_MIN_LENGTH = 6;
 const NAME_MAX_LENGTH = 50;
 
 // Builds an admin client authenticated as the calling user per request only.
@@ -128,14 +128,10 @@ const updatePassword = async (req, res) => {
     try {
         const { password } = req.body;
 
-        if (!password) {
-            return res.status(400).json({ error: 'New password is required' });
-        }
+        const passwordError = validatePassword(password);
 
-        if (password.length < PASSWORD_MIN_LENGTH) {
-            return res.status(400).json({
-                error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters`,
-            });
+        if (passwordError) {
+            return res.status(400).json({ error: passwordError });
         }
 
         const requestClient = await buildUserScopedClient(req);

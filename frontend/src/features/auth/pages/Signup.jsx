@@ -72,13 +72,13 @@ function Signup({ embedded = false, onSwitchToLogin }) {
     };
 
     const inputClass = embedded
-        ? "w-full rounded-lg border border-white/15 bg-white/10 py-2.5 pl-10 pr-10 text-sm text-white placeholder:text-white/45 outline-none focus:border-white/40 focus:ring-2 focus:ring-white/10"
-        : "w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-green-400 dark:focus:ring-green-900/50";
+    ? "w-full rounded-lg border border-white/15 bg-white/10 py-2.5 pl-10 pr-10 text-sm text-white placeholder:text-white/45 outline-none focus:border-white/40 focus:ring-2 focus:ring-white/10 dark:border-slate-300 dark:bg-white/50 dark:text-slate-800 dark:placeholder:text-slate-400 dark:focus:border-green-400 dark:focus:ring-green-100"
+    : "w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-green-400 dark:focus:ring-green-900/50";
 
-    const labelClass = embedded ? "text-white/80" : "text-slate-700 dark:text-slate-200";
-    const iconClass = embedded ? "text-white/45" : "text-slate-400 dark:text-slate-500";
-    const eyeClass = embedded ? "text-white/45 hover:text-white" : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300";
-    const fieldErrorClass = embedded ? "mt-1 text-xs text-red-200" : "mt-1 text-xs text-red-500 dark:text-red-400";
+    const labelClass = embedded ? "text-white/80 dark:text-slate-700" : "text-slate-700 dark:text-slate-200";
+    const iconClass = embedded ? "text-white/45 dark:text-slate-400" : "text-slate-400 dark:text-slate-500";
+    const eyeClass = embedded ? "text-white/45 hover:text-white dark:text-slate-400 dark:hover:text-slate-600" : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300";
+    const fieldErrorClass = embedded ? "mt-1 text-xs text-red-200 dark:text-red-600" : "mt-1 text-xs text-red-500 dark:text-red-400";
 
     const form = (
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -165,11 +165,11 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                 {errors.confirmPassword && <p className={fieldErrorClass}>{errors.confirmPassword}</p>}
             </div>
 
-            {error && <p className={`text-sm ${embedded ? "text-red-200" : "text-red-500 dark:text-red-400"}`}>{error}</p>}
+            {error && <p className={`text-sm ${embedded ? "text-red-200 dark:text-red-600" : "text-red-500 dark:text-red-400"}`}>{error}</p>}
 
-            <p className={`pt-1 text-xs leading-5 ${embedded ? "text-white/55" : "text-slate-500 dark:text-slate-400"}`}>
+            <p className={`pt-1 text-xs leading-5 ${embedded ? "text-white/55 dark:text-slate-500" : "text-slate-500 dark:text-slate-400"}`}>
                 By creating an account, you agree to our{" "}
-                <Link to="/privacy" target="_blank" rel="noopener noreferrer" className={`font-medium underline ${embedded ? "text-green-300" : "text-green-600 dark:text-green-400"}`}>Privacy Policy</Link>.
+                <Link to="/privacy" target="_blank" rel="noopener noreferrer" className={`font-medium underline ${embedded ? "text-green-300 dark:text-green-600" : "text-green-600 dark:text-green-400"}`}>Privacy Policy</Link>.
             </p>
 
             <button type="submit" disabled={loading} className="w-full rounded-lg bg-green-500 py-2.5 text-sm font-medium text-white transition hover:bg-green-600 disabled:opacity-60">
@@ -183,19 +183,20 @@ function Signup({ embedded = false, onSwitchToLogin }) {
             <div className="flex min-h-full items-start px-6 pb-12 pt-24 sm:px-10 sm:pt-28">
                 <div className="mx-auto w-full max-w-md">
                     <div className="mb-8 flex flex-col items-center text-center">
-                        <div className="flex items-center gap-2 text-green-300">
-                            <GraduationCap size={24} />
-                            <span className="font-bold text-white">Takda</span>
+                        <div className="flex items-center gap-2 text-green-300 dark:text-green-500">
+                        <GraduationCap size={24} />
+                        <span className="font-bold text-white dark:text-slate-800">Takda</span>
                         </div>
-                        <h1 className="mt-8 text-center text-3xl font-black tracking-tight text-white"><HoverText text="Create your account" /></h1>
-                        <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-6 text-white/60">Start organizing your schoolwork with Takda.</p>
+
+                        <h1 className="mt-8 text-center text-3xl font-black tracking-tight text-white dark:text-slate-800"><HoverText text="Create your account" /></h1>
+                        <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-6 text-white/60 dark:text-slate-500">Start organizing your schoolwork with Takda.</p>
                     </div>
 
                     {form}
 
-                    <p className="mt-8 text-center text-sm text-white/60">
+                    <p className="mt-8 text-center text-sm text-white/60 dark:text-slate-500">
                         Already have an account?{" "}
-                        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-green-300 hover:text-green-200">Sign in</button>
+                        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-green-300 hover:text-green-200 dark:text-green-600 dark:hover:text-green-700">Sign in</button>
                     </p>
                 </div>
             </div>

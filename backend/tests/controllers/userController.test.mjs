@@ -381,9 +381,8 @@ describe("updateEmail", () => {
 describe("updatePassword", () => {
     it("should return 400 when the password is missing", async () => {
         const req = {
-            user: createUser(),
-            headers: {},
             body: {},
+            headers: {},
         };
 
         const res = createResponse();
@@ -392,17 +391,16 @@ describe("updatePassword", () => {
 
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith({
-            error: "New password is required",
+            error: "Password is required",
         });
     });
 
-    it("should reject a password shorter than 6 characters", async () => {
+    it("should reject a password shorter than 8 characters", async () => {
         const req = {
-            user: createUser(),
-            headers: {},
             body: {
-                password: "12345",
+                password: "Ab1!",
             },
+            headers: {},
         };
 
         const res = createResponse();
@@ -411,17 +409,16 @@ describe("updatePassword", () => {
 
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith({
-            error: "Password must be at least 6 characters",
+            error: "Password must be at least 8 characters",
         });
     });
 
     it("should reject a request without access and refresh tokens", async () => {
         const req = {
-            user: createUser(),
-            headers: {},
             body: {
-                password: "new-password",
+                password: "Secret123!",
             },
+            headers: {},
         };
 
         const res = createResponse();

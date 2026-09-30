@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, GraduationCap } from "lucide-react";
+import { useAuth } from "../features/auth/hooks/useAuth";
 import HoverText from "../shared/components/effects/HoverText";
 import PublicNavbar from "../shared/components/navigation/PublicNavbar";
 import AuthPanel from "../features/auth/components/AuthPanel";
@@ -8,6 +9,7 @@ import AuthPanel from "../features/auth/components/AuthPanel";
 function LandingPage() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [showAuth, setShowAuth] = useState(false);
     const [authEmail, setAuthEmail] = useState("");
 
@@ -21,7 +23,7 @@ function LandingPage() {
         }
     }, [location.state, navigate]);
 
-    const handleGetStarted = () => setShowAuth(true);
+    const handleGetStarted = () => user ? navigate("/dashboard") : setShowAuth(true);
     const handleCloseAuth = () => setShowAuth(false);
 
     return (

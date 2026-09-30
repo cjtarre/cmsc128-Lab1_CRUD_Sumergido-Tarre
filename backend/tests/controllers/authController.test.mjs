@@ -1,5 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("../../config/supabaseClient.js", () => ({
+    supabase: {
+        auth: {
+            getUser: vi.fn(),
+            signUp: vi.fn(),
+            signInWithPassword: vi.fn(),
+            refreshSession: vi.fn(),
+            resetPasswordForEmail: vi.fn(),
+        },
+    },
+    supabaseUrl: "http://localhost:54321",
+    supabaseKey: "test-key",
+}));
+
+vi.mock("@supabase/supabase-js", () => ({
+    createClient: vi.fn(),
+}));
+
 const { supabase } = await import("../../config/supabaseClient.js");
 
 const {
@@ -152,12 +170,13 @@ describe("signUpUser", () => {
         const user = {
             id: "test-user-id",
             email: "user@example.com",
+            identities: [{ id: "identity-id" }],
         };
 
         const req = {
             body: {
                 email: "  user@example.com  ",
-                password: "secret123",
+                password: "Secret123!",
                 username: "  Christie  ",
             },
         };
@@ -175,7 +194,7 @@ describe("signUpUser", () => {
 
         expect(supabase.auth.signUp).toHaveBeenCalledWith({
             email: "user@example.com",
-            password: "secret123",
+            password: "Secret123!",
             options: {
                 data: {
                     username: "Christie",
@@ -195,7 +214,7 @@ describe("signUpUser", () => {
         const req = {
             body: {
                 email: "user@example.com",
-                password: "secret123",
+                password: "Secret123!",
                 username: "Christie",
             },
         };
@@ -203,15 +222,21 @@ describe("signUpUser", () => {
         const res = createResponse();
 
         supabase.auth.signUp.mockResolvedValue({
-            data: null,
-            error: new Error("User already registered"),
+            data: {
+                user: {
+                    id: "existing-user-id",
+                    email: "user@example.com",
+                    identities: [],
+                },
+            },
+            error: null,
         });
 
         await signUpUser(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.status).toHaveBeenCalledWith(409);
         expect(res.json).toHaveBeenCalledWith({
-            error: "User already registered",
+            error: "An account with this email already exists",
         });
     });
 });
@@ -526,12 +551,12 @@ describe("resetPassword", () => {
         });
     });
 
-    it("should reject a password shorter than 6 characters", async () => {
+    it("should reject a password shorter than 8 characters", async () => {
         const req = {
             body: {
                 access_token: "access-token",
                 refresh_token: "refresh-token",
-                password: "12345",
+                password: "Ab1!",
             },
         };
 
@@ -541,7 +566,7 @@ describe("resetPassword", () => {
 
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith({
-            error: "Password must be at least 6 characters",
+            error: "Password must be at least 8 characters",
         });
     });
 });
