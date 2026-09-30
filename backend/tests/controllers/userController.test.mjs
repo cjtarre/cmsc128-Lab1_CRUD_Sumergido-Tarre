@@ -1,433 +1,260 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createRequire } from "node:module";
+import path from "node:path";
 
-const supabaseAdmin =
-    (await import("../../config/supabaseAdmin.js")).default;
+const require = createRequire(import.meta.url);
+const mock = require("mock-require");
 
-const {
-    updateProfile,
-    updateEmail,
-    updatePassword,
-} = await import("../../controllers/userController.js");
+const supabaseAdmin = { from: vi.fn() };
+const createClient = vi.fn();
 
-const createResponse = () => ({
-    status: vi.fn().mockReturnThis(),
-    json: vi.fn(),
+mock(path.resolve("config/supabaseAdmin.js"), supabaseAdmin);
+mock(path.resolve("config/supabaseClient.js"), {
+    supabaseUrl: "http://localhost:54321",
+    supabaseKey: "test-key",
 });
+mock("@supabase/supabase-js", { createClient });
 
-const createUser = () => ({
-    id: "test-user-id",
-    email: "user@example.com",
-    user_metadata: {
-        username: "Christie",
-        display_name: "Christie",
-        existing_field: "preserved",
-    },
-});
+const { updateProfile, updateEmail, updatePassword } =
+    require("../../controllers/userController.js");
 
-beforeEach(() => {
-    vi.clearAllMocks();
+const createResponse = () => ({ status: vi.fn().mockReturnThis(), json: vi.fn() });
 
-    supabaseAdmin.auth.admin.updateUserById = vi.fn();
-});
+const mockProfileUpdate = ({ data = null, error = null } = {}) => {
+    const query = { update: vi.fn(), eq: vi.fn(), select: vi.fn(), single: vi.fn() };
+    query.update.mockReturnValue(query);
+    query.eq.mockReturnValue(query);
+    query.select.mockReturnValue(query);
+    query.single.mockResolvedValue({ data, error });
+    supabaseAdmin.from.mockReturnValue(query);
+    return query;
+};
+
+const mockUserClient = ({ setSessionError = null, updateData = {}, updateError = null } = {}) => {
+    const client = {
+        auth: {
+            setSession: vi.fn().mockResolvedValue({ error: setSessionError }),
+            updateUser: vi.fn().mockResolvedValue({ data: updateData, error: updateError }),
+        },
+    };
+
+    createClient.mockReturnValue(client);
+    return client;
+};
+
+beforeEach(() => vi.clearAllMocks());
 
 describe("updateProfile", () => {
-    it("should return 400 when there is nothing to update", async () => {
-        const req = {
-            user: createUser(),
-            body: {},
-        };
+    const user = { id: "user-1", email: "user@example.com" };
 
-        const res = createResponse();
-
+    it("rejects an empty update", async () => {
+        const req = { user, body: {} }, res = createResponse();
         await updateProfile(req, res);
-
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Nothing to update",
-        });
-
-        expect(
-            supabaseAdmin.auth.admin.updateUserById
-        ).not.toHaveBeenCalled();
+        expect(res.json).toHaveBeenCalledWith({ error: "Nothing to update" });
     });
 
-    it("should reject a blank display name", async () => {
-        const req = {
-            user: createUser(),
-            body: {
-                display_name: "   ",
-            },
-        };
-
-        const res = createResponse();
-
+    it("requires a display name", async () => {
+        const req = { user, body: { display_name: " " } }, res = createResponse();
         await updateProfile(req, res);
-
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Display name is required",
-        });
+        expect(res.json).toHaveBeenCalledWith({ error: "Display name is required" });
     });
 
-    it("should reject a display name longer than 50 characters", async () => {
-        const req = {
-            user: createUser(),
-            body: {
-                display_name: "a".repeat(51),
-            },
-        };
-
-        const res = createResponse();
-
+    it("rejects a display name over 50 characters", async () => {
+        const req = { user, body: { display_name: "a".repeat(51) } }, res = createResponse();
         await updateProfile(req, res);
-
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Display name must be 50 characters or fewer",
-        });
+        expect(res.json).toHaveBeenCalledWith({ error: "Display name must be 50 characters or fewer" });
     });
 
-    it("should trim and update the display name", async () => {
-        const req = {
-            user: createUser(),
-            body: {
-                display_name: "  Christie Jude  ",
-            },
-        };
+    it("rejects an invalid username", async () => {
+        const req = { user, body: { username: "ab" } }, res = createResponse();
+        await updateProfile(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({ error: "Username must be at least 3 characters" });
+    });
 
+    it("updates display name and username", async () => {
+        const req = { user, body: { display_name: "  Updated User  ", username: "  Updated.User  " } };
         const res = createResponse();
-
-        const updatedUser = {
-            ...req.user,
-            user_metadata: {
-                ...req.user.user_metadata,
-                display_name: "Christie Jude",
-            },
-        };
-
-        supabaseAdmin.auth.admin.updateUserById.mockResolvedValue({
-            data: {
-                user: updatedUser,
-            },
-            error: null,
+        const query = mockProfileUpdate({
+            data: { user_id: "user-1", username: "updated.user", display_name: "Updated User" },
         });
 
         await updateProfile(req, res);
 
-        expect(
-            supabaseAdmin.auth.admin.updateUserById
-        ).toHaveBeenCalledWith(
-            "test-user-id",
-            {
-                user_metadata: {
-                    username: "Christie",
-                    display_name: "Christie Jude",
-                    existing_field: "preserved",
-                },
-            }
-        );
-
+        expect(supabaseAdmin.from).toHaveBeenCalledWith("profiles");
+        expect(query.update).toHaveBeenCalledWith({ display_name: "Updated User", username: "updated.user" });
+        expect(query.eq).toHaveBeenCalledWith("user_id", "user-1");
+        expect(query.select).toHaveBeenCalledWith("user_id, username, display_name");
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({
             message: "Profile updated successfully",
-            user: updatedUser,
+            user: { id: "user-1", email: "user@example.com", username: "updated.user", display_name: "Updated User" },
         });
     });
 
-    it("should reject a blank username", async () => {
-        const req = {
-            user: createUser(),
-            body: {
-                username: "   ",
-            },
-        };
-
-        const res = createResponse();
-
-        await updateProfile(req, res);
-
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Username is required",
-        });
-    });
-
-    it("should reject a username longer than 50 characters", async () => {
-        const req = {
-            user: createUser(),
-            body: {
-                username: "a".repeat(51),
-            },
-        };
-
-        const res = createResponse();
-
-        await updateProfile(req, res);
-
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Username must be 50 characters or fewer",
-        });
-    });
-
-    it("should trim and update the username", async () => {
-        const req = {
-            user: createUser(),
-            body: {
-                username: "  NewUsername  ",
-            },
-        };
-
-        const res = createResponse();
-
-        const updatedUser = {
-            ...req.user,
-            user_metadata: {
-                ...req.user.user_metadata,
-                username: "NewUsername",
-            },
-        };
-
-        supabaseAdmin.auth.admin.updateUserById.mockResolvedValue({
-            data: {
-                user: updatedUser,
-            },
-            error: null,
+    it("updates only the display name", async () => {
+        const req = { user, body: { display_name: "Updated User" } }, res = createResponse();
+        const query = mockProfileUpdate({
+            data: { user_id: "user-1", username: "test.user", display_name: "Updated User" },
         });
 
         await updateProfile(req, res);
 
-        expect(
-            supabaseAdmin.auth.admin.updateUserById
-        ).toHaveBeenCalledWith(
-            "test-user-id",
-            {
-                user_metadata: {
-                    username: "NewUsername",
-                    display_name: "Christie",
-                    existing_field: "preserved",
-                },
-            }
-        );
-
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-            message: "Profile updated successfully",
-            user: updatedUser,
-        });
-    });
-
-    it("should update both display name and username together", async () => {
-        const req = {
-            user: createUser(),
-            body: {
-                display_name: "  Christie Tarre  ",
-                username: "  cjtarre  ",
-            },
-        };
-
-        const res = createResponse();
-
-        const updatedUser = {
-            ...req.user,
-            user_metadata: {
-                ...req.user.user_metadata,
-                display_name: "Christie Tarre",
-                username: "cjtarre",
-            },
-        };
-
-        supabaseAdmin.auth.admin.updateUserById.mockResolvedValue({
-            data: {
-                user: updatedUser,
-            },
-            error: null,
-        });
-
-        await updateProfile(req, res);
-
-        expect(
-            supabaseAdmin.auth.admin.updateUserById
-        ).toHaveBeenCalledWith(
-            "test-user-id",
-            {
-                user_metadata: {
-                    username: "cjtarre",
-                    display_name: "Christie Tarre",
-                    existing_field: "preserved",
-                },
-            }
-        );
-
+        expect(query.update).toHaveBeenCalledWith({ display_name: "Updated User" });
         expect(res.status).toHaveBeenCalledWith(200);
     });
 
-    it("should preserve existing user metadata", async () => {
-        const req = {
-            user: createUser(),
-            body: {
-                display_name: "Updated Name",
-            },
-        };
-
-        const res = createResponse();
-
-        supabaseAdmin.auth.admin.updateUserById.mockResolvedValue({
-            data: {
-                user: req.user,
-            },
-            error: null,
+    it("updates only the username", async () => {
+        const req = { user, body: { username: "Updated.User" } }, res = createResponse();
+        const query = mockProfileUpdate({
+            data: { user_id: "user-1", username: "updated.user", display_name: "Test User" },
         });
 
         await updateProfile(req, res);
 
-        expect(
-            supabaseAdmin.auth.admin.updateUserById
-        ).toHaveBeenCalledWith(
-            "test-user-id",
-            {
-                user_metadata: expect.objectContaining({
-                    username: "Christie",
-                    display_name: "Updated Name",
-                    existing_field: "preserved",
-                }),
-            }
-        );
+        expect(query.update).toHaveBeenCalledWith({ username: "updated.user" });
+        expect(res.status).toHaveBeenCalledWith(200);
     });
 
-    it("should return 500 when Supabase fails to update the profile", async () => {
-        const req = {
-            user: createUser(),
-            body: {
-                display_name: "Updated Name",
-            },
-        };
+    it("rejects a duplicate username", async () => {
+        const req = { user, body: { username: "existing.user" } }, res = createResponse();
+        mockProfileUpdate({ error: { code: "23505" } });
 
-        const res = createResponse();
+        await updateProfile(req, res);
 
-        supabaseAdmin.auth.admin.updateUserById.mockResolvedValue({
-            data: null,
-            error: new Error("Database error"),
-        });
+        expect(res.status).toHaveBeenCalledWith(409);
+        expect(res.json).toHaveBeenCalledWith({ error: "That username is already taken" });
+    });
+
+    it("returns 500 when profile update fails", async () => {
+        const req = { user, body: { display_name: "Updated User" } }, res = createResponse();
+        mockProfileUpdate({ error: new Error("Database error") });
 
         await updateProfile(req, res);
 
         expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Internal Server Error",
-        });
+        expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
     });
 });
 
 describe("updateEmail", () => {
-    it("should return 400 when email is missing", async () => {
-        const req = {
-            user: createUser(),
-            headers: {},
-            body: {
-                email: "",
-            },
-        };
+    const baseReq = {
+        user: { id: "user-1", email: "user@example.com" },
+        headers: { authorization: "Bearer access-token" },
+    };
 
+    it("requires an email", async () => {
+        const req = { ...baseReq, body: { email: "", refresh_token: "refresh-token" } }, res = createResponse();
+        await updateEmail(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({ error: "Email is required" });
+    });
+
+    it("rejects an invalid email", async () => {
+        const req = { ...baseReq, body: { email: "invalid-email", refresh_token: "refresh-token" } }, res = createResponse();
+        await updateEmail(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({ error: "Please enter a valid email address" });
+    });
+
+    it("requires access and refresh tokens", async () => {
+        const req = { ...baseReq, headers: {}, body: { email: "new@example.com" } }, res = createResponse();
+        await updateEmail(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({ error: "Missing access_token or refresh_token" });
+    });
+
+    it("updates the email", async () => {
+        const updatedUser = { id: "user-1", email: "new@example.com" };
+        const client = mockUserClient({ updateData: { user: updatedUser } });
+        const req = { ...baseReq, body: { email: " new@example.com ", refresh_token: "refresh-token" } };
         const res = createResponse();
 
         await updateEmail(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(400);
+        expect(client.auth.setSession).toHaveBeenCalledWith({ access_token: "access-token", refresh_token: "refresh-token" });
+        expect(client.auth.updateUser).toHaveBeenCalledWith({ email: "new@example.com" });
+        expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({
-            error: "Email is required",
+            message: "Confirmation email sent — check your new inbox to complete the change.",
+            user: updatedUser,
         });
     });
 
-    it("should reject an invalid email address", async () => {
-        const req = {
-            user: createUser(),
-            headers: {},
-            body: {
-                email: "invalid-email",
-            },
-        };
-
+    it("returns 500 when setting the session fails", async () => {
+        mockUserClient({ setSessionError: new Error("Invalid session") });
+        const req = { ...baseReq, body: { email: "new@example.com", refresh_token: "refresh-token" } };
         const res = createResponse();
 
         await updateEmail(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Please enter a valid email address",
-        });
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
     });
 
-    it("should reject a request without access and refresh tokens", async () => {
-        const req = {
-            user: createUser(),
-            headers: {},
-            body: {
-                email: "new@example.com",
-            },
-        };
-
+    it("returns 500 when email update fails", async () => {
+        mockUserClient({ updateError: new Error("Update failed") });
+        const req = { ...baseReq, body: { email: "new@example.com", refresh_token: "refresh-token" } };
         const res = createResponse();
 
         await updateEmail(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Missing access_token or refresh_token",
-        });
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
     });
 });
 
 describe("updatePassword", () => {
-    it("should return 400 when the password is missing", async () => {
-        const req = {
-            body: {},
-            headers: {},
-        };
+    const baseReq = {
+        user: { id: "user-1", email: "user@example.com" },
+        headers: { authorization: "Bearer access-token" },
+    };
 
-        const res = createResponse();
-
+    it("requires a password", async () => {
+        const req = { ...baseReq, body: { password: "", refresh_token: "refresh-token" } }, res = createResponse();
         await updatePassword(req, res);
-
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Password is required",
-        });
+        expect(res.json).toHaveBeenCalledWith({ error: "Password is required" });
     });
 
-    it("should reject a password shorter than 8 characters", async () => {
-        const req = {
-            body: {
-                password: "Ab1!",
-            },
-            headers: {},
-        };
-
-        const res = createResponse();
-
+    it("rejects a weak password", async () => {
+        const req = { ...baseReq, body: { password: "Ab1!", refresh_token: "refresh-token" } }, res = createResponse();
         await updatePassword(req, res);
-
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Password must be at least 8 characters",
-        });
+        expect(res.json).toHaveBeenCalledWith({ error: "Password must be at least 8 characters" });
     });
 
-    it("should reject a request without access and refresh tokens", async () => {
-        const req = {
-            body: {
-                password: "Secret123!",
-            },
-            headers: {},
-        };
+    it("requires access and refresh tokens", async () => {
+        const req = { ...baseReq, headers: {}, body: { password: "Password1!" } }, res = createResponse();
+        await updatePassword(req, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({ error: "Missing access_token or refresh_token" });
+    });
 
+    it("updates the password", async () => {
+        const client = mockUserClient();
+        const req = { ...baseReq, body: { password: "NewPassword1!", refresh_token: "refresh-token" } };
         const res = createResponse();
 
         await updatePassword(req, res);
 
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Missing access_token or refresh_token",
-        });
+        expect(client.auth.setSession).toHaveBeenCalledWith({ access_token: "access-token", refresh_token: "refresh-token" });
+        expect(client.auth.updateUser).toHaveBeenCalledWith({ password: "NewPassword1!" });
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith({ message: "Password updated successfully" });
+    });
+
+    it("returns 500 when password update fails", async () => {
+        mockUserClient({ updateError: new Error("Update failed") });
+        const req = { ...baseReq, body: { password: "NewPassword1!", refresh_token: "refresh-token" } };
+        const res = createResponse();
+
+        await updatePassword(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
     });
 });
