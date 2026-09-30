@@ -4,8 +4,8 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 
-import ProtectedRoute from "../src/routes/ProtectedRoute";
 import { useAuth } from "../src/features/auth/hooks/useAuth";
+import ProtectedRoute from "../src/routes/ProtectedRoute";
 
 vi.mock("../src/features/auth/hooks/useAuth", () => ({
     useAuth: vi.fn(),
@@ -16,31 +16,16 @@ describe("ProtectedRoute", () => {
         vi.clearAllMocks();
     });
 
-    afterEach(() => {
-        cleanup();
-    });
+    afterEach(cleanup);
 
     it("renders protected content when the user is authenticated", () => {
-        useAuth.mockReturnValue({
-            isAuthenticated: true,
-        });
+        useAuth.mockReturnValue({ isAuthenticated: true });
 
         render(
             <MemoryRouter initialEntries={["/dashboard"]}>
                 <Routes>
-                    <Route
-                        path="/dashboard"
-                        element={
-                            <ProtectedRoute>
-                                <div>Protected content</div>
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    <Route
-                        path="/login"
-                        element={<div>Login page</div>}
-                    />
+                    <Route path="/dashboard" element={<ProtectedRoute><div>Protected content</div></ProtectedRoute>} />
+                    <Route path="/login" element={<div>Login page</div>} />
                 </Routes>
             </MemoryRouter>
         );
@@ -50,26 +35,13 @@ describe("ProtectedRoute", () => {
     });
 
     it("redirects unauthenticated users to the login page", () => {
-        useAuth.mockReturnValue({
-            isAuthenticated: false,
-        });
+        useAuth.mockReturnValue({ isAuthenticated: false });
 
         render(
             <MemoryRouter initialEntries={["/dashboard"]}>
                 <Routes>
-                    <Route
-                        path="/dashboard"
-                        element={
-                            <ProtectedRoute>
-                                <div>Protected content</div>
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    <Route
-                        path="/login"
-                        element={<div>Login page</div>}
-                    />
+                    <Route path="/dashboard" element={<ProtectedRoute><div>Protected content</div></ProtectedRoute>} />
+                    <Route path="/login" element={<div>Login page</div>} />
                 </Routes>
             </MemoryRouter>
         );

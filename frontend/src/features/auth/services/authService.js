@@ -4,13 +4,13 @@ const AUTH_URL = "/api/auth";
 const USERS_URL = "/api/users";
 
 export const authService = {
-    signup: async (email, password, username) => {
-        const response = await api.post(`${AUTH_URL}/signup`, { email, password, username });
+    signup: async (email, password, username, displayName) => {
+        const response = await api.post(`${AUTH_URL}/signup`, { email, password, username, display_name: displayName,});
         return response.data;
     },
 
-    login: async (email, password) => {
-        const response = await api.post(`${AUTH_URL}/login`, { email, password });
+    login: async (identifier, password) => {
+        const response = await api.post(`${AUTH_URL}/login`, { identifier, password });
         return response.data;
     },
 
@@ -33,8 +33,8 @@ export const authService = {
         return response.data;
     },
 
-    updateProfile: async (username) => {
-        const response = await api.patch(`${USERS_URL}/me`, { username });
+    updateProfile: async (profile) => {
+        const response = await api.patch(`${USERS_URL}/me`, profile);
         return response.data;
     },
 

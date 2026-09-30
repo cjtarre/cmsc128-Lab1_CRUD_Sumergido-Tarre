@@ -1,5 +1,5 @@
 export function getDisplayName(user) {
-    return user?.user_metadata?.username?.trim() || "User";
+    return user?.display_name?.trim() || "User";
 }
 
 export function getInitials(name) {

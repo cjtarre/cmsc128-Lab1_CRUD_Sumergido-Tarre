@@ -27,17 +27,9 @@ function TestConsumer() {
 
     return (
         <div>
-            <span data-testid="loading">
-                {authContext.authLoading ? "loading" : "ready"}
-            </span>
-
-            <span data-testid="authenticated">
-                {authContext.isAuthenticated ? "yes" : "no"}
-            </span>
-
-            <span data-testid="user">
-                {authContext.user?.email || "none"}
-            </span>
+            <span data-testid="loading">{authContext.authLoading ? "loading" : "ready"}</span>
+            <span data-testid="authenticated">{authContext.isAuthenticated ? "yes" : "no"}</span>
+            <span data-testid="user">{authContext.user?.email || "none"}</span>
         </div>
     );
 }
@@ -49,20 +41,12 @@ describe("AuthProvider", () => {
         authContext = null;
     });
 
-    afterEach(() => {
-        cleanup();
-    });
+    afterEach(cleanup);
 
     it("starts unauthenticated when no access token exists", async () => {
-        render(
-            <AuthProvider>
-                <TestConsumer />
-            </AuthProvider>
-        );
+        render(<AuthProvider><TestConsumer /></AuthProvider>);
 
-        await waitFor(() => {
-            expect(screen.getByTestId("loading").textContent).toBe("ready");
-        });
+        await waitFor(() => expect(screen.getByTestId("loading").textContent).toBe("ready"));
 
         expect(screen.getByTestId("authenticated").textContent).toBe("no");
         expect(screen.getByTestId("user").textContent).toBe("none");
@@ -71,23 +55,13 @@ describe("AuthProvider", () => {
 
     it("restores the authenticated user when a valid session exists", async () => {
         localStorage.setItem("accessToken", "access-token");
-
         authService.getCurrentUser.mockResolvedValue({
-            user: {
-                id: "user-1",
-                email: "user@example.com",
-            },
+            user: { id: "user-1", email: "user@example.com", username: "test.user", display_name: "Test User" },
         });
 
-        render(
-            <AuthProvider>
-                <TestConsumer />
-            </AuthProvider>
-        );
+        render(<AuthProvider><TestConsumer /></AuthProvider>);
 
-        await waitFor(() => {
-            expect(screen.getByTestId("authenticated").textContent).toBe("yes");
-        });
+        await waitFor(() => expect(screen.getByTestId("authenticated").textContent).toBe("yes"));
 
         expect(authService.getCurrentUser).toHaveBeenCalledOnce();
         expect(screen.getByTestId("user").textContent).toBe("user@example.com");
@@ -96,20 +70,11 @@ describe("AuthProvider", () => {
     it("clears stored tokens when session restoration fails", async () => {
         localStorage.setItem("accessToken", "invalid-token");
         localStorage.setItem("refreshToken", "refresh-token");
+        authService.getCurrentUser.mockRejectedValue(new Error("Invalid session"));
 
-        authService.getCurrentUser.mockRejectedValue(
-            new Error("Invalid session")
-        );
+        render(<AuthProvider><TestConsumer /></AuthProvider>);
 
-        render(
-            <AuthProvider>
-                <TestConsumer />
-            </AuthProvider>
-        );
-
-        await waitFor(() => {
-            expect(screen.getByTestId("loading").textContent).toBe("ready");
-        });
+        await waitFor(() => expect(screen.getByTestId("loading").textContent).toBe("ready"));
 
         expect(localStorage.getItem("accessToken")).toBeNull();
         expect(localStorage.getItem("refreshToken")).toBeNull();
@@ -118,40 +83,18 @@ describe("AuthProvider", () => {
 
     it("logs in and stores the session tokens", async () => {
         const response = {
-            user: {
-                id: "user-1",
-                email: "user@example.com",
-            },
-            session: {
-                access_token: "access-token",
-                refresh_token: "refresh-token",
-            },
+            user: { id: "user-1", email: "user@example.com", username: "test.user", display_name: "Test User" },
+            session: { access_token: "access-token", refresh_token: "refresh-token" },
         };
 
         authService.login.mockResolvedValue(response);
 
-        render(
-            <AuthProvider>
-                <TestConsumer />
-            </AuthProvider>
-        );
+        render(<AuthProvider><TestConsumer /></AuthProvider>);
+        await waitFor(() => expect(screen.getByTestId("loading").textContent).toBe("ready"));
 
-        await waitFor(() => {
-            expect(screen.getByTestId("loading").textContent).toBe("ready");
-        });
+        await act(async () => { await authContext.login("test.user", "Password1!"); });
 
-        await act(async () => {
-            await authContext.login(
-                "user@example.com",
-                "password123"
-            );
-        });
-
-        expect(authService.login).toHaveBeenCalledWith(
-            "user@example.com",
-            "password123"
-        );
-
+        expect(authService.login).toHaveBeenCalledWith("test.user", "Password1!");
         expect(localStorage.getItem("accessToken")).toBe("access-token");
         expect(localStorage.getItem("refreshToken")).toBe("refresh-token");
         expect(screen.getByTestId("authenticated").textContent).toBe("yes");
@@ -160,24 +103,12 @@ describe("AuthProvider", () => {
 
     it("logs out and clears the authenticated user", async () => {
         localStorage.setItem("refreshToken", "refresh-token");
+        authService.logout.mockResolvedValue({ message: "Logged out successfully." });
 
-        authService.logout.mockResolvedValue({
-            message: "Logged out successfully.",
-        });
+        render(<AuthProvider><TestConsumer /></AuthProvider>);
+        await waitFor(() => expect(screen.getByTestId("loading").textContent).toBe("ready"));
 
-        render(
-            <AuthProvider>
-                <TestConsumer />
-            </AuthProvider>
-        );
-
-        await waitFor(() => {
-            expect(screen.getByTestId("loading").textContent).toBe("ready");
-        });
-
-        await act(async () => {
-            await authContext.logout();
-        });
+        await act(async () => { await authContext.logout(); });
 
         expect(authService.logout).toHaveBeenCalledWith("refresh-token");
         expect(localStorage.getItem("accessToken")).toBeNull();
@@ -190,69 +121,32 @@ describe("AuthProvider", () => {
         localStorage.setItem("refreshToken", "refresh-token");
 
         authService.getCurrentUser.mockResolvedValue({
-            user: {
-                id: "user-1",
-                email: "user@example.com",
-            },
+            user: { id: "user-1", email: "user@example.com", username: "test.user", display_name: "Test User" },
         });
+        authService.logout.mockRejectedValue(new Error("Logout failed"));
 
-        authService.logout.mockRejectedValue(
-            new Error("Logout failed")
-        );
+        render(<AuthProvider><TestConsumer /></AuthProvider>);
+        await waitFor(() => expect(screen.getByTestId("authenticated").textContent).toBe("yes"));
 
-        render(
-            <AuthProvider>
-                <TestConsumer />
-            </AuthProvider>
-        );
+        await expect(authContext.logout()).rejects.toThrow("Logout failed");
 
-        await waitFor(() => {
-            expect(screen.getByTestId("authenticated").textContent).toBe("yes");
-        });
-
-        await expect(
-            authContext.logout()
-        ).rejects.toThrow("Logout failed");
-
-        expect(authService.logout).toHaveBeenCalledWith(
-            "refresh-token"
-        );
-
+        expect(authService.logout).toHaveBeenCalledWith("refresh-token");
         expect(localStorage.getItem("accessToken")).toBeNull();
         expect(localStorage.getItem("refreshToken")).toBeNull();
     });
 
     it("updates the user after a profile update", async () => {
-        const updatedUser = {
-            id: "user-1",
-            email: "user@example.com",
-            user_metadata: {
-                username: "Updated User",
-            },
-        };
+        const profile = { display_name: "Updated User", username: "updated.user" };
+        const updatedUser = { id: "user-1", email: "user@example.com", username: "updated.user", display_name: "Updated User" };
 
-        authService.updateProfile.mockResolvedValue({
-            user: updatedUser,
-        });
+        authService.updateProfile.mockResolvedValue({ user: updatedUser });
 
-        render(
-            <AuthProvider>
-                <TestConsumer />
-            </AuthProvider>
-        );
+        render(<AuthProvider><TestConsumer /></AuthProvider>);
+        await waitFor(() => expect(screen.getByTestId("loading").textContent).toBe("ready"));
 
-        await waitFor(() => {
-            expect(screen.getByTestId("loading").textContent).toBe("ready");
-        });
+        await act(async () => { await authContext.updateProfile(profile); });
 
-        await act(async () => {
-            await authContext.updateProfile("Updated User");
-        });
-
-        expect(authService.updateProfile).toHaveBeenCalledWith(
-            "Updated User"
-        );
-
+        expect(authService.updateProfile).toHaveBeenCalledWith(profile);
         expect(authContext.user).toEqual(updatedUser);
         expect(authContext.isAuthenticated).toBe(true);
     });

@@ -1,11 +1,8 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
-    formatDueDate,
-    convertToInputDate,
-    convertToInputTime,
-    formatDueTime,
-    getTaskCategory,
+    convertToInputDate, convertToInputTime, formatDueDate,
+    formatDueTime, getTaskCategory,
 } from "../src/shared/utils/dateUtils";
 
 describe("dateUtils", () => {
@@ -21,7 +18,6 @@ describe("dateUtils", () => {
         it("returns Today when the date is today", () => {
             vi.useFakeTimers();
             vi.setSystemTime(new Date(2026, 8, 21));
-
             expect(formatDueDate("21/09/2026")).toBe("Today");
         });
 
@@ -116,21 +112,18 @@ describe("dateUtils", () => {
         it("returns overdue for a past date", () => {
             vi.useFakeTimers();
             vi.setSystemTime(new Date(2026, 8, 21));
-
             expect(getTaskCategory("20/09/2026")).toBe("overdue");
         });
 
         it("returns today for today's date", () => {
             vi.useFakeTimers();
             vi.setSystemTime(new Date(2026, 8, 21));
-
             expect(getTaskCategory("21/09/2026")).toBe("today");
         });
 
         it("returns upcoming for a future date", () => {
             vi.useFakeTimers();
             vi.setSystemTime(new Date(2026, 8, 21));
-
             expect(getTaskCategory("22/09/2026")).toBe("upcoming");
         });
 

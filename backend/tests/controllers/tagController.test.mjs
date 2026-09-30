@@ -3,17 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const supabase = (await import("../../config/supabaseAdmin.js")).default;
 const { getAllTags } = await import("../../controllers/tagController.js");
 
-const mockQuery = {
-    select: vi.fn(),
-    order: vi.fn(),
-};
+const mockQuery = { select: vi.fn(), order: vi.fn() };
+const createResponse = () => ({ status: vi.fn().mockReturnThis(), json: vi.fn() });
 
 describe("getAllTags", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-
         supabase.from = vi.fn().mockReturnValue(mockQuery);
-
         mockQuery.select.mockReturnValue(mockQuery);
         mockQuery.order.mockResolvedValue({
             data: [
@@ -25,20 +21,13 @@ describe("getAllTags", () => {
     });
 
     it("should return all tags ordered by tag name", async () => {
-        const req = {};
-        const res = {
-            status: vi.fn().mockReturnThis(),
-            json: vi.fn(),
-        };
+        const req = {}, res = createResponse();
 
         await getAllTags(req, res);
 
         expect(supabase.from).toHaveBeenCalledWith("tags");
         expect(mockQuery.select).toHaveBeenCalledWith("*");
-        expect(mockQuery.order).toHaveBeenCalledWith(
-            "tag_name",
-            { ascending: true }
-        );
+        expect(mockQuery.order).toHaveBeenCalledWith("tag_name", { ascending: true });
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith([
             { tag_id: 1, tag_name: "School" },
@@ -47,22 +36,12 @@ describe("getAllTags", () => {
     });
 
     it("should return 500 when fetching tags fails", async () => {
-        const req = {};
-        const res = {
-            status: vi.fn().mockReturnThis(),
-            json: vi.fn(),
-        };
-
-        mockQuery.order.mockResolvedValue({
-            data: null,
-            error: new Error("Database error"),
-        });
+        const req = {}, res = createResponse();
+        mockQuery.order.mockResolvedValue({ data: null, error: new Error("Database error") });
 
         await getAllTags(req, res);
 
         expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({
-            error: "Internal Server Error",
-        });
+        expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
     });
 });

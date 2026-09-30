@@ -26,6 +26,7 @@ function AuthPanel({ isOpen, onClose, initialEmail = "" }) {
     }, [isOpen, initialEmail]);
 
     const handleClose = () => {
+        sessionStorage.removeItem("signupDisplayName");
         sessionStorage.removeItem("signupUsername");
         sessionStorage.removeItem("signupEmail");
         setIsSignup(false);
