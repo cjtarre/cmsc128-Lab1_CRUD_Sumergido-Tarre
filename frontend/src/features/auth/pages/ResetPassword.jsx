@@ -17,23 +17,28 @@ function ResetPassword() {
     const [loading, setLoading] = useState(false);
     const [validLink, setValidLink] = useState(null);
 
-    // Read recovery tokens and remove them from the visible URL
+    // Read recovery tokens from the redirect URL
     useEffect(() => {
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const queryParams = new URLSearchParams(window.location.search);
-
-        const access = hashParams.get("access_token") || queryParams.get("access_token");
-        const refresh = hashParams.get("refresh_token") || queryParams.get("refresh_token");
-        const type = hashParams.get("type") || queryParams.get("type");
-
+    
+        const access =
+            hashParams.get("access_token") ||
+            queryParams.get("access_token");
+    
+        const refresh =
+            hashParams.get("refresh_token") ||
+            queryParams.get("refresh_token");
+    
+        const type =
+            hashParams.get("type") ||
+            queryParams.get("type");
+    
         if (access && refresh && (!type || type === "recovery")) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setAccessToken(access);
             setRefreshToken(refresh);
             setValidLink(true);
-
-            // Keep sensitive recovery tokens out of the address bar
-            window.history.replaceState({}, document.title, "/reset-password");
         } else {
             setValidLink(false);
         }
@@ -44,7 +49,7 @@ function ResetPassword() {
         e.preventDefault();
 
         if (!newPassword) return toast.error("Enter a new password.");
-        if (newPassword.length < 6) return toast.error("Password must be at least 6 characters.");
+        if (newPassword.length < 8) return toast.error("Password must be at least 8 characters.");
         if (!confirmPassword) return toast.error("Confirm your new password.");
         if (newPassword !== confirmPassword) return toast.error("Passwords do not match.");
 
@@ -129,7 +134,7 @@ function ResetPassword() {
                             </div>
                         </div>
 
-                        <p className="text-xs text-slate-400 dark:text-slate-500">Use at least 6 characters.</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">Use at least 8 characters.</p>
 
                         <button type="submit" disabled={loading} className="w-full rounded-xl bg-green-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-60">
                             {loading ? "Resetting..." : "Reset password"}
