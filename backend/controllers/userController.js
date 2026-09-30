@@ -1,7 +1,7 @@
 const { supabaseUrl, supabaseKey } = require('../config/supabaseClient');
 const supabaseAdmin = require('../config/supabaseAdmin');
 const { createClient } = require('@supabase/supabase-js');
-const { validatePassword } = require('../utils/validation');
+const { validatePassword, validateUsername } = require('../utils/validation');
 
 const NAME_MAX_LENGTH = 50;
 
@@ -27,8 +27,7 @@ const buildUserScopedClient = async (req) => {
     return requestClient;
 };
 
-// Update display_name and/or username. Merged into existing user_metadata
-// (not replaced) so updating one field never wipes the other.
+// Updates application profile data stored in public.profiles.
 const updateProfile = async (req, res) => {
     try {
         const { display_name, username } = req.body;
@@ -37,7 +36,7 @@ const updateProfile = async (req, res) => {
             return res.status(400).json({ error: 'Nothing to update' });
         }
 
-        const user_metadata = { ...req.user.user_metadata };
+        const updates = {};
 
         if (display_name !== undefined) {
             const trimmedDisplayName = display_name.trim();
@@ -52,34 +51,41 @@ const updateProfile = async (req, res) => {
                 });
             }
 
-            user_metadata.display_name = trimmedDisplayName;
+            updates.display_name = trimmedDisplayName;
         }
 
         if (username !== undefined) {
-            const trimmedUsername = username.trim();
+            const normalizedUsername = username.trim().toLowerCase();
+            const usernameError = validateUsername(normalizedUsername);
 
-            if (!trimmedUsername) {
-                return res.status(400).json({ error: 'Username is required' });
+            if (usernameError) {
+                return res.status(400).json({ error: usernameError });
             }
 
-            if (trimmedUsername.length > NAME_MAX_LENGTH) {
-                return res.status(400).json({
-                    error: `Username must be ${NAME_MAX_LENGTH} characters or fewer`,
-                });
-            }
-
-            user_metadata.username = trimmedUsername;
+            updates.username = normalizedUsername;
         }
 
-        const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
-            req.user.id,
-            { user_metadata }
-        );
+        const { data, error } = await supabaseAdmin
+            .from('profiles')
+            .update(updates)
+            .eq('user_id', req.user.id)
+            .select('user_id, username, display_name')
+            .single();
+
+        if (error?.code === '23505') {
+            return res.status(409).json({ error: 'That username is already taken' });
+        }
+
         if (error) throw error;
 
         res.status(200).json({
             message: 'Profile updated successfully',
-            user: data.user,
+            user: {
+                id: req.user.id,
+                email: req.user.email,
+                username: data.username,
+                display_name: data.display_name,
+            },
         });
     } catch (error) {
         console.error('Error updating profile:', error);

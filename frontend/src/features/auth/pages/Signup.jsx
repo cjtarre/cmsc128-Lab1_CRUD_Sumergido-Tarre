@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import HoverText from "../../../shared/components/effects/HoverText";
 import { useAuth } from "../hooks/useAuth";
-import { NAME_MAX_LENGTH, validateSignup } from "../../../shared/utils/validation";
+import { DISPLAY_NAME_MAX_LENGTH, USERNAME_MAX_LENGTH, validateSignup } from "../../../shared/utils/validation";
 
 function Signup({ embedded = false, onSwitchToLogin }) {
     const { signup } = useAuth();
@@ -12,8 +12,9 @@ function Signup({ embedded = false, onSwitchToLogin }) {
     const location = useLocation();
 
     // Signup form state
+    const [displayName, setDisplayName] = useState(() => sessionStorage.getItem("signupDisplayName") || "");
     const [username, setUsername] = useState(() => sessionStorage.getItem("signupUsername") || "");
-    const [email, setEmail] = useState(() => sessionStorage.getItem("signupEmail") || "");  
+    const [email, setEmail] = useState(() => sessionStorage.getItem("signupEmail") || "");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -24,11 +25,13 @@ function Signup({ embedded = false, onSwitchToLogin }) {
 
     // Preserve non-sensitive signup progress across accidental refreshes
     useEffect(() => {
+        sessionStorage.setItem("signupDisplayName", displayName);
         sessionStorage.setItem("signupUsername", username);
         sessionStorage.setItem("signupEmail", email);
-    }, [username, email]);
+    }, [displayName, username, email]);
 
     const clearSignupDraft = () => {
+        sessionStorage.removeItem("signupDisplayName");
         sessionStorage.removeItem("signupUsername");
         sessionStorage.removeItem("signupEmail");
     };
@@ -43,7 +46,7 @@ function Signup({ embedded = false, onSwitchToLogin }) {
         e.preventDefault();
         setError("");
 
-        const validationErrors = validateSignup({ username, email, password, confirmPassword });
+        const validationErrors = validateSignup({ displayName, username, email, password, confirmPassword });
 
         if (Object.keys(validationErrors).length) {
             setErrors(validationErrors);
@@ -54,8 +57,9 @@ function Signup({ embedded = false, onSwitchToLogin }) {
         setLoading(true);
 
         try {
-            await signup(email.trim(), password, username.trim());
+            await signup(email.trim(), password, username.trim().toLowerCase(), displayName.trim());
 
+            sessionStorage.removeItem("signupDisplayName");
             sessionStorage.removeItem("signupUsername");
             sessionStorage.removeItem("signupEmail");
 
@@ -63,7 +67,9 @@ function Signup({ embedded = false, onSwitchToLogin }) {
             navigate("/login", { state: { accountCreated: true, email: email.trim() } });
         } catch (err) {
             const message = err.response?.data?.error || "";
+
             if (message.toLowerCase().includes("rate limit")) setError("Too many verification emails were requested. Please try again later.");
+            else if (message.toLowerCase().includes("username")) setError(message);
             else if (message.toLowerCase().includes("already")) setError("An account with this email already exists. Try signing in instead.");
             else setError(message || "Unable to create account.");
         } finally {
@@ -83,7 +89,27 @@ function Signup({ embedded = false, onSwitchToLogin }) {
     const form = (
         <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-                <label htmlFor="signup-username" className={`text-sm font-medium ${labelClass}`}>Display name</label>
+                <label htmlFor="signup-display-name" className={`text-sm font-medium ${labelClass}`}>Display name</label>
+                <div className="relative mt-2">
+                    <User size={17} className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconClass}`} />
+                    <input
+                        id="signup-display-name"
+                        type="text"
+                        value={displayName}
+                        onChange={(e) => {
+                            setDisplayName(e.target.value);
+                            clearFieldError("displayName");
+                        }}
+                        maxLength={DISPLAY_NAME_MAX_LENGTH}
+                        placeholder="Enter your name"
+                        className={inputClass}
+                    />
+                </div>
+                {errors.displayName && <p className={fieldErrorClass}>{errors.displayName}</p>}
+            </div>
+
+            <div>
+                <label htmlFor="signup-username" className={`text-sm font-medium ${labelClass}`}>Username</label>
                 <div className="relative mt-2">
                     <User size={17} className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconClass}`} />
                     <input
@@ -91,11 +117,12 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                         type="text"
                         value={username}
                         onChange={(e) => {
-                            setUsername(e.target.value);
+                            setUsername(e.target.value.toLowerCase());
                             clearFieldError("username");
                         }}
-                        maxLength={NAME_MAX_LENGTH}
-                        placeholder="Enter your name"
+                        maxLength={USERNAME_MAX_LENGTH}
+                        autoComplete="username"
+                        placeholder="Choose a username"
                         className={inputClass}
                     />
                 </div>

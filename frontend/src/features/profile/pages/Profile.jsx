@@ -5,11 +5,13 @@ import { toast } from "sonner";
 import { useAuth } from "../../auth/hooks/useAuth";
 import ConfirmDialog from "../../../shared/components/common/ConfirmDialog";
 import { getDisplayName, getInitials } from "../../../shared/utils/userUtils";
+import { DISPLAY_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, validateDisplayName, validatePassword, validateUsername} from "../../../shared/utils/validation";
 
 function Profile() {
     const { user, authLoading, logout, updateProfile, updateEmail, updatePassword } = useAuth();
 
     const [displayName, setDisplayName] = useState("");
+    const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,7 +22,8 @@ function Profile() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
-    const savedDisplayName = user?.user_metadata?.username?.trim() || "";
+    const savedDisplayName = user?.display_name?.trim() || "";
+    const savedUsername = user?.username?.trim() || "";
     const currentDisplayName = getDisplayName(user);
     const currentEmail = user?.email || "";
     const initials = getInitials(currentDisplayName);
@@ -28,27 +31,40 @@ function Profile() {
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setDisplayName(savedDisplayName);
+        setUsername(savedUsername);
         setEmail(currentEmail);
-    }, [savedDisplayName, currentEmail]);
+    }, [savedDisplayName, savedUsername, currentEmail]);
 
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
 
         const name = displayName.trim();
+        const normalizedUsername = username.trim().toLowerCase();
         const newEmail = email.trim();
 
-        if (!name) return toast.error("Display name is required.");
+        const nameError = validateDisplayName(name);
+        if (nameError) return toast.error(nameError);
+
+        const usernameError = validateUsername(normalizedUsername);
+        if (usernameError) return toast.error(usernameError);
+
         if (!newEmail) return toast.error("Email address is required.");
 
         const nameChanged = name !== savedDisplayName;
+        const usernameChanged = normalizedUsername !== savedUsername;
         const emailChanged = newEmail !== currentEmail;
 
-        if (!nameChanged && !emailChanged) return toast.info("No changes to save.");
+        if (!nameChanged && !usernameChanged && !emailChanged) return toast.info("No changes to save.");
 
         setSavingProfile(true);
 
         try {
-            if (nameChanged) await updateProfile(name);
+            if (nameChanged || usernameChanged) {
+                await updateProfile({
+                    ...(nameChanged && { display_name: name }),
+                    ...(usernameChanged && { username: normalizedUsername }),
+                });
+            }
 
             if (emailChanged) {
                 const data = await updateEmail(newEmail);
@@ -66,8 +82,8 @@ function Profile() {
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
 
-        if (!newPassword) return toast.error("Enter a new password.");
-        if (newPassword.length < 6) return toast.error("Password must be at least 6 characters.");
+        const passwordError = validatePassword(newPassword);
+        if (passwordError) return toast.error(passwordError);
         if (!confirmPassword) return toast.error("Confirm your new password.");
         if (newPassword !== confirmPassword) return toast.error("Passwords do not match.");
 
@@ -119,6 +135,7 @@ function Profile() {
 
                     <div className="min-w-0">
                         <h2 className="truncate text-lg font-semibold text-slate-800 dark:text-slate-100">{currentDisplayName}</h2>
+                        <p className="mt-1 truncate text-sm text-slate-500 dark:text-slate-400">@{savedUsername}</p>
                         <p className="mt-1 truncate text-sm text-slate-500 dark:text-slate-400">{currentEmail}</p>
                         <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-green-600 dark:text-green-400">Takda account</p>
                     </div>
@@ -137,8 +154,17 @@ function Profile() {
                             <label htmlFor="displayName" className="text-xs font-medium text-slate-600 dark:text-slate-300">Display name</label>
                             <div className="relative">
                                 <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input id="displayName" type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} autoComplete="name" maxLength={50} placeholder="Enter your display name" className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-green-600 dark:focus:ring-green-950" />
+                                <input id="displayName" type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} autoComplete="name" maxLength={DISPLAY_NAME_MAX_LENGTH} placeholder="Enter your display name" className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-green-600 dark:focus:ring-green-950" />
                             </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label htmlFor="username" className="text-xs font-medium text-slate-600 dark:text-slate-300">Username</label>
+                            <div className="relative">
+                                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoComplete="username" maxLength={USERNAME_MAX_LENGTH} placeholder="Enter your username" className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-green-600 dark:focus:ring-green-950" />
+                            </div>
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500">Use {USERNAME_MIN_LENGTH}–{USERNAME_MAX_LENGTH} lowercase letters, numbers, periods, or underscores.</p>
                         </div>
 
                         <div className="space-y-1.5">
@@ -194,7 +220,7 @@ function Profile() {
                         </div>
 
                         <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-5 dark:border-slate-800">
-                            <p className="text-[11px] text-slate-400 dark:text-slate-500">Use at least 6 characters.</p>
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500">Use at least {PASSWORD_MIN_LENGTH} characters with uppercase, lowercase, number, and special character.</p>
                             <button type="submit" disabled={savingPassword} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-700">
                                 <LockKeyhole size={16} /> {savingPassword ? "Updating..." : "Change password"}
                             </button>

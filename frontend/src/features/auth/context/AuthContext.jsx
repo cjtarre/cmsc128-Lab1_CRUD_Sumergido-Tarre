@@ -28,18 +28,19 @@ export function AuthProvider({ children }) {
         restoreSession();
     }, []);
 
-    const login = async (email, password) => {
-        const data = await authService.login(email, password);
+    const login = async (identifier, password) => {
+        const data = await authService.login(identifier, password);
         localStorage.setItem("accessToken", data.session.access_token);
         localStorage.setItem("refreshToken", data.session.refresh_token);
         setUser(data.user);
         return data;
     };
-
-    const signup = async (email, password, username) => authService.signup(email, password, username);
-
-    const updateProfile = async (username) => {
-        const data = await authService.updateProfile(username);
+    
+    const signup = async (email, password, username, displayName) =>
+        authService.signup(email, password, username, displayName);
+    
+    const updateProfile = async (profile) => {
+        const data = await authService.updateProfile(profile);
         setUser(data.user);
         return data;
     };
