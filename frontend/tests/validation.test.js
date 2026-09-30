@@ -1,141 +1,178 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
-    formatDueDate,
-    convertToInputDate,
-    convertToInputTime,
-    formatDueTime,
-    getTaskCategory,
-} from "../src/shared/utils/dateUtils";
+    INFO_MAX_LENGTH,
+    NAME_MAX_LENGTH,
+    PASSWORD_MIN_LENGTH,
+    validateSignup,
+    validateTask,
+} from "../src/shared/utils/validation";
 
-describe("dateUtils", () => {
-    afterEach(() => {
-        vi.useRealTimers();
+describe("validateTask", () => {
+    const validTask = {
+        title: "Finish CMSC 128 Lab",
+        description: "Complete the remaining requirements.",
+        dueDate: "30/09/2026",
+        dueTime: "23:59",
+    };
+
+    it("accepts valid task data", () => {
+        expect(validateTask(validTask)).toEqual({});
     });
 
-    describe("formatDueDate", () => {
-        it("returns an empty string when no date is provided", () => {
-            expect(formatDueDate("")).toBe("");
-        });
-
-        it("returns Today when the date is today", () => {
-            vi.useFakeTimers();
-            vi.setSystemTime(new Date(2026, 8, 21));
-
-            expect(formatDueDate("21/09/2026")).toBe("Today");
-        });
-
-        it("formats a valid date", () => {
-            expect(formatDueDate("25/12/2026")).toBe("December 25");
-        });
-
-        it("returns Invalid date for an invalid date format", () => {
-            expect(formatDueDate("2026-12-25")).toBe("Invalid date");
+    it("requires a task title", () => {
+        expect(validateTask({ ...validTask, title: " " })).toEqual({
+            title: "Task title is required.",
         });
     });
 
-    describe("convertToInputDate", () => {
-        it("returns an empty string when no date is provided", () => {
-            expect(convertToInputDate("")).toBe("");
-        });
-
-        it("converts DD/MM/YYYY to YYYY-MM-DD", () => {
-            expect(convertToInputDate("21/09/2026")).toBe("2026-09-21");
-        });
-
-        it("pads single-digit day and month", () => {
-            expect(convertToInputDate("5/3/2026")).toBe("2026-03-05");
-        });
-
-        it("returns an empty string for invalid input", () => {
-            expect(convertToInputDate("21/09")).toBe("");
+    it("rejects a task title that is too long", () => {
+        expect(validateTask({
+            ...validTask,
+            title: "a".repeat(NAME_MAX_LENGTH + 1),
+        })).toEqual({
+            title: `Task title must be ${NAME_MAX_LENGTH} characters or fewer.`,
         });
     });
 
-    describe("convertToInputTime", () => {
-        it("returns an empty string when no time is provided", () => {
-            expect(convertToInputTime("")).toBe("");
-        });
-
-        it("returns a 24-hour time unchanged", () => {
-            expect(convertToInputTime("14:30")).toBe("14:30");
-        });
-
-        it("converts PM time to 24-hour format", () => {
-            expect(convertToInputTime("2:30 PM")).toBe("14:30");
-        });
-
-        it("converts 12 PM correctly", () => {
-            expect(convertToInputTime("12:00 PM")).toBe("12:00");
-        });
-
-        it("converts 12 AM correctly", () => {
-            expect(convertToInputTime("12:00 AM")).toBe("00:00");
-        });
-
-        it("returns an empty string for invalid input", () => {
-            expect(convertToInputTime("invalid")).toBe("");
+    it("rejects a task description that is too long", () => {
+        expect(validateTask({
+            ...validTask,
+            description: "a".repeat(INFO_MAX_LENGTH + 1),
+        })).toEqual({
+            description: `Description must be ${INFO_MAX_LENGTH} characters or fewer.`,
         });
     });
 
-    describe("formatDueTime", () => {
-        it("returns an empty string when no time is provided", () => {
-            expect(formatDueTime("")).toBe("");
-        });
-
-        it("formats a 24-hour time as 12-hour time", () => {
-            expect(formatDueTime("14:30")).toBe("2:30 PM");
-        });
-
-        it("formats an AM time correctly", () => {
-            expect(formatDueTime("09:05")).toBe("9:05 AM");
-        });
-
-        it("formats 12 PM correctly", () => {
-            expect(formatDueTime("12:00")).toBe("12:00 PM");
-        });
-
-        it("formats midnight correctly", () => {
-            expect(formatDueTime("00:30")).toBe("12:30 AM");
-        });
-
-        it("keeps an already formatted time unchanged", () => {
-            expect(formatDueTime("2:30 PM")).toBe("2:30 PM");
-        });
-
-        it("returns an empty string for invalid input", () => {
-            expect(formatDueTime("invalid")).toBe("");
+    it("requires a due date", () => {
+        expect(validateTask({ ...validTask, dueDate: "" })).toEqual({
+            dueDate: "Due date is required.",
         });
     });
 
-    describe("getTaskCategory", () => {
-        it("returns upcoming when no date is provided", () => {
-            expect(getTaskCategory("")).toBe("upcoming");
+    it("requires a due time", () => {
+        expect(validateTask({ ...validTask, dueTime: "" })).toEqual({
+            dueTime: "Due time is required.",
         });
+    });
+});
 
-        it("returns overdue for a past date", () => {
-            vi.useFakeTimers();
-            vi.setSystemTime(new Date(2026, 8, 21));
+describe("validateSignup", () => {
+    const validSignup = {
+        username: "Christie",
+        email: "christie@example.com",
+        password: "Password1!",
+        confirmPassword: "Password1!",
+    };
 
-            expect(getTaskCategory("20/09/2026")).toBe("overdue");
+    it("accepts valid signup data", () => {
+        expect(validateSignup(validSignup)).toEqual({});
+    });
+
+    it("requires a display name", () => {
+        expect(validateSignup({ ...validSignup, username: " " })).toEqual({
+            username: "Display name is required.",
         });
+    });
 
-        it("returns today for today's date", () => {
-            vi.useFakeTimers();
-            vi.setSystemTime(new Date(2026, 8, 21));
-
-            expect(getTaskCategory("21/09/2026")).toBe("today");
+    it("rejects a display name that is too long", () => {
+        expect(validateSignup({
+            ...validSignup,
+            username: "a".repeat(NAME_MAX_LENGTH + 1),
+        })).toEqual({
+            username: `Display name must be ${NAME_MAX_LENGTH} characters or fewer.`,
         });
+    });
 
-        it("returns upcoming for a future date", () => {
-            vi.useFakeTimers();
-            vi.setSystemTime(new Date(2026, 8, 21));
-
-            expect(getTaskCategory("22/09/2026")).toBe("upcoming");
+    it("requires an email address", () => {
+        expect(validateSignup({ ...validSignup, email: " " })).toEqual({
+            email: "Email address is required.",
         });
+    });
 
-        it("returns upcoming for invalid input", () => {
-            expect(getTaskCategory("invalid")).toBe("upcoming");
+    it("rejects an invalid email address", () => {
+        expect(validateSignup({
+            ...validSignup,
+            email: "invalid-email",
+        })).toEqual({
+            email: "Please enter a valid email address.",
+        });
+    });
+
+    it("requires a password", () => {
+        expect(validateSignup({
+            ...validSignup,
+            password: "",
+        })).toEqual({
+            password: "Password is required.",
+        });
+    });
+
+    it("rejects a short password", () => {
+        expect(validateSignup({
+            ...validSignup,
+            password: "Ab1!",
+            confirmPassword: "Ab1!",
+        })).toEqual({
+            password: `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`,
+        });
+    });
+
+    it("requires an uppercase letter", () => {
+        expect(validateSignup({
+            ...validSignup,
+            password: "password1!",
+            confirmPassword: "password1!",
+        })).toEqual({
+            password: "Password must include an uppercase letter.",
+        });
+    });
+
+    it("requires a lowercase letter", () => {
+        expect(validateSignup({
+            ...validSignup,
+            password: "PASSWORD1!",
+            confirmPassword: "PASSWORD1!",
+        })).toEqual({
+            password: "Password must include a lowercase letter.",
+        });
+    });
+
+    it("requires a number", () => {
+        expect(validateSignup({
+            ...validSignup,
+            password: "Password!",
+            confirmPassword: "Password!",
+        })).toEqual({
+            password: "Password must include a number.",
+        });
+    });
+
+    it("requires a special character", () => {
+        expect(validateSignup({
+            ...validSignup,
+            password: "Password1",
+            confirmPassword: "Password1",
+        })).toEqual({
+            password: "Password must include a special character.",
+        });
+    });
+
+    it("requires password confirmation", () => {
+        expect(validateSignup({
+            ...validSignup,
+            confirmPassword: "",
+        })).toEqual({
+            confirmPassword: "Please confirm your password.",
+        });
+    });
+
+    it("requires matching passwords", () => {
+        expect(validateSignup({
+            ...validSignup,
+            confirmPassword: "Different1!",
+        })).toEqual({
+            confirmPassword: "Passwords do not match.",
         });
     });
 });

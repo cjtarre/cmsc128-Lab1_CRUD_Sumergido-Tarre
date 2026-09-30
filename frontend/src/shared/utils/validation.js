@@ -33,7 +33,7 @@ export function validateTask(task) {
 }
 
 
-export const PASSWORD_MIN_LENGTH = 6;
+export const PASSWORD_MIN_LENGTH = 8;
 
 export function validateSignup({ username, email, password, confirmPassword }) {
     const errors = {};
@@ -67,6 +67,26 @@ export function validateSignup({ username, email, password, confirmPassword }) {
 
     if (password.length < PASSWORD_MIN_LENGTH) {
         errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
+        return errors;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+        errors.password = "Password must include an uppercase letter.";
+        return errors;
+    }
+
+    if (!/[a-z]/.test(password)) {
+        errors.password = "Password must include a lowercase letter.";
+        return errors;
+    }
+
+    if (!/\d/.test(password)) {
+        errors.password = "Password must include a number.";
+        return errors;
+    }
+
+    if (!/[^A-Za-z0-9]/.test(password)) {
+        errors.password = "Password must include a special character.";
         return errors;
     }
 

@@ -3,22 +3,34 @@ import { useEffect, useState } from "react";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 
-function AuthPanel({ isOpen, onClose }) {
+function AuthPanel({ isOpen, onClose, initialEmail = "" }) {
     const [isSignup, setIsSignup] = useState(false);
+    const [loginEmail, setLoginEmail] = useState(initialEmail);
     const [shouldRender, setShouldRender] = useState(isOpen);
 
     useEffect(() => {
         if (isOpen) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setShouldRender(true);
+    
+            if (initialEmail) {
+                setLoginEmail(initialEmail);
+            }
         } else {
             const timer = setTimeout(() => {
                 setShouldRender(false);
             }, 700);
-
+    
             return () => clearTimeout(timer);
         }
-    }, [isOpen]);
+    }, [isOpen, initialEmail]);
+
+    const handleClose = () => {
+        sessionStorage.removeItem("signupUsername");
+        sessionStorage.removeItem("signupEmail");
+        setIsSignup(false);
+        onClose();
+    };
 
     if (!shouldRender) {
         return (
@@ -32,7 +44,7 @@ function AuthPanel({ isOpen, onClose }) {
                 <path d="M100 0 C20 18 20 82 100 100 L100 0 Z" className="fill-[#02341e] dark:fill-[#dff5e8]" />
             </svg>
 
-            <button type="button" onClick={onClose} aria-label="Close" className="absolute right-5 top-5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/80 transition hover:bg-white/15 hover:text-white dark:border-slate-300 dark:bg-white/50 dark:text-slate-600 dark:hover:bg-white/80 dark:hover:text-slate-800">
+            <button type="button" onClick={handleClose} aria-label="Close" className="absolute right-5 top-5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/80 transition hover:bg-white/15 hover:text-white dark:border-slate-300 dark:bg-white/50 dark:text-slate-600 dark:hover:bg-white/80 dark:hover:text-slate-800">
                 <X size={18} />
             </button>
 
@@ -40,7 +52,7 @@ function AuthPanel({ isOpen, onClose }) {
                 {isSignup ? (
                     <Signup embedded onSwitchToLogin={() => setIsSignup(false)} />
                 ) : (
-                    <Login embedded onSwitchToSignup={() => setIsSignup(true)} />
+                    <Login embedded initialEmail={loginEmail} onEmailChange={setLoginEmail} onSwitchToSignup={() => setIsSignup(true)} />
                 )}
             </div>
         </div>
