@@ -1,5 +1,6 @@
 const { supabase, supabaseUrl, supabaseKey } = require('../config/supabaseClient');
 const { createClient } = require('@supabase/supabase-js');
+const { validatePassword } = require('../utils/validation');
 
 const requireAuth = async (req, res, next) => {
     try {
@@ -38,6 +39,12 @@ const signUpUser = async (req, res) => {
             return res.status(400).json({ error: 'Email, password, and username are required' });
         }
 
+        const passwordError = validatePassword(password);
+
+        if (passwordError) {
+            return res.status(400).json({ error: passwordError });
+        }
+
         const { data, error } = await supabase.auth.signUp({
             email: email.trim(),
             password,
@@ -50,6 +57,12 @@ const signUpUser = async (req, res) => {
         });
 
         if (error) return res.status(400).json({ error: error.message });
+
+        if (data.user?.identities?.length === 0) {
+            return res.status(409).json({
+                error: 'An account with this email already exists',
+            });
+        }
 
         return res.status(201).json({
             message: 'User signed up successfully',
@@ -198,11 +211,11 @@ const resetPassword = async (req, res) => {
             });
         }
 
-        // Enforce the same minimum password length as the frontend.
-        if (password.length < 6) {
-            return res.status(400).json({
-                error: 'Password must be at least 6 characters',
-            });
+        // Enforce the same password policy used during registration.
+        const passwordError = validatePassword(password);
+        
+        if (passwordError) {
+            return res.status(400).json({ error: passwordError });
         }
 
         // Fresh, request-scoped client for the recovery session.
