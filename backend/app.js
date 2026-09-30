@@ -6,6 +6,7 @@ require("dotenv").config({
 
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 
 // Routes
 const taskRoutes = require("./routes/taskRoutes");
@@ -15,7 +16,10 @@ const userRoutes = require("./routes/userRoutes");
 
 // Middleware
 const app = express();
-app.use(cors());
+app.use(helmet());
+app.use(cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+}));
 app.use(express.json());
 
 // Connect CRUD route endpoints to the Express app

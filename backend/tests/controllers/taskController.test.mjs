@@ -391,6 +391,42 @@ describe("updateTask", () => {
         });
     });
 
+    it("should return 404 and not modify tags when the task does not belong to the authenticated user", async () => {
+        const req = {
+            user: mockUser,
+            params: { task_id: "99" },
+            body: {
+                task_name: "Unauthorized Update",
+                task_info: "Should not be updated",
+                priority_level: "High",
+                status: "Pending",
+                due_date: "2026-10-15",
+                tag_ids: [1, 2],
+            },
+        };
+
+        const res = createResponse();
+
+        mockQuery.select.mockResolvedValueOnce({
+            data: [],
+            error: null,
+        });
+
+        await updateTask(req, res);
+
+        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
+        expect(mockQuery.eq).toHaveBeenCalledWith("task_id", "99");
+
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith({
+            error: "Task not found",
+        });
+
+        expect(mockQuery.delete).not.toHaveBeenCalled();
+        expect(mockQuery.insert).not.toHaveBeenCalled();
+        expect(mockQuery.single).not.toHaveBeenCalled();
+    });
+
     it("should return 400 when updating a task fails", async () => {
         const req = {
             user: mockUser,

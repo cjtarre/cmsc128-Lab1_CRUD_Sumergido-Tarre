@@ -5,14 +5,9 @@ const { validatePassword } = require('../utils/validation');
 const requireAuth = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
+        const [scheme, token, extra] = authHeader?.split(' ') ?? [];
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ error: 'Access token missing or invalid' });
-        }
-
-        const token = authHeader.split(' ')[1];
-
-        if (!token) {
+        if (scheme !== 'Bearer' || !token || extra) {
             return res.status(401).json({ error: 'Access token missing or invalid' });
         }
 

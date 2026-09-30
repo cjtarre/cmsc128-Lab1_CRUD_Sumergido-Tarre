@@ -109,12 +109,16 @@ const updateTask = async (req, res) => {
                 status,
                 due_date
             })
-            .eq('user_id', req.user.id)
+            .eq("user_id", req.user.id)
             .eq("task_id", task_id)
             .select();
-
+        
         if (updateError) throw updateError;
-
+        
+        if (!data || data.length === 0) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+        
         if (tag_ids !== undefined) {
             const { error: deleteError } = await supabase
                 .from("task_tag")
@@ -146,6 +150,7 @@ const updateTask = async (req, res) => {
                 )
             `)
             .eq("task_id", task_id)
+            .eq("user_id", req.user.id)
             .single();
 
         if (fetchError) throw fetchError;
