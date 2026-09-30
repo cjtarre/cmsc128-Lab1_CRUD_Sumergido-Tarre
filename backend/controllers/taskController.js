@@ -1,4 +1,4 @@
-const supabase = require("../config/supabaseClient");
+const supabase = require("../config/supabaseAdmin");
 
 const getAllTasks = async (req, res) => {
     try {
@@ -15,8 +15,9 @@ const getAllTasks = async (req, res) => {
                 )
             `)
             .is("deleted_at", null)
-            .order("created_at", { ascending: false });
-
+            .eq('user_id', req.user.id)
+            .order('created_at', { ascending: false });
+        
         if (error) throw error;
 
         res.status(200).json(data);
@@ -38,16 +39,15 @@ const createTask = async (req, res) => {
         } = req.body;
 
         const { data: newTask, error: newTaskError } = await supabase
-            .from("tasks")
-            .insert([
-                {
-                    task_name,
-                    task_info,
-                    priority_level,
-                    status,
-                    due_date
-                }
-            ])
+            .from('tasks')
+            .insert([{ 
+                task_name, 
+                task_info, 
+                priority_level, 
+                status, 
+                due_date,
+                user_id: req.user.id
+            }])
             .select()
             .single();
 
@@ -109,11 +109,16 @@ const updateTask = async (req, res) => {
                 status,
                 due_date
             })
+            .eq("user_id", req.user.id)
             .eq("task_id", task_id)
             .select();
-
+        
         if (updateError) throw updateError;
-
+        
+        if (!data || data.length === 0) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+        
         if (tag_ids !== undefined) {
             const { error: deleteError } = await supabase
                 .from("task_tag")
@@ -145,6 +150,7 @@ const updateTask = async (req, res) => {
                 )
             `)
             .eq("task_id", task_id)
+            .eq("user_id", req.user.id)
             .single();
 
         if (fetchError) throw fetchError;
@@ -165,6 +171,7 @@ const deleteTask = async (req, res) => {
                 deleted_at: new Date().toISOString()
             })
             .eq("task_id", task_id)
+            .eq('user_id', req.user.id)
             .is("deleted_at", null)
             .select();
 
@@ -188,7 +195,8 @@ const restoreTask = async (req, res) => {
             .update({
                 deleted_at: null
             })
-            .eq("task_id", task_id);
+            .eq("task_id", task_id)
+            .eq("user_id", req.user.id);
 
         if (error) throw error;
 
@@ -205,6 +213,7 @@ const restoreTask = async (req, res) => {
                 )
             `)
             .eq("task_id", task_id)
+            .eq("user_id", req.user.id)
             .single();
 
         if (fetchError) throw fetchError;

@@ -11,8 +11,7 @@ const toApiTask = (task, includeTags = true) => {
         priority_level: task.priority ?? 0,
         status: task.status ?? STATUS.NOT_STARTED,
         due_date: dueDate,
-
-        ...(includeTags && { tag_ids: (task.tags || []).map((tag) => typeof tag === "object" ? tag.tag_id : tag),}),
+        ...(includeTags && { tag_ids: (task.tags || []).map((tag) => typeof tag === "object" ? tag.tag_id : tag) }),
     };
 };
 
@@ -26,15 +25,8 @@ const convertApiTask = (task) => {
         description: task.task_info || "",
         status: task.status,
         priority: task.priority_level,
-
         dueDate: due ? due.toLocaleDateString("en-GB") : "",
-
-        dueTime: due
-            ? due.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-              })
-            : "",
+        dueTime: due ? due.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
         tags,
         createdAt: task.created_at ?? null,
     };
@@ -42,17 +34,16 @@ const convertApiTask = (task) => {
 
 function useTasks(tasks, setTasks) {
     const getTask = (id) => tasks.find((task) => task.id === id);
+
     const addTask = async (task) => {
         const created = await taskService.createTask(toApiTask(task));
-
-        setTasks((prev) => [ ...prev, convertApiTask(created),]);
+        setTasks((prev) => [...prev, convertApiTask(created)]);
         return created;
     };
 
     const updateTask = async (task) => {
-        const updated = await taskService.updateTask(task.id, toApiTask(task));
-
-        setTasks((prev) => prev.map((item) => item.id === task.id ? convertApiTask(updated): item));
+        const updated = convertApiTask(await taskService.updateTask(task.id, toApiTask(task)));
+        setTasks((prev) => prev.map((item) => item.id === task.id ? updated : item));
         return updated;
     };
 
@@ -61,20 +52,17 @@ function useTasks(tasks, setTasks) {
         setTasks((prev) => prev.filter((task) => task.id !== id));
     };
 
-
     const restoreTask = async (id) => {
         const restored = await taskService.restoreTask(id);
-        setTasks((prev) => [ ...prev, convertApiTask(restored),]);
+        setTasks((prev) => [...prev, convertApiTask(restored)]);
         return restored;
     };
-
 
     const updateTaskStatus = async (id, status) => {
         const task = getTask(id);
         if (!task) return;
 
-        // Status changes do not need to modify task tags.
-        const updated = await taskService.updateTask(id, { ...toApiTask(task, false), status, });
+        const updated = await taskService.updateTask(id, { ...toApiTask(task, false), status });
         setTasks((prev) => prev.map((item) => item.id === id ? convertApiTask(updated) : item));
     };
 
@@ -86,15 +74,7 @@ function useTasks(tasks, setTasks) {
         await updateTaskStatus(id, status);
     };
 
-    return {
-        getTask,
-        addTask,
-        updateTask,
-        deleteTask,
-        restoreTask,
-        updateTaskStatus,
-        toggleTaskComplete,
-    };
+    return { getTask, addTask, updateTask, deleteTask, restoreTask, updateTaskStatus, toggleTaskComplete };
 }
 
 export default useTasks;

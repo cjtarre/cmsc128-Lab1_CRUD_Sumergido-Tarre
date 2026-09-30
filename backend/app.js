@@ -6,18 +6,27 @@ require("dotenv").config({
 
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 
 // Routes
 const taskRoutes = require("./routes/taskRoutes");
 const tagRoutes = require("./routes/tagRoutes");
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 
+// Middleware
 const app = express();
-app.use(cors());
+app.use(helmet());
+app.use(cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+}));
 app.use(express.json());
 
 // Connect CRUD route endpoints to the Express app
+app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/tags", tagRoutes);
+app.use("/api/users", userRoutes);
 
 // Define your local hosting port
 const PORT = process.env.PORT || 5000;

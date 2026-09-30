@@ -100,7 +100,7 @@ function AddTask({ isOpen, onClose, onSubmit }) {
     ];
 
     return (
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-900/25 p-3 pt-7 dark:bg-slate-950/60 sm:flex sm:items-center sm:justify-center sm:p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-900/25 p-3 dark:bg-slate-950/60 sm:p-4">
             <div className="mx-auto flex max-h-[calc(100dvh-2.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900 sm:max-h-[85vh] sm:rounded-2xl">
                 <div className="flex shrink-0 items-start justify-between border-b border-slate-100 px-4 py-4 dark:border-slate-700 sm:px-6 sm:py-5">
                     <div>

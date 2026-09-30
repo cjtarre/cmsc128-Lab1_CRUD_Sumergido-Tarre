@@ -15,7 +15,7 @@ function TaskTable({
 }) {
     return (
         <div className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <div className="hidden grid-cols-[minmax(0,2.5fr)_minmax(90px,1fr)_minmax(140px,2fr)_44px] items-center gap-4 border-b border-slate-200 bg-slate-50/70 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/50 sm:grid">
+            <div className="hidden grid-cols-[minmax(0,2.3fr)_minmax(110px,0.9fr)_minmax(180px,1.2fr)_44px] items-center gap-4 border-b border-slate-200 bg-slate-50/70 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/50 sm:grid">
                 <SortButtonToggle
                     label="Task"
                     activeLabel={

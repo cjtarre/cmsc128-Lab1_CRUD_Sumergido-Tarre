@@ -12,11 +12,11 @@ const taskStyles = {
         2: "text-green-600 dark:text-green-400",
     },
 
-    tag: {
-        1: "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400",
-        2: "bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400",
-        3: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
-    },
+tag: {
+    1: "bg-blue-50/50 text-blue-500 dark:bg-blue-950/20 dark:text-blue-400",
+    2: "bg-purple-50/50 text-purple-500 dark:bg-purple-950/20 dark:text-purple-400",
+    3: "bg-slate-50 text-slate-500 dark:bg-slate-800/60 dark:text-slate-400",
+},
 };
 
 export default taskStyles;
