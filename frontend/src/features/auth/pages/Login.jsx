@@ -1,18 +1,18 @@
 import { useState } from "react";
-import { ChevronLeft, Eye, EyeOff, GraduationCap, Lock, Mail } from "lucide-react";
+import { ChevronLeft, Eye, EyeOff, GraduationCap, Lock, Mail, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import HoverText from "../../../shared/components/effects/HoverText";
 import { useAuth } from "../hooks/useAuth";
 
-function Login({ embedded = false, onSwitchToSignup }) {
+function Login({ embedded = false, initialEmail = "", onEmailChange, onSwitchToSignup }) {
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Login form state
-    const [email, setEmail] = useState("");
+    // Login form state; retain email passed from related auth pages
+    const [email, setEmail] = useState(initialEmail || location.state?.email || "");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
@@ -67,7 +67,13 @@ function Login({ embedded = false, onSwitchToSignup }) {
                 <label htmlFor="login-email" className={`text-sm font-medium ${labelClass}`}>Email address</label>
                 <div className="relative mt-2">
                     <Mail size={17} className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconClass}`} />
-                    <input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" placeholder="Enter your email" className={inputClass} />
+                    <input id="login-email" type="email" value={email} onChange={(e) => { setEmail(e.target.value); onEmailChange?.(e.target.value); }} required autoComplete="email" placeholder="Enter your email" className={inputClass} />
+
+                    {email && (
+                        <button type="button" onClick={() => { setEmail(""); onEmailChange?.(""); }} aria-label="Clear email" className={`absolute right-3 top-1/2 -translate-y-1/2 transition ${embedded ? "text-white/45 hover:text-white dark:text-slate-500 dark:hover:text-slate-700" : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"}`}>
+                            <X size={16} />
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -90,7 +96,7 @@ function Login({ embedded = false, onSwitchToSignup }) {
             )}
 
             <div className="flex justify-end">
-                <Link to="/forgot-password" state={{ from: embedded ? "auth-panel" : "login" }} className={`text-xs font-medium transition ${
+                <Link to="/forgot-password" state={{ from: embedded ? "auth-panel" : "login", email, loginEmail: email}} className={`text-xs font-medium transition ${
                         embedded ? "text-green-300 hover:text-green-200 dark:text-green-700 dark:hover:text-green-800" : "text-green-700 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200" }`}
                 >
                     Forgot password?
@@ -170,7 +176,7 @@ function Login({ embedded = false, onSwitchToSignup }) {
 
                         <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
                             Don't have an account?{" "}
-                            <Link to="/signup" className="font-semibold text-green-600 dark:text-green-400">
+                            <Link to="/signup" state={{ loginEmail: email }} className="font-semibold text-green-600 dark:text-green-400">
                                 Create one
                             </Link>
                         </p>

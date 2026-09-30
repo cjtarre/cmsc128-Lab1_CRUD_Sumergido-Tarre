@@ -9,12 +9,14 @@ function LandingPage() {
     const location = useLocation();
     const navigate = useNavigate();
     const [showAuth, setShowAuth] = useState(false);
+    const [authEmail, setAuthEmail] = useState("");
 
     // Reopen the auth panel when returning from Forgot Password
     useEffect(() => {
         if (location.state?.openAuth) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setShowAuth(true);
+            setAuthEmail(location.state?.email ?? "");
             navigate("/", { replace: true, state: {} });
         }
     }, [location.state, navigate]);
@@ -74,7 +76,7 @@ function LandingPage() {
             </div>
 
             {/* Auth page */}
-            <AuthPanel isOpen={showAuth} onClose={handleCloseAuth} />
+            <AuthPanel isOpen={showAuth} onClose={handleCloseAuth} initialEmail={authEmail} />
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Mail, X } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { toast } from "sonner";
@@ -9,7 +9,7 @@ function ForgotPassword() {
     const location = useLocation();
     const cameFromAuthPanel = location.state?.from === "auth-panel";
 
-    const [email, setEmail] = useState("");
+    const [email, setEmail] = useState(location.state?.email ?? "");
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
 
@@ -44,7 +44,10 @@ function ForgotPassword() {
                 {/* Return to home */}
                 <Link
                     to={cameFromAuthPanel ? "/" : "/login"}
-                    state={cameFromAuthPanel ? { openAuth: true } : undefined}
+                    state={cameFromAuthPanel
+                        ? { openAuth: true, email: location.state?.loginEmail ?? "" }
+                        : { email: location.state?.loginEmail ?? "" }
+                    }
                     aria-label={cameFromAuthPanel ? "Back to home" : "Back to login"}
                     className="group mb-6 flex h-10 w-10 items-center overflow-hidden whitespace-nowrap rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-300 hover:w-36 hover:border-green-300 hover:bg-green-50 hover:text-green-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-green-700 dark:hover:bg-green-950 dark:hover:text-green-400"
                 >
@@ -91,7 +94,13 @@ function ForgotPassword() {
 
                             <div className="relative">
                                 <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="Enter your email address" className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-green-600 dark:focus:ring-green-950" />
+                                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="Enter your email address" className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-green-600 dark:focus:ring-green-950" />
+
+                                {email && (
+                                    <button type="button" onClick={() => setEmail("")} aria-label="Clear email" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
+                                        <X size={16} />
+                                    </button>
+                                )}
                             </div>
                         </div>
 

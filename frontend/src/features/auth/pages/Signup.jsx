@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, Eye, EyeOff, GraduationCap, Lock, Mail, User } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import HoverText from "../../../shared/components/effects/HoverText";
 import { useAuth } from "../hooks/useAuth";
@@ -9,9 +9,11 @@ import { NAME_MAX_LENGTH, validateSignup } from "../../../shared/utils/validatio
 function Signup({ embedded = false, onSwitchToLogin }) {
     const { signup } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");
+    // Signup form state
+    const [username, setUsername] = useState(() => sessionStorage.getItem("signupUsername") || "");
+    const [email, setEmail] = useState(() => sessionStorage.getItem("signupEmail") || "");  
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -20,10 +22,23 @@ function Signup({ embedded = false, onSwitchToLogin }) {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
+    // Preserve non-sensitive signup progress across accidental refreshes
+    useEffect(() => {
+        sessionStorage.setItem("signupUsername", username);
+        sessionStorage.setItem("signupEmail", email);
+    }, [username, email]);
+
+    const clearSignupDraft = () => {
+        sessionStorage.removeItem("signupUsername");
+        sessionStorage.removeItem("signupEmail");
+    };
+
+    // Clear validation feedback as the user corrects a field
     const clearFieldError = (field) => {
         setErrors((prev) => ({ ...prev, [field]: undefined }));
     };
 
+    // Validate and create the account before redirecting to login
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -40,8 +55,12 @@ function Signup({ embedded = false, onSwitchToLogin }) {
 
         try {
             await signup(email.trim(), password, username.trim());
+
+            sessionStorage.removeItem("signupUsername");
+            sessionStorage.removeItem("signupEmail");
+
             toast.success("Account created successfully!");
-            navigate("/login", { state: { accountCreated: true } });
+            navigate("/login", { state: { accountCreated: true, email: email.trim() } });
         } catch (err) {
             const message = err.response?.data?.error || "";
             if (message.toLowerCase().includes("rate limit")) setError("Too many verification emails were requested. Please try again later.");
@@ -186,7 +205,7 @@ function Signup({ embedded = false, onSwitchToLogin }) {
     return (
         <div className="min-h-screen bg-[#f5faf7] px-6 py-6 dark:bg-slate-950">
             <div className="mx-auto max-w-md">
-                <Link to="/" aria-label="Back to home" className="group flex h-10 w-10 items-center overflow-hidden rounded-full border border-slate-200 bg-white px-3 text-slate-500 shadow-sm transition-all duration-300 hover:w-32 hover:border-green-200 hover:text-green-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-green-800 dark:hover:text-green-400">
+                <Link to="/" onClick={clearSignupDraft} aria-label="Back to home" className="group flex h-10 w-10 items-center overflow-hidden rounded-full border border-slate-200 bg-white px-3 text-slate-500 shadow-sm transition-all duration-300 hover:w-32 hover:border-green-200 hover:text-green-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-green-800 dark:hover:text-green-400">
                     <ChevronLeft size={18} className="shrink-0 transition-transform duration-300 group-hover:-translate-x-0.5" />
                     <span className="ml-1 max-w-0 whitespace-nowrap text-sm font-medium opacity-0 transition-all duration-300 group-hover:max-w-24 group-hover:opacity-100">Back to home</span>
                 </Link>
@@ -206,7 +225,7 @@ function Signup({ embedded = false, onSwitchToLogin }) {
 
                         <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
                             Already have an account?{" "}
-                            <Link to="/login" className="font-semibold text-green-600 dark:text-green-400">Sign in</Link>
+                            <Link to="/login" state={{ email: location.state?.loginEmail ?? "" }} className="font-semibold text-green-600 dark:text-green-400">Sign in</Link>
                         </p>
                     </div>
                 </div>
