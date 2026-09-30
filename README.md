@@ -411,7 +411,7 @@ Users can log in using either their username or email address together with thei
 ### Session Persistence
 Takda uses token-based authentication backed by Supabase sessions. After a successful login, the authentication session is restored when the application loads so that authenticated users remain logged in across page refreshes and normal browser navigation.
 
-The frontend restores the authenticated user state from the existing session and refreshes authentication when necessary. Invalid or expired authentication data is cleared so that protected content can no longer be accessed.
+The frontend restores the authenticated user state using the stored session tokens and verifies the current user through the backend. Invalid or expired authentication data is cleared so that protected content can no longer be accessed.
 
 ### Protected Routes
 Authenticated application pages are protected through `ProtectedRoute`. Users without an authenticated session are redirected to the login page.
@@ -435,9 +435,9 @@ Users can change their email address and password from account settings. Email u
 New passwords are subject to the same password-strength requirements used during registration and password recovery. Password validation is enforced by the backend before the update is sent to Supabase.
 
 ### Password Recovery
-Users who cannot log in can request a password-reset email using their registered email address. Supabase sends a recovery link that returns the user to Takda's reset-password flow.
+Users who cannot log in can request a password-reset email using their registered email address. Supabase sends a recovery link that verifies the reset request and redirects the user to Takda's reset-password page with temporary recovery tokens.
 
-Recovery tokens from the reset link are used to establish the password-reset session. The user can then set a new password that satisfies the application's password policy.
+The frontend reads the recovery access and refresh tokens from the redirect URL and sends them with the new password to the backend. The backend establishes the recovery session through Supabase and updates the user's password after validating it against the application's password policy. After a successful reset, the user can sign in using the new password and the previous password is no longer valid.
 
 ---
 ## Expanded Features
