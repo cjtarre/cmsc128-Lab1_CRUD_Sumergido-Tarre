@@ -10,7 +10,7 @@ function MainLayout() {
             <Header />
 
             <div className="flex min-h-0 flex-1">
-                <div className="hidden xl:block">
+                <div id="desktop-navbar" className="hidden xl:block">
                     <Navbar />
                 </div>
 
@@ -19,7 +19,9 @@ function MainLayout() {
                 </main>
             </div>
 
-            <MobileNavbar />
+            <div id="mobile-navbar" className="xl:hidden">
+                <MobileNavbar />
+            </div>
 
             <TaskCompanion />
         </div>

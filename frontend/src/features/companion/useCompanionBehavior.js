@@ -1,215 +1,117 @@
-import {
-    useCallback,
-    useEffect,
-    useRef,
-    useState,
-} from "react";
-
+import { useCallback, useEffect, useRef, useState } from "react";
 import { STATUS } from "../tasks/constants/taskOptions";
-import {
-    COMPANION_STATE,
-    COMPANION_TIMING,
-} from "./companionStates";
+import { COMPANION_STATE, COMPANION_TIMING } from "./companionStates";
 import { getRandomMessage } from "./companionMessages";
 
-const PET_SIZE = 80;
-const EDGE_PADDING = 24;
-const HEADER_CLEARANCE = 88;
-const MOBILE_NAV_CLEARANCE = 120;
+const PET_SIZE = 88;
+const EDGE = 24;
 const DRAG_THRESHOLD = 6;
+const POSITION_KEY = "takda-companion-x";
 
-const CORNER = {
-    TOP_LEFT: "top-left",
-    TOP_RIGHT: "top-right",
-    BOTTOM_RIGHT: "bottom-right",
-    BOTTOM_LEFT: "bottom-left",
-};
-
-const ADJACENT_CORNERS = {
-    [CORNER.TOP_LEFT]: [
-        CORNER.TOP_RIGHT,
-        CORNER.BOTTOM_LEFT,
-    ],
-    [CORNER.TOP_RIGHT]: [
-        CORNER.TOP_LEFT,
-        CORNER.BOTTOM_RIGHT,
-    ],
-    [CORNER.BOTTOM_RIGHT]: [
-        CORNER.TOP_RIGHT,
-        CORNER.BOTTOM_LEFT,
-    ],
-    [CORNER.BOTTOM_LEFT]: [
-        CORNER.TOP_LEFT,
-        CORNER.BOTTOM_RIGHT,
-    ],
-};
-
-function randomItem(items) {
-    return items[
-        Math.floor(Math.random() * items.length)
-    ];
-}
-
-function randomBetween(min, max) {
-    if (max <= min) return min;
-
-    return (
-        Math.floor(Math.random() * (max - min + 1)) + min
-    );
-}
+const random = (min, max) =>
+    Math.floor(Math.random() * (max - min + 1)) + min;
 
 function getBounds() {
+    const desktopNav = document.getElementById("desktop-navbar");
+    const mobileNav = document.getElementById("mobile-navbar");
+
+    const desktopRect = desktopNav?.getBoundingClientRect();
+    const mobileRect = mobileNav?.getBoundingClientRect();
+
+    const navRight =
+        desktopRect?.width > 0 ? desktopRect.right : 0;
+
+    const mobileTop =
+        mobileRect?.height > 0
+            ? mobileRect.top
+            : window.innerHeight;
+
+    const left = navRight + EDGE;
     const right = Math.max(
-        EDGE_PADDING,
-        window.innerWidth - PET_SIZE - EDGE_PADDING
+        left,
+        window.innerWidth - PET_SIZE - EDGE
     );
 
-    const bottomClearance =
-        window.innerWidth < 1280
-            ? MOBILE_NAV_CLEARANCE
-            : EDGE_PADDING;
-
-    const bottom = Math.max(
-        HEADER_CLEARANCE,
-        window.innerHeight -
-            PET_SIZE -
-            bottomClearance
+    const groundY = Math.max(
+        EDGE,
+        mobileTop - PET_SIZE - EDGE
     );
+
+    return { left, right, groundY };
+}
+
+function clampX(x) {
+    const { left, right } = getBounds();
+    return Math.min(right, Math.max(left, x));
+}
+
+function getHome() {
+    const { right, groundY } = getBounds();
+    return { x: right, y: groundY };
+}
+
+function getSavedPosition() {
+    const saved = Number(localStorage.getItem(POSITION_KEY));
+    const { groundY } = getBounds();
 
     return {
-        left: EDGE_PADDING,
-        right,
-        top: HEADER_CLEARANCE,
-        bottom,
+        x: localStorage.getItem(POSITION_KEY) !== null
+            ? clampX(saved)
+            : getHome().x,
+        y: groundY,
     };
 }
 
-function getCornerPosition(corner) {
-    const bounds = getBounds();
-
-    switch (corner) {
-        case CORNER.TOP_LEFT:
-            return {
-                x: bounds.left,
-                y: bounds.top,
-            };
-
-        case CORNER.TOP_RIGHT:
-            return {
-                x: bounds.right,
-                y: bounds.top,
-            };
-
-        case CORNER.BOTTOM_LEFT:
-            return {
-                x: bounds.left,
-                y: bounds.bottom,
-            };
-
-        case CORNER.BOTTOM_RIGHT:
-        default:
-            return {
-                x: bounds.right,
-                y: bounds.bottom,
-            };
-    }
+function savePosition({ x }) {
+    localStorage.setItem(POSITION_KEY, String(x));
 }
 
-function getNearestCorner(position) {
-    const bounds = getBounds();
-
-    const horizontal =
-        position.x <
-        (bounds.left + bounds.right) / 2
-            ? "left"
-            : "right";
-
-    const vertical =
-        position.y <
-        (bounds.top + bounds.bottom) / 2
-            ? "top"
-            : "bottom";
-
-    if (vertical === "top" && horizontal === "left") {
-        return CORNER.TOP_LEFT;
-    }
-
-    if (
-        vertical === "top" &&
-        horizontal === "right"
-    ) {
-        return CORNER.TOP_RIGHT;
-    }
-
-    if (
-        vertical === "bottom" &&
-        horizontal === "left"
-    ) {
-        return CORNER.BOTTOM_LEFT;
-    }
-
-    return CORNER.BOTTOM_RIGHT;
+function snapToGround({ x }) {
+    const { groundY } = getBounds();
+    return { x: clampX(x), y: groundY };
 }
 
-function clampDragPosition(x, y) {
-    const bounds = getBounds();
+function clampDrag(x, y) {
+    const { left, right, groundY } = getBounds();
 
     return {
-        x: Math.min(
-            bounds.right,
-            Math.max(bounds.left, x)
-        ),
-        y: Math.min(
-            bounds.bottom,
-            Math.max(bounds.top, y)
-        ),
+        x: Math.min(right, Math.max(left, x)),
+        y: Math.min(groundY, Math.max(EDGE, y)),
     };
 }
 
-export default function useCompanionBehavior(
-    tasks = []
-) {
-    const [state, setState] = useState(
-        COMPANION_STATE.IDLE
+function getRandomSpot(currentX) {
+    const { left, right, groundY } = getBounds();
+    const width = right - left;
+
+    const spots = [0.1, 0.3, 0.5, 0.7, 0.9]
+        .map((r) => ({
+            x: left + width * r,
+            y: groundY,
+        }))
+        .filter((p) => Math.abs(p.x - currentX) > width * 0.12);
+
+    return spots[Math.floor(Math.random() * spots.length)] ?? getHome();
+}
+
+export default function useCompanionBehavior(tasks = []) {
+    const [state, setState] = useState(COMPANION_STATE.IDLE);
+    const [position, setPosition] = useState(() =>
+        typeof window === "undefined"
+            ? { x: 900, y: 600 }
+            : getSavedPosition()
     );
+    const [message, setMessage] = useState("");
+    const [isDragging, setIsDragging] = useState(false);
+    const [direction, setDirection] = useState(1);
 
-    const [corner, setCorner] = useState(
-        CORNER.BOTTOM_RIGHT
-    );
-
-    const [position, setPosition] = useState(() => {
-        if (typeof window === "undefined") {
-            return { x: 32, y: 500 };
-        }
-
-        return getCornerPosition(
-            CORNER.BOTTOM_RIGHT
-        );
-    });
-
-    const [message, setMessage] = useState(
-        getRandomMessage(COMPANION_STATE.IDLE)
-    );
-
-    const [isDragging, setIsDragging] =
-        useState(false);
-
-    const previousCompletedCount = useRef(null);
+    const previousCompleted = useRef(null);
     const reactionTimer = useRef(null);
     const landingTimer = useRef(null);
-
-    const dragData = useRef({
-        pointerId: null,
-        startX: 0,
-        startY: 0,
-        offsetX: 0,
-        offsetY: 0,
-        moved: false,
-    });
+    const drag = useRef({});
 
     const completedCount = tasks.filter(
-        (task) =>
-            task.status === STATUS.COMPLETED
+        (task) => task.status === STATUS.COMPLETED
     ).length;
 
     const overdueCount = tasks.filter(
@@ -218,244 +120,168 @@ export default function useCompanionBehavior(
             task.status !== STATUS.COMPLETED
     ).length;
 
-    const showTemporaryState = useCallback(
-        (nextState) => {
-            if (reactionTimer.current) {
-                clearTimeout(reactionTimer.current);
-            }
+    const react = useCallback((nextState) => {
+        clearTimeout(reactionTimer.current);
+        setState(nextState);
+        setMessage(getRandomMessage(nextState));
 
-            setState(nextState);
-            setMessage(getRandomMessage(nextState));
+        reactionTimer.current = setTimeout(() => {
+            setState(COMPANION_STATE.IDLE);
+            setMessage("");
+        }, COMPANION_TIMING.REACTION_DURATION);
+    }, []);
 
-            reactionTimer.current = setTimeout(
-                () => {
-                    setState(COMPANION_STATE.IDLE);
-                    setMessage(
-                        getRandomMessage(
-                            COMPANION_STATE.IDLE
-                        )
-                    );
-                },
-                COMPANION_TIMING.REACTION_DURATION
-            );
-        },
-        []
-    );
-
+    // Persist resting X position.
     useEffect(() => {
-        if (previousCompletedCount.current === null) {
-            previousCompletedCount.current =
-                completedCount;
+        if (!isDragging) savePosition(position);
+    }, [position, isDragging]);
+
+    // React to completed tasks.
+    useEffect(() => {
+        if (previousCompleted.current === null) {
+            previousCompleted.current = completedCount;
             return;
         }
 
-        if (
-            completedCount >
-            previousCompletedCount.current
-        ) {
-            showTemporaryState(
-                COMPANION_STATE.CELEBRATING
-            );
-        }
+        if (completedCount > previousCompleted.current)
+            react(COMPANION_STATE.CELEBRATING);
 
-        previousCompletedCount.current =
-            completedCount;
-    }, [completedCount, showTemporaryState]);
+        previousCompleted.current = completedCount;
+    }, [completedCount, react]);
 
+    // Ambient behavior.
     useEffect(() => {
-        if (isDragging) return undefined;
-
-        const mediaQuery = window.matchMedia(
-            "(prefers-reduced-motion: reduce)"
-        );
-
-        if (mediaQuery.matches) return undefined;
+        if (
+            isDragging ||
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ) return;
 
         let timer;
 
-        const scheduleNextBehavior = () => {
-            const delay = randomBetween(
-                COMPANION_TIMING.MIN_IDLE,
-                COMPANION_TIMING.MAX_IDLE
-            );
-
+        const schedule = () => {
             timer = setTimeout(() => {
                 if (isDragging) return;
 
                 if (
-                    state ===
-                        COMPANION_STATE.CELEBRATING ||
-                    state ===
-                        COMPANION_STATE.REACTING ||
-                    state ===
-                        COMPANION_STATE.HELD ||
-                    state ===
-                        COMPANION_STATE.LANDING
+                    [
+                        COMPANION_STATE.CELEBRATING,
+                        COMPANION_STATE.REACTING,
+                        COMPANION_STATE.HELD,
+                        COMPANION_STATE.LANDING,
+                    ].includes(state)
                 ) {
-                    scheduleNextBehavior();
+                    schedule();
                     return;
                 }
 
                 const roll = Math.random();
 
-                // Occasionally worry about overdue work.
-                if (
-                    overdueCount > 0 &&
-                    roll < 0.08
-                ) {
-                    showTemporaryState(
-                        COMPANION_STATE.CONCERNED
-                    );
+                if (overdueCount && roll < 0.08) {
+                    react(COMPANION_STATE.CONCERNED);
                     return;
                 }
 
-                // Sometimes take a nap.
-                if (roll < 0.23) {
-                    setState(
-                        COMPANION_STATE.SLEEPING
-                    );
-                    setMessage(
-                        getRandomMessage(
-                            COMPANION_STATE.SLEEPING
-                        )
-                    );
+                if (roll < 0.25) {
+                    setState(COMPANION_STATE.SLEEPING);
+                    setMessage("");
 
                     timer = setTimeout(() => {
-                        setState(
-                            COMPANION_STATE.IDLE
-                        );
-                        setMessage(
-                            getRandomMessage(
-                                COMPANION_STATE.IDLE
-                            )
-                        );
-                        scheduleNextBehavior();
+                        setState(COMPANION_STATE.IDLE);
+                        schedule();
                     }, COMPANION_TIMING.SLEEP_DURATION);
 
                     return;
                 }
 
-                // Only occasionally relocate.
-                if (roll < 0.48) {
-                    const nextCorner = randomItem(
-                        ADJACENT_CORNERS[corner]
-                    );
-
-                    setCorner(nextCorner);
-                    setPosition(
-                        getCornerPosition(nextCorner)
-                    );
-                    setState(
-                        COMPANION_STATE.WALKING
-                    );
-                    setMessage(
-                        getRandomMessage(
-                            COMPANION_STATE.WALKING
-                        )
-                    );
-
+                if (roll < 0.5) {
+                    setState(COMPANION_STATE.WALKING);
+                    setMessage("");
+                
+                    requestAnimationFrame(() => {
+                        setPosition((p) => {
+                            const next = getRandomSpot(p.x);
+                
+                            setDirection(next.x < p.x ? -1 : 1);
+                
+                            return next;
+                        });
+                    });
+                
                     timer = setTimeout(() => {
-                        setState(
-                            COMPANION_STATE.IDLE
-                        );
-                        setMessage(
-                            getRandomMessage(
-                                COMPANION_STATE.IDLE
-                            )
-                        );
-                        scheduleNextBehavior();
+                        setState(COMPANION_STATE.IDLE);
+                        schedule();
                     }, COMPANION_TIMING.WALK_DURATION);
-
+                
                     return;
                 }
 
-                // Most cycles can simply remain idle.
                 setState(COMPANION_STATE.IDLE);
-                setMessage(
-                    getRandomMessage(
-                        COMPANION_STATE.IDLE
-                    )
-                );
-
-                scheduleNextBehavior();
-            }, delay);
+                setMessage("");
+                schedule();
+            }, random(
+                COMPANION_TIMING.MIN_IDLE,
+                COMPANION_TIMING.MAX_IDLE
+            ));
         };
 
-        scheduleNextBehavior();
-
+        schedule();
         return () => clearTimeout(timer);
-    }, [
-        corner,
-        isDragging,
-        overdueCount,
-        showTemporaryState,
-        state,
-    ]);
+    }, [isDragging, overdueCount, react, state]);
 
+    // React to viewport and navbar size changes.
     useEffect(() => {
-        const handleResize = () => {
-            if (isDragging) return;
+        const desktopNav = document.getElementById("desktop-navbar");
+        const mobileNav = document.getElementById("mobile-navbar");
 
-            setPosition(
-                getCornerPosition(corner)
-            );
-        };
+        const update = () =>
+            setPosition((p) => snapToGround(p));
 
-        window.addEventListener(
-            "resize",
-            handleResize
-        );
+        const observer = new ResizeObserver(update);
 
-        return () =>
-            window.removeEventListener(
-                "resize",
-                handleResize
-            );
-    }, [corner, isDragging]);
+        if (desktopNav) observer.observe(desktopNav);
+        if (mobileNav) observer.observe(mobileNav);
 
-    useEffect(() => {
+        window.addEventListener("resize", update);
+
+        // Measure again after initial layout.
+        requestAnimationFrame(update);
+
         return () => {
-            if (reactionTimer.current) {
-                clearTimeout(reactionTimer.current);
-            }
-
-            if (landingTimer.current) {
-                clearTimeout(landingTimer.current);
-            }
+            observer.disconnect();
+            window.removeEventListener("resize", update);
         };
     }, []);
 
+    useEffect(
+        () => () => {
+            clearTimeout(reactionTimer.current);
+            clearTimeout(landingTimer.current);
+        },
+        []
+    );
+
     const handlePointerDown = useCallback(
         (event) => {
-            if (reactionTimer.current) {
-                clearTimeout(reactionTimer.current);
-            }
+            clearTimeout(reactionTimer.current);
+            clearTimeout(landingTimer.current);
 
-            if (landingTimer.current) {
-                clearTimeout(landingTimer.current);
-            }
+            event.currentTarget.setPointerCapture(event.pointerId);
 
-            event.currentTarget.setPointerCapture(
-                event.pointerId
-            );
-
-            dragData.current = {
-                pointerId: event.pointerId,
+            drag.current = {
+                id: event.pointerId,
                 startX: event.clientX,
                 startY: event.clientY,
-                offsetX:
-                    event.clientX - position.x,
-                offsetY:
-                    event.clientY - position.y,
+                offsetX: event.clientX - position.x,
+                offsetY: event.clientY - position.y,
                 moved: false,
             };
 
             setIsDragging(true);
             setState(COMPANION_STATE.HELD);
             setMessage(
-                getRandomMessage(
-                    COMPANION_STATE.HELD
-                )
+                Math.random() < 0.35
+                    ? getRandomMessage(COMPANION_STATE.HELD)
+                    : ""
             );
         },
         [position]
@@ -463,119 +289,70 @@ export default function useCompanionBehavior(
 
     const handlePointerMove = useCallback(
         (event) => {
+            if (!isDragging || drag.current.id !== event.pointerId) return;
+
             if (
-                !isDragging ||
-                dragData.current.pointerId !==
-                    event.pointerId
+                Math.hypot(
+                    event.clientX - drag.current.startX,
+                    event.clientY - drag.current.startY
+                ) > DRAG_THRESHOLD
             ) {
-                return;
+                drag.current.moved = true;
             }
 
-            const distance = Math.hypot(
-                event.clientX -
-                    dragData.current.startX,
-                event.clientY -
-                    dragData.current.startY
+            setPosition(
+                clampDrag(
+                    event.clientX - drag.current.offsetX,
+                    event.clientY - drag.current.offsetY
+                )
             );
-
-            if (distance > DRAG_THRESHOLD) {
-                dragData.current.moved = true;
-            }
-
-            const nextPosition = clampDragPosition(
-                event.clientX -
-                    dragData.current.offsetX,
-                event.clientY -
-                    dragData.current.offsetY
-            );
-
-            setPosition(nextPosition);
         },
         [isDragging]
     );
 
     const handlePointerUp = useCallback(
         (event) => {
-            if (
-                !isDragging ||
-                dragData.current.pointerId !==
-                    event.pointerId
-            ) {
-                return;
-            }
+            if (!isDragging || drag.current.id !== event.pointerId) return;
 
-            if (
-                event.currentTarget.hasPointerCapture(
-                    event.pointerId
-                )
-            ) {
-                event.currentTarget.releasePointerCapture(
-                    event.pointerId
-                );
-            }
+            if (event.currentTarget.hasPointerCapture(event.pointerId))
+                event.currentTarget.releasePointerCapture(event.pointerId);
 
-            const wasDragged =
-                dragData.current.moved;
-
+            const moved = drag.current.moved;
             setIsDragging(false);
 
-            if (!wasDragged) {
-                showTemporaryState(
-                    COMPANION_STATE.REACTING
-                );
+            if (!moved) {
+                react(COMPANION_STATE.REACTING);
                 return;
             }
 
-            const nextCorner =
-                getNearestCorner(position);
+            setPosition((p) => {
+                const landed = snapToGround(p);
+                savePosition(landed);
+                return landed;
+            });
 
-            setCorner(nextCorner);
-            setPosition(
-                getCornerPosition(nextCorner)
-            );
             setState(COMPANION_STATE.LANDING);
-            setMessage(
-                getRandomMessage(
-                    COMPANION_STATE.LANDING
-                )
-            );
+            setMessage("");
 
             landingTimer.current = setTimeout(
-                () => {
-                    setState(COMPANION_STATE.IDLE);
-                    setMessage(
-                        getRandomMessage(
-                            COMPANION_STATE.IDLE
-                        )
-                    );
-                },
+                () => setState(COMPANION_STATE.IDLE),
                 COMPANION_TIMING.LANDING_DURATION
             );
         },
-        [
-            isDragging,
-            position,
-            showTemporaryState,
-        ]
-    );
-
-    const handlePointerCancel = useCallback(
-        (event) => {
-            handlePointerUp(event);
-        },
-        [handlePointerUp]
+        [isDragging, react]
     );
 
     return {
         state,
         position,
         message,
+        direction,
         completedCount,
         overdueCount,
         isDragging,
         handlePointerDown,
         handlePointerMove,
         handlePointerUp,
-        handlePointerCancel,
+        handlePointerCancel: handlePointerUp,
     };
 }

@@ -13,7 +13,7 @@ export const COMPANION_MESSAGES = {
         "Five more minutes...",
     ],
     celebrating: [
-        "Task complete! ?",
+        "Task complete!",
         "We did it!",
         "Nice work!",
         "Another one done!",
