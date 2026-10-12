@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import Header from "../shared/components/header/Header";
 import Navbar from "../shared/components/navigation/NavBar";
 import MobileNavbar from "../shared/components/navigation/MobileNavBar";
+import TaskCompanion from "../features/companion/TaskCompanion";
 
 function MainLayout() {
     return (
@@ -19,6 +20,8 @@ function MainLayout() {
             </div>
 
             <MobileNavbar />
+
+            <TaskCompanion />
         </div>
     );
 }

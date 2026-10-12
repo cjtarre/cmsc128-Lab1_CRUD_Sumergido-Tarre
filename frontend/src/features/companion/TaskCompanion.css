@@ -1,0 +1,268 @@
+.task-companion {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 45;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    pointer-events: none;
+
+    transition: transform 2.2s ease-in-out;
+    will-change: transform;
+}
+
+
+/* --------------------------------------------------
+   Pet
+-------------------------------------------------- */
+
+.task-companion__pet {
+    width: 80px;
+    height: 80px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+    border: 0;
+    background: transparent;
+
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+
+    appearance: none;
+    -webkit-appearance: none;
+
+    pointer-events: auto;
+}
+
+.task-companion__sprite {
+    width: 80px;
+    height: 80px;
+
+    display: block;
+    object-fit: contain;
+
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+
+/* --------------------------------------------------
+   Interaction
+-------------------------------------------------- */
+
+.task-companion__pet:hover {
+    transform: scale(1.06);
+}
+
+.task-companion__pet:focus-visible {
+    outline: 3px solid #22c55e;
+    outline-offset: 3px;
+    border-radius: 1rem;
+}
+
+.task-companion--dragging {
+    transition: none;
+    z-index: 60;
+}
+
+.task-companion--dragging .task-companion__pet {
+    cursor: grabbing;
+    transform: scale(1.08) rotate(3deg);
+}
+
+
+/* --------------------------------------------------
+   Speech bubble
+-------------------------------------------------- */
+
+.task-companion__message {
+    max-width: 11rem;
+    margin-bottom: 0.45rem;
+    padding: 0.4rem 0.65rem;
+
+    border: 1px solid rgba(203, 213, 225, 0.9);
+    border-radius: 0.75rem;
+
+    background: rgba(255, 255, 255, 0.95);
+    color: #475569;
+
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+
+    pointer-events: none;
+}
+
+
+/* --------------------------------------------------
+   State animations
+-------------------------------------------------- */
+
+/* Very subtle breathing while resting */
+.task-companion--idle .task-companion__pet {
+    animation:
+        companion-breathe 2.8s ease-in-out infinite;
+}
+
+/*
+ * Walking already uses multiple sprite frames.
+ * Only add a tiny physical bob.
+ */
+.task-companion--walking .task-companion__pet {
+    animation:
+        companion-walk 0.36s ease-in-out infinite alternate;
+}
+
+.task-companion--sleeping .task-companion__pet {
+    animation:
+        companion-sleep 2.5s ease-in-out infinite;
+}
+
+.task-companion--celebrating .task-companion__pet {
+    animation:
+        companion-celebrate 0.45s ease-in-out 4;
+}
+
+.task-companion--concerned .task-companion__pet {
+    animation:
+        companion-concerned 0.45s ease-in-out 2;
+}
+
+.task-companion--reacting .task-companion__pet {
+    animation:
+        companion-bounce 0.45s ease-in-out 2;
+}
+
+.task-companion--landing .task-companion__pet {
+    animation:
+        companion-land 0.5s ease-out;
+}
+
+
+/* --------------------------------------------------
+   Keyframes
+-------------------------------------------------- */
+
+@keyframes companion-breathe {
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+    }
+
+    50% {
+        transform: translateY(-2px) scale(1.015);
+    }
+}
+
+@keyframes companion-walk {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-2px);
+    }
+}
+
+@keyframes companion-sleep {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(0.97);
+    }
+}
+
+@keyframes companion-celebrate {
+    0%,
+    100% {
+        transform: translateY(0) rotate(0);
+    }
+
+    50% {
+        transform: translateY(-10px) rotate(5deg);
+    }
+}
+
+@keyframes companion-concerned {
+    0%,
+    100% {
+        transform: rotate(0);
+    }
+
+    35% {
+        transform: rotate(-4deg);
+    }
+
+    70% {
+        transform: rotate(4deg);
+    }
+}
+
+@keyframes companion-bounce {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-7px);
+    }
+}
+
+@keyframes companion-land {
+    0% {
+        transform: translateY(-8px) scale(1.05);
+    }
+
+    60% {
+        transform: translateY(3px) scale(0.96);
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+
+/* --------------------------------------------------
+   Dark mode
+-------------------------------------------------- */
+
+@media (prefers-color-scheme: dark) {
+    .task-companion__message {
+        background: rgba(15, 23, 42, 0.95);
+        border-color: rgba(51, 65, 85, 0.95);
+        color: #cbd5e1;
+    }
+}
+
+
+/* --------------------------------------------------
+   Accessibility
+-------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .task-companion {
+        transition: none;
+    }
+
+    .task-companion__pet {
+        animation: none !important;
+        transition: none;
+    }
+}
