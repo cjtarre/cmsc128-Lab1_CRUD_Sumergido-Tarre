@@ -52,8 +52,8 @@ function Dashboard() {
 
     const totalPages = Math.ceil(sortedTasks.length / tasksPerPage);
 
-    const paginatedTasks = sortedTasks.slice( (currentPage - 1) * tasksPerPage, currentPage * tasksPerPage );
-
+    const displayedTasks = filter === "all" ? sortedTasks : sortedTasks.slice((currentPage - 1) * tasksPerPage, currentPage * tasksPerPage);
+    
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);}, [filter, searchTerm, activeSort, priorityFilter, statusFilter, tagFilter]);
@@ -129,7 +129,8 @@ function Dashboard() {
                     ) : filteredTasks.length ? (
                         <>
                             <TaskTable
-                                tasks={paginatedTasks}
+                                tasks={displayedTasks}
+                                scrollable={filter === "all"}
                                 activeSort={activeSort}
                                 onSortTask={handleSortTask}
                                 onSortDueDate={handleSortDueDate}
@@ -140,13 +141,15 @@ function Dashboard() {
                                 onView={handlers.handleViewTask}
                             />
 
-                            <Pagination
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                totalItems={sortedTasks.length}
-                                itemsPerPage={tasksPerPage}
-                                onPageChange={setCurrentPage}
-                            />
+                            {filter !== "all" && (
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    totalItems={sortedTasks.length}
+                                    itemsPerPage={tasksPerPage}
+                                    onPageChange={setCurrentPage}
+                                />
+                            )}
                         </>
                     ) : (
                         <EmptyState

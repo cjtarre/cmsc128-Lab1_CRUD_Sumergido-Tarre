@@ -18,21 +18,24 @@ const initialFormData = {
     tags: [],
 };
 
-function AddTask({ isOpen, onClose, onSubmit }) {
+function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "" }) {
     const { availableTags } = useTaskData();
     const [formData, setFormData] = useState(initialFormData);
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
         if (!isOpen) return;
-
+    
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setFormData({ ...initialFormData, dueDate: initialDueDate });
+    
         const overflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
-
+    
         return () => {
             document.body.style.overflow = overflow;
         };
-    }, [isOpen]);
+    }, [isOpen, initialDueDate]);
 
     if (!isOpen) return null;
 
@@ -56,7 +59,7 @@ function AddTask({ isOpen, onClose, onSubmit }) {
         }));
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
 
         const validationErrors = validateTask(formData);
@@ -69,9 +72,12 @@ function AddTask({ isOpen, onClose, onSubmit }) {
             return;
         }
 
-        onSubmit(event, formData);
-        setFormData(initialFormData);
-        setErrors({});
+        const success = await onSubmit(formData);
+
+        if (success) {
+            setFormData(initialFormData);
+            setErrors({});
+        }
     };
 
     const handleClose = () => {

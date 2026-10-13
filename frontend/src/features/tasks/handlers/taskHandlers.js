@@ -15,17 +15,21 @@ export function createTaskHandlers({
         handleOpenAddTask: () => setIsAddTaskOpen(true),
         handleCloseAddTask: () => setIsAddTaskOpen(false),
 
-        handleAddTaskSubmit: async (event, formData) => {
-            event.preventDefault();
-            if (!formData.title.trim()) return toast.error("Task title is required.");
+        handleAddTaskSubmit: async (formData) => {
+            if (!formData.title.trim()) {
+                toast.error("Task title is required.");
+                return false;
+            }
 
             try {
                 await addTask({ ...formData, title: formData.title.trim(), description: formData.description.trim(), dueDate: formatDate(formData.dueDate), status: STATUS.NOT_STARTED });
                 setIsAddTaskOpen(false);
                 toast.success("Task added successfully!");
+                return true; // Indicate success
             } catch (error) {
                 console.error("Error adding task:", error);
                 toast.error("Failed to add task.");
+                return false; // Indicate failure
             }
         },
 

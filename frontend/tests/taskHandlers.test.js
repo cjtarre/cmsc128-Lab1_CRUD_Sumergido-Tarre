@@ -34,17 +34,15 @@ describe("createTaskHandlers", () => {
     it("adds a task with trimmed and formatted data", async () => {
         const mocks = createMocks();
         mocks.addTask.mockResolvedValue({});
-
+    
         const handlers = createTaskHandlers(mocks);
-        const event = { preventDefault: vi.fn() };
         const formData = {
             title: "  New Task  ", description: "  Task description  ", priority: 1,
             dueDate: "2026-09-25", dueTime: "10:30", tags: [],
         };
-
-        await handlers.handleAddTaskSubmit(event, formData);
-
-        expect(event.preventDefault).toHaveBeenCalled();
+    
+        const result = await handlers.handleAddTaskSubmit(formData);
+    
         expect(mocks.addTask).toHaveBeenCalledWith({
             ...formData,
             title: "New Task",
@@ -54,17 +52,18 @@ describe("createTaskHandlers", () => {
         });
         expect(mocks.setIsAddTaskOpen).toHaveBeenCalledWith(false);
         expect(toast.success).toHaveBeenCalledWith("Task added successfully!");
+        expect(result).toBe(true);
     });
 
     it("rejects a task with an empty title", async () => {
         const mocks = createMocks();
         const handlers = createTaskHandlers(mocks);
-        const event = { preventDefault: vi.fn() };
-
-        await handlers.handleAddTaskSubmit(event, {
+    
+        const result = await handlers.handleAddTaskSubmit({
             title: "   ", description: "", priority: 1, dueDate: "", dueTime: "", tags: [],
         });
-
+    
+        expect(result).toBe(false);
         expect(mocks.addTask).not.toHaveBeenCalled();
         expect(toast.error).toHaveBeenCalledWith("Task title is required.");
         expect(mocks.setIsAddTaskOpen).not.toHaveBeenCalled();

@@ -12,6 +12,7 @@ import TaskDetails from "../../tasks/components/TaskDetails";
 import EditTask from "../../tasks/components/EditTask";
 import DeleteTask from "../../tasks/components/DeleteTask";
 import SelectedDayPanel from "../components/SelectedDayPanel";
+import AddTask from "../../tasks/components/AddTask";
 
 function Calendar() {
     const { tasks, setTasks } = useTaskData();
@@ -37,9 +38,10 @@ function Calendar() {
     const [selectedTask, setSelectedTask] = useState(null);
     const [taskToEdit, setTaskToEdit] = useState(null);
     const [taskToDelete, setTaskToDelete] = useState(null);
+    const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
     const taskActions = useTasks(tasks, setTasks);
-    const handlers = createTaskHandlers({ ...taskActions, setSelectedTask, setTaskToEdit, setTaskToDelete });
+    const handlers = createTaskHandlers({ ...taskActions, setSelectedTask, setTaskToEdit, setTaskToDelete, setIsAddTaskOpen });
 
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -79,7 +81,8 @@ function Calendar() {
     const today = new Date();
     const isCurrentMonth = month === today.getMonth() && year === today.getFullYear();
     const selectedDayTasks = getTasksForDate(selectedDate);
-
+    const selectedDateValue = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
+    
     return (
         <div className="px-3 py-5 text-slate-800 dark:text-slate-100 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
             {/* Calendar header */}
@@ -133,7 +136,7 @@ function Calendar() {
                                     type="button"
                                     disabled={!day}
                                     onClick={() => setSelectedDate(new Date(year, month, day))}
-                                    className={`min-h-20 border-b border-r border-slate-200 p-1.5 text-left transition dark:border-slate-700 sm:min-h-32 sm:p-3 ${
+                                    className={`flex min-h-20 flex-col items-stretch justify-start border-b border-r border-slate-200 p-1.5 text-left transition dark:border-slate-700 sm:min-h-32 sm:p-3 ${
                                         isToday ? "bg-green-50/50 dark:bg-green-950/30" : "bg-white dark:bg-slate-900"
                                     } ${isSelected ? "ring-2 ring-inset ring-green-300 dark:ring-green-600" : "hover:bg-slate-50 dark:hover:bg-slate-800"}`}
                                 >
@@ -143,12 +146,25 @@ function Calendar() {
 
                                             {/* Tasks */}
                                             <div className="mt-1 space-y-1 sm:mt-2 sm:space-y-1.5">
-                                                {dayTasks.map((task) => (
-                                                    <div key={task.id} className={`overflow-hidden rounded-md px-1 py-1 text-[8px] sm:px-2 sm:py-1.5 sm:text-[10px] ${taskStyles.priority[task.priority] || "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"}`}>
-                                                        <p className={`truncate font-semibold ${task.status === STATUS.COMPLETED ? "line-through opacity-60" : ""}`}>{task.title}</p>
-                                                        <p className="mt-0.5 hidden truncate opacity-70 sm:block">{formatDueTime(task.dueTime)}</p>
+                                                {dayTasks.slice(0, dayTasks.length > 3 ? 2 : 3).map((task) => (
+                                                    <div
+                                                        key={task.id}
+                                                        className={`overflow-hidden rounded-md px-1 py-1 text-[8px] sm:px-2 sm:py-1.5 sm:text-[10px] ${taskStyles.priority[task.priority] || "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"}`}
+                                                    >
+                                                        <p className={`truncate font-semibold ${task.status === STATUS.COMPLETED ? "line-through opacity-60" : ""}`}>
+                                                            {task.title}
+                                                        </p>
+                                                        <p className="mt-0.5 hidden truncate opacity-70 sm:block">
+                                                            {formatDueTime(task.dueTime)}
+                                                        </p>
                                                     </div>
                                                 ))}
+
+                                                {dayTasks.length > 3 && (
+                                                    <div className="overflow-hidden rounded-md bg-slate-100 px-1 py-1 text-[8px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400 sm:px-2 sm:py-1.5 sm:text-[10px]">
+                                                        +{dayTasks.length - 2} more
+                                                    </div>
+                                                )}
                                             </div>
                                         </>
                                     )}
@@ -159,7 +175,13 @@ function Calendar() {
                 </div>
 
                 {/* Selected date tasks */}
-                <SelectedDayPanel date={selectedDate} tasks={selectedDayTasks} onTaskClick={setSelectedTask} />
+                <SelectedDayPanel
+                    date={selectedDate}
+                    tasks={selectedDayTasks}
+                    onTaskClick={setSelectedTask}
+                    onToggleComplete={handlers.handleToggleComplete}
+                    onAddTask={() => setIsAddTaskOpen(true)}
+                />
             </div>
 
             {/* Task modals */}
@@ -171,7 +193,7 @@ function Calendar() {
                     onDelete={() => handlers.handleDeleteTask(selectedTask.id)}
                 />
             )}
-
+            <AddTask isOpen={isAddTaskOpen} onClose={() => setIsAddTaskOpen(false)} onSubmit={handlers.handleAddTaskSubmit} initialDueDate={selectedDateValue} />
             <EditTask task={taskToEdit} isOpen={Boolean(taskToEdit)} onClose={handlers.handleCloseEditTask} onSave={handlers.handleUpdateTask} />
             <DeleteTask task={taskToDelete} onConfirm={() => handlers.handleConfirmDelete(taskToDelete)} onCancel={handlers.handleCancelDelete} />
         </div>
