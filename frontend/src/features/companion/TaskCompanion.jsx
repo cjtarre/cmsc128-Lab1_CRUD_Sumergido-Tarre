@@ -1,22 +1,29 @@
 import { useEffect, useState } from "react";
+
 import { useTaskData } from "../tasks/context/TaskContext";
 import useCompanionBehavior from "./useCompanionBehavior";
 import { COMPANION_STATE } from "./companionStates";
 
 import idle1 from "./assets/pet/idle_1.png";
 import idle2 from "./assets/pet/idle_2.png";
+
 import walk1 from "./assets/pet/walk_1.png";
 import walk2 from "./assets/pet/walk_2.png";
 import walk3 from "./assets/pet/walk_3.png";
 import walk4 from "./assets/pet/walk_4.png";
 import walk5 from "./assets/pet/walk_5.png";
+
 import sleeping from "./assets/pet/sleeping.png";
+
 import celebrate1 from "./assets/pet/celebrate_1.png";
 import celebrate2 from "./assets/pet/celebrate_2.png";
+
 import concerned from "./assets/pet/concerned.png";
 import reacting from "./assets/pet/reacting.png";
+
 import held1 from "./assets/pet/held_1.png";
 import held2 from "./assets/pet/held_2.png";
+
 import landing1 from "./assets/pet/landing_1.png";
 import landing2 from "./assets/pet/landing_2.png";
 
@@ -24,13 +31,34 @@ import "./TaskCompanion.css";
 
 const FRAMES = {
     [COMPANION_STATE.IDLE]: [idle1, idle2],
-    [COMPANION_STATE.WALKING]: [walk1, walk2, walk3, walk4, walk5],
+
+    [COMPANION_STATE.WALKING]: [
+        walk1,
+        walk2,
+        walk3,
+        walk4,
+        walk5,
+    ],
+
     [COMPANION_STATE.SLEEPING]: [sleeping],
-    [COMPANION_STATE.CELEBRATING]: [celebrate1, celebrate2],
+
+    [COMPANION_STATE.CELEBRATING]: [
+        celebrate1,
+        celebrate2,
+    ],
+
     [COMPANION_STATE.CONCERNED]: [concerned],
     [COMPANION_STATE.REACTING]: [reacting],
-    [COMPANION_STATE.HELD]: [held1, held2],
-    [COMPANION_STATE.LANDING]: [landing1, landing2],
+
+    [COMPANION_STATE.HELD]: [
+        held1,
+        held2,
+    ],
+
+    [COMPANION_STATE.LANDING]: [
+        landing1,
+        landing2,
+    ],
 };
 
 const SPEED = {
@@ -43,11 +71,25 @@ const SPEED = {
 
 export default function TaskCompanion() {
     const { tasks, loading } = useTaskData();
-    const behavior = useCompanionBehavior(tasks);
-    const { state, position, message, direction, isDragging } = behavior;
+
+    const {
+        state,
+        position,
+        message,
+        direction,
+        walkDuration,
+        isDragging,
+        handleWalkEnd,
+        handlePointerDown,
+        handlePointerMove,
+        handlePointerUp,
+        handlePointerCancel,
+    } = useCompanionBehavior(tasks);
+
     const [frame, setFrame] = useState(0);
 
-    const frames = FRAMES[state] ?? FRAMES[COMPANION_STATE.IDLE];
+    const frames =
+        FRAMES[state] ?? FRAMES[COMPANION_STATE.IDLE];
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -56,7 +98,11 @@ export default function TaskCompanion() {
         if (frames.length < 2) return;
 
         const timer = setInterval(
-            () => setFrame((i) => (i + 1) % frames.length),
+            () =>
+                setFrame(
+                    (current) =>
+                        (current + 1) % frames.length
+                ),
             SPEED[state] ?? 500
         );
 
@@ -68,14 +114,32 @@ export default function TaskCompanion() {
     return (
         <div
             className={`task-companion task-companion--${state}${
-                isDragging ? " task-companion--dragging" : ""
+                isDragging
+                    ? " task-companion--dragging"
+                    : ""
             }`}
             style={{
                 transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+                transitionDuration:
+                    state === COMPANION_STATE.WALKING
+                        ? `${walkDuration}ms`
+                        : "0ms",
+            }}
+            onTransitionEnd={(event) => {
+                if (
+                    event.target === event.currentTarget &&
+                    event.propertyName === "transform" &&
+                    state === COMPANION_STATE.WALKING
+                ) {
+                    handleWalkEnd();
+                }
             }}
         >
             {message && (
-                <div className="task-companion__message" role="status">
+                <div
+                    className="task-companion__message"
+                    role="status"
+                >
                     {message}
                 </div>
             )}
@@ -83,13 +147,13 @@ export default function TaskCompanion() {
             <button
                 type="button"
                 className="task-companion__pet"
-                onPointerDown={behavior.handlePointerDown}
-                onPointerMove={behavior.handlePointerMove}
-                onPointerUp={behavior.handlePointerUp}
-                onPointerCancel={behavior.handlePointerCancel}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
                 aria-label="Interact with task companion"
             >
-                <div className="task-companion__stage">
+                <span className="task-companion__stage">
                     <img
                         src={frames[frame]}
                         className="task-companion__sprite"
@@ -99,7 +163,7 @@ export default function TaskCompanion() {
                         alt=""
                         draggable="false"
                     />
-                </div>
+                </span>
             </button>
         </div>
     );

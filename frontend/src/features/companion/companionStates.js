@@ -26,5 +26,5 @@ export const COMPANION_TIMING = {
     REACTION_DURATION: 2200,
 
     // Brief landing animation after being released.
-    LANDING_DURATION: 500,
+    LANDING_DURATION: 800,
 };

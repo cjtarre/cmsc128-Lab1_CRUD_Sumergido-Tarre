@@ -29,6 +29,19 @@ export const COMPANION_MESSAGES = {
         "You found me!",
         "Let's get things done!",
     ],
+    held: [
+        "Waa!",
+        "Where are we going?",
+        "I like it here!",
+        "Hehe!",
+    ],
+    landing: [
+        "Made it!",
+        "Safe landing!",
+        "Back on solid ground!",
+        "Whew!",
+        "Ta-da!",
+    ],
 };
 
 export function getRandomMessage(state) {

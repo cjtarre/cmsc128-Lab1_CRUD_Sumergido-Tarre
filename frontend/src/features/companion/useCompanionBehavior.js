@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import { STATUS } from "../tasks/constants/taskOptions";
 import { COMPANION_STATE, COMPANION_TIMING } from "./companionStates";
 import { getRandomMessage } from "./companionMessages";
@@ -18,8 +19,7 @@ function getBounds() {
     const desktopRect = desktopNav?.getBoundingClientRect();
     const mobileRect = mobileNav?.getBoundingClientRect();
 
-    const navRight =
-        desktopRect?.width > 0 ? desktopRect.right : 0;
+    const navRight = desktopRect?.width > 0 ? desktopRect.right : 0;
 
     const mobileTop =
         mobileRect?.height > 0
@@ -55,9 +55,10 @@ function getSavedPosition() {
     const { groundY } = getBounds();
 
     return {
-        x: localStorage.getItem(POSITION_KEY) !== null
-            ? clampX(saved)
-            : getHome().x,
+        x:
+            localStorage.getItem(POSITION_KEY) !== null
+                ? clampX(saved)
+                : getHome().x,
         y: groundY,
     };
 }
@@ -68,7 +69,11 @@ function savePosition({ x }) {
 
 function snapToGround({ x }) {
     const { groundY } = getBounds();
-    return { x: clampX(x), y: groundY };
+
+    return {
+        x: clampX(x),
+        y: groundY,
+    };
 }
 
 function clampDrag(x, y) {
@@ -85,27 +90,37 @@ function getRandomSpot(currentX) {
     const width = right - left;
 
     const spots = [0.1, 0.3, 0.5, 0.7, 0.9]
-        .map((r) => ({
-            x: left + width * r,
+        .map((ratio) => ({
+            x: left + width * ratio,
             y: groundY,
         }))
-        .filter((p) => Math.abs(p.x - currentX) > width * 0.12);
+        .filter(
+            (spot) =>
+                Math.abs(spot.x - currentX) > width * 0.12
+        );
 
-    return spots[Math.floor(Math.random() * spots.length)] ?? getHome();
+    return (
+        spots[Math.floor(Math.random() * spots.length)] ??
+        getHome()
+    );
 }
 
 export default function useCompanionBehavior(tasks = []) {
     const [state, setState] = useState(COMPANION_STATE.IDLE);
+
     const [position, setPosition] = useState(() =>
         typeof window === "undefined"
             ? { x: 900, y: 600 }
             : getSavedPosition()
     );
+
     const [message, setMessage] = useState("");
     const [isDragging, setIsDragging] = useState(false);
     const [direction, setDirection] = useState(1);
+    const [walkDuration, setWalkDuration] = useState(4000);
 
-    const previousCompleted = useRef(null);
+    const positionRef = useRef(position);
+    const previousTaskStatuses = useRef(null);
     const reactionTimer = useRef(null);
     const landingTimer = useRef(null);
     const drag = useRef({});
@@ -122,6 +137,7 @@ export default function useCompanionBehavior(tasks = []) {
 
     const react = useCallback((nextState) => {
         clearTimeout(reactionTimer.current);
+
         setState(nextState);
         setMessage(getRandomMessage(nextState));
 
@@ -131,30 +147,58 @@ export default function useCompanionBehavior(tasks = []) {
         }, COMPANION_TIMING.REACTION_DURATION);
     }, []);
 
-    // Persist resting X position.
+    // Keep the latest position without restarting ambient behavior.
     useEffect(() => {
-        if (!isDragging) savePosition(position);
+        positionRef.current = position;
+    }, [position]);
+
+    // Save resting X position.
+    useEffect(() => {
+        if (!isDragging) {
+            savePosition(position);
+        }
     }, [position, isDragging]);
 
-    // React to completed tasks.
+    // Celebrate only when an existing task becomes completed.
     useEffect(() => {
-        if (previousCompleted.current === null) {
-            previousCompleted.current = completedCount;
+        const currentStatuses = new Map(
+            tasks.map((task) => [task.id, task.status])
+        );
+
+        // Initial load should not trigger celebration.
+        if (previousTaskStatuses.current === null) {
+            previousTaskStatuses.current = currentStatuses;
             return;
         }
 
-        if (completedCount > previousCompleted.current)
-            react(COMPANION_STATE.CELEBRATING);
+        const taskWasCompleted = tasks.some((task) => {
+            const previousStatus =
+                previousTaskStatuses.current.get(task.id);
 
-        previousCompleted.current = completedCount;
-    }, [completedCount, react]);
+            return (
+                previousStatus !== undefined &&
+                previousStatus !== STATUS.COMPLETED &&
+                task.status === STATUS.COMPLETED
+            );
+        });
+
+        previousTaskStatuses.current = currentStatuses;
+
+        if (taskWasCompleted) {
+            react(COMPANION_STATE.CELEBRATING);
+        }
+    }, [tasks, react]);
 
     // Ambient behavior.
     useEffect(() => {
         if (
             isDragging ||
-            window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ) return;
+            window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches
+        ) {
+            return;
+        }
 
         let timer;
 
@@ -162,62 +206,86 @@ export default function useCompanionBehavior(tasks = []) {
             timer = setTimeout(() => {
                 if (isDragging) return;
 
+                // Do not interrupt active reactions.
                 if (
                     [
+                        COMPANION_STATE.WALKING,
+                        COMPANION_STATE.SLEEPING,
                         COMPANION_STATE.CELEBRATING,
+                        COMPANION_STATE.CONCERNED,
                         COMPANION_STATE.REACTING,
                         COMPANION_STATE.HELD,
                         COMPANION_STATE.LANDING,
                     ].includes(state)
                 ) {
-                    schedule();
                     return;
                 }
 
                 const roll = Math.random();
 
+                // Occasionally react to overdue tasks.
                 if (overdueCount && roll < 0.08) {
                     react(COMPANION_STATE.CONCERNED);
                     return;
                 }
 
+                // Sleep.
                 if (roll < 0.25) {
                     setState(COMPANION_STATE.SLEEPING);
-                    setMessage("");
+                    setMessage(
+                        Math.random() < 0.5
+                            ? getRandomMessage(COMPANION_STATE.SLEEPING)
+                            : ""
+                    );
 
                     timer = setTimeout(() => {
                         setState(COMPANION_STATE.IDLE);
-                        schedule();
+                        setMessage("");
                     }, COMPANION_TIMING.SLEEP_DURATION);
 
                     return;
                 }
 
+                // Walk.
                 if (roll < 0.5) {
+                    const current = positionRef.current;
+                    const next = getRandomSpot(current.x);
+
+                    const distance = Math.abs(next.x - current.x);
+
+                    // Constant-ish walking speed.
+                    const duration = Math.max(1800, distance * 8);
+
+                    // Walking PNGs face right by default.
+                    setDirection(next.x < current.x ? -1 : 1);
+                    setWalkDuration(duration);
                     setState(COMPANION_STATE.WALKING);
-                    setMessage("");
-                
+
+                    setMessage(
+                        Math.random() < 0.35
+                            ? getRandomMessage(COMPANION_STATE.WALKING)
+                            : ""
+                    );
+
+                    // First render WALKING + direction,
+                    // then begin physical movement.
                     requestAnimationFrame(() => {
-                        setPosition((p) => {
-                            const next = getRandomSpot(p.x);
-                
-                            setDirection(next.x < p.x ? -1 : 1);
-                
-                            return next;
+                        requestAnimationFrame(() => {
+                            setPosition(next);
                         });
                     });
-                
-                    timer = setTimeout(() => {
-                        setState(COMPANION_STATE.IDLE);
-                        schedule();
-                    }, COMPANION_TIMING.WALK_DURATION);
-                
+
                     return;
                 }
 
+                // Remain idle.
                 setState(COMPANION_STATE.IDLE);
-                setMessage("");
-                schedule();
+                setMessage(
+                    Math.random() < 0.3
+                        ? getRandomMessage(COMPANION_STATE.IDLE)
+                        : ""
+                );
+
             }, random(
                 COMPANION_TIMING.MIN_IDLE,
                 COMPANION_TIMING.MAX_IDLE
@@ -225,25 +293,46 @@ export default function useCompanionBehavior(tasks = []) {
         };
 
         schedule();
+
         return () => clearTimeout(timer);
     }, [isDragging, overdueCount, react, state]);
 
-    // React to viewport and navbar size changes.
+    // CSS travel finished -> stop walking immediately.
+    const handleWalkEnd = useCallback(() => {
+        setState((current) =>
+            current === COMPANION_STATE.WALKING
+                ? COMPANION_STATE.IDLE
+                : current
+        );
+
+        setMessage("");
+    }, []);
+
+    // React to viewport/navbar size changes.
     useEffect(() => {
-        const desktopNav = document.getElementById("desktop-navbar");
-        const mobileNav = document.getElementById("mobile-navbar");
+        const desktopNav =
+            document.getElementById("desktop-navbar");
+
+        const mobileNav =
+            document.getElementById("mobile-navbar");
 
         const update = () =>
-            setPosition((p) => snapToGround(p));
+            setPosition((current) =>
+                snapToGround(current)
+            );
 
         const observer = new ResizeObserver(update);
 
-        if (desktopNav) observer.observe(desktopNav);
-        if (mobileNav) observer.observe(mobileNav);
+        if (desktopNav) {
+            observer.observe(desktopNav);
+        }
+
+        if (mobileNav) {
+            observer.observe(mobileNav);
+        }
 
         window.addEventListener("resize", update);
 
-        // Measure again after initial layout.
         requestAnimationFrame(update);
 
         return () => {
@@ -252,6 +341,7 @@ export default function useCompanionBehavior(tasks = []) {
         };
     }, []);
 
+    // Cleanup reaction/landing timers.
     useEffect(
         () => () => {
             clearTimeout(reactionTimer.current);
@@ -265,7 +355,9 @@ export default function useCompanionBehavior(tasks = []) {
             clearTimeout(reactionTimer.current);
             clearTimeout(landingTimer.current);
 
-            event.currentTarget.setPointerCapture(event.pointerId);
+            event.currentTarget.setPointerCapture(
+                event.pointerId
+            );
 
             drag.current = {
                 id: event.pointerId,
@@ -278,9 +370,12 @@ export default function useCompanionBehavior(tasks = []) {
 
             setIsDragging(true);
             setState(COMPANION_STATE.HELD);
+
             setMessage(
                 Math.random() < 0.35
-                    ? getRandomMessage(COMPANION_STATE.HELD)
+                    ? getRandomMessage(
+                          COMPANION_STATE.HELD
+                      )
                     : ""
             );
         },
@@ -289,7 +384,12 @@ export default function useCompanionBehavior(tasks = []) {
 
     const handlePointerMove = useCallback(
         (event) => {
-            if (!isDragging || drag.current.id !== event.pointerId) return;
+            if (
+                !isDragging ||
+                drag.current.id !== event.pointerId
+            ) {
+                return;
+            }
 
             if (
                 Math.hypot(
@@ -312,34 +412,50 @@ export default function useCompanionBehavior(tasks = []) {
 
     const handlePointerUp = useCallback(
         (event) => {
-            if (!isDragging || drag.current.id !== event.pointerId) return;
+            if (
+                !isDragging ||
+                drag.current.id !== event.pointerId
+            ) {
+                return;
+            }
 
-            if (event.currentTarget.hasPointerCapture(event.pointerId))
-                event.currentTarget.releasePointerCapture(event.pointerId);
+            if (
+                event.currentTarget.hasPointerCapture(
+                    event.pointerId
+                )
+            ) {
+                event.currentTarget.releasePointerCapture(
+                    event.pointerId
+                );
+            }
 
             const moved = drag.current.moved;
+
             setIsDragging(false);
 
+            // Click without dragging.
             if (!moved) {
                 react(COMPANION_STATE.REACTING);
                 return;
             }
 
-            setPosition((p) => {
-                const landed = snapToGround(p);
+            // Dragged pet returns to floor.
+            setPosition((current) => {
+                const landed = snapToGround(current);
                 savePosition(landed);
                 return landed;
             });
 
             setState(COMPANION_STATE.LANDING);
-            setMessage("");
-
-            landingTimer.current = setTimeout(
-                () => setState(COMPANION_STATE.IDLE),
-                COMPANION_TIMING.LANDING_DURATION
+            setMessage(
+                Math.random() < 0.5
+                    ? getRandomMessage(COMPANION_STATE.LANDING)
+                    : ""
             );
-        },
-        [isDragging, react]
+
+            landingTimer.current = setTimeout(() => {setState(COMPANION_STATE.IDLE); setMessage("")
+            }, COMPANION_TIMING.LANDING_DURATION);
+        }, [isDragging, react]
     );
 
     return {
@@ -347,9 +463,11 @@ export default function useCompanionBehavior(tasks = []) {
         position,
         message,
         direction,
+        walkDuration,
         completedCount,
         overdueCount,
         isDragging,
+        handleWalkEnd,
         handlePointerDown,
         handlePointerMove,
         handlePointerUp,
