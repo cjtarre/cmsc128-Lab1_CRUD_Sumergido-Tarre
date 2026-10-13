@@ -4,6 +4,7 @@ import { taskSortLabels, dueDateSortLabels } from "../utils/taskUtils";
 
 function TaskTable({
     tasks,
+    scrollable = false,
     activeSort,
     onSortTask,
     onSortDueDate,
@@ -18,11 +19,7 @@ function TaskTable({
             <div className="hidden grid-cols-[minmax(0,2.3fr)_minmax(110px,0.9fr)_minmax(180px,1.2fr)_44px] items-center gap-4 border-b border-slate-200 bg-slate-50/70 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/50 sm:grid">
                 <SortButtonToggle
                     label="Task"
-                    activeLabel={
-                        activeSort.column === "task"
-                            ? taskSortLabels[activeSort.mode]
-                            : null
-                    }
+                    activeLabel={activeSort.column === "task" ? taskSortLabels[activeSort.mode] : null}
                     onClick={onSortTask}
                 />
 
@@ -32,26 +29,20 @@ function TaskTable({
 
                 <SortButtonToggle
                     label="Due Date"
-                    activeLabel={
-                        activeSort.column === "dueDate"
-                            ? dueDateSortLabels[activeSort.mode]
-                            : null
-                    }
+                    activeLabel={activeSort.column === "dueDate" ? dueDateSortLabels[activeSort.mode] : null}
                     onClick={onSortDueDate}
                 />
 
                 <span />
             </div>
 
-            <div className="divide-y divide-slate-100 dark:divide-slate-700">
+            <div className={`divide-y divide-slate-100 dark:divide-slate-700 ${scrollable ? "max-h-[430px] overflow-y-auto" : ""}`}>
                 {tasks.map((task) => (
                     <TaskRow
                         key={task.id}
                         {...task}
                         onToggleComplete={() => onToggleComplete(task.id)}
-                        onStatusChange={(status) =>
-                            onStatusChange(task.id, status)
-                        }
+                        onStatusChange={(status) => onStatusChange(task.id, status)}
                         onEdit={() => onEdit(task.id)}
                         onDelete={() => onDelete(task.id)}
                         onView={() => onView(task.id)}

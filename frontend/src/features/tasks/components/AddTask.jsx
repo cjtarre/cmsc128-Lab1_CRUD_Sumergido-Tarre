@@ -56,7 +56,7 @@ function AddTask({ isOpen, onClose, onSubmit }) {
         }));
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
 
         const validationErrors = validateTask(formData);
@@ -69,9 +69,12 @@ function AddTask({ isOpen, onClose, onSubmit }) {
             return;
         }
 
-        onSubmit(event, formData);
-        setFormData(initialFormData);
-        setErrors({});
+        const success = await onSubmit(formData);
+
+        if (success) {
+            setFormData(initialFormData);
+            setErrors({});
+        }
     };
 
     const handleClose = () => {
