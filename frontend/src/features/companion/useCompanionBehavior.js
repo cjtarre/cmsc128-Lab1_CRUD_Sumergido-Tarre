@@ -372,7 +372,7 @@ export default function useCompanionBehavior(tasks = []) {
             setState(COMPANION_STATE.HELD);
 
             setMessage(
-                Math.random() < 0.35
+                Math.random() < 0.5
                     ? getRandomMessage(
                           COMPANION_STATE.HELD
                       )
