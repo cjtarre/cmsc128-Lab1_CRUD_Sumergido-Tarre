@@ -1,3 +1,5 @@
+import { STATUS } from "../constants/taskOptions";
+
 // Available sorting modes.
 export const TASK_SORT_MODES = {
     TITLE_ASC: "title_asc",
@@ -32,12 +34,23 @@ export const dueDateSortLabels = {
 
 // Move to the next sorting mode when a column is clicked.
 export function getNextSort(previous, column, cycle) {
-    if (previous.column !== column) return { column, mode: cycle[0] };
+    if (previous.column !== column) {
+        return { column, mode: cycle[0] };
+    }
 
     return {
         column,
         mode: cycle[(cycle.indexOf(previous.mode) + 1) % cycle.length],
     };
+}
+
+// Keep completed tasks below actionable tasks.
+function compareCompletedLast(a, b) {
+    const aCompleted = a.status === STATUS.COMPLETED;
+    const bCompleted = b.status === STATUS.COMPLETED;
+
+    if (aCompleted === bCompleted) return 0;
+    return aCompleted ? 1 : -1;
 }
 
 // Convert the displayed due date/time into a sortable timestamp.
@@ -54,38 +67,66 @@ function getDueDateTimestamp(task) {
     return new Date(year, month - 1, day, hours, minutes).getTime();
 }
 
-// Sort tasks by title or priority.
+// Sort by task title or priority while keeping completed tasks last.
 export function sortTasksByTaskColumn(tasks, mode) {
     const sorted = [...tasks];
 
-    switch (mode) {
-        case TASK_SORT_MODES.TITLE_ASC:
-            return sorted.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-        case TASK_SORT_MODES.TITLE_DESC:
-            return sorted.sort((a, b) => (b.title || "").localeCompare(a.title || ""));
-        case TASK_SORT_MODES.PRIORITY_ASC:
-            return sorted.sort((a, b) => (a.priority || 0) - (b.priority || 0));
-        case TASK_SORT_MODES.PRIORITY_DESC:
-            return sorted.sort((a, b) => (b.priority || 0) - (a.priority || 0));
-        default:
-            return sorted;
-    }
+    return sorted.sort((a, b) => {
+        const completedOrder = compareCompletedLast(a, b);
+        if (completedOrder !== 0) return completedOrder;
+
+        switch (mode) {
+            case TASK_SORT_MODES.TITLE_ASC:
+                return (a.title || "").localeCompare(b.title || "");
+
+            case TASK_SORT_MODES.TITLE_DESC:
+                return (b.title || "").localeCompare(a.title || "");
+
+            case TASK_SORT_MODES.PRIORITY_ASC:
+                return (a.priority || 0) - (b.priority || 0);
+
+            case TASK_SORT_MODES.PRIORITY_DESC:
+                return (b.priority || 0) - (a.priority || 0);
+
+            default:
+                return 0;
+        }
+    });
 }
 
-// Sort tasks by due date or creation date.
+// Sort by due/created date while keeping completed tasks last.
 export function sortTasksByDueDateColumn(tasks, mode) {
     const sorted = [...tasks];
 
-    if (mode === DUEDATE_SORT_MODES.CRE_ASC) return sorted.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
-    if (mode === DUEDATE_SORT_MODES.CRE_DESC) return sorted.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-
     return sorted.sort((a, b) => {
+        const completedOrder = compareCompletedLast(a, b);
+        if (completedOrder !== 0) return completedOrder;
+
+        if (mode === DUEDATE_SORT_MODES.CRE_ASC) {
+            return (
+                new Date(a.createdAt || 0).getTime() -
+                new Date(b.createdAt || 0).getTime()
+            );
+        }
+
+        if (mode === DUEDATE_SORT_MODES.CRE_DESC) {
+            return (
+                new Date(b.createdAt || 0).getTime() -
+                new Date(a.createdAt || 0).getTime()
+            );
+        }
+
         const dateA = getDueDateTimestamp(a);
         const dateB = getDueDateTimestamp(b);
 
-        if (!Number.isFinite(dateA)) return Number.isFinite(dateB) ? 1 : 0;
+        if (!Number.isFinite(dateA)) {
+            return Number.isFinite(dateB) ? 1 : 0;
+        }
+
         if (!Number.isFinite(dateB)) return -1;
 
-        return mode === DUEDATE_SORT_MODES.DUE_DESC ? dateB - dateA : dateA - dateB;
+        return mode === DUEDATE_SORT_MODES.DUE_DESC
+            ? dateB - dateA
+            : dateA - dateB;
     });
 }
