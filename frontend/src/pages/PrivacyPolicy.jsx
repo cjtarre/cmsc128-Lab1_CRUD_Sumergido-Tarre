@@ -1,13 +1,25 @@
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import PublicNavbar from "../shared/components/navigation/PublicNavbar";
 
 function PrivacyPolicy() {
     return (
-        <div className="min-h-screen bg-[#f5faf7] text-slate-700 dark:bg-slate-950 dark:text-slate-300">
-            <PublicNavbar />
+        <div className="relative min-h-screen overflow-hidden bg-[#f3f9f5] text-slate-700 dark:bg-slate-950 dark:text-slate-300">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute -left-32 top-20 h-[30rem] w-[30rem] rounded-full bg-emerald-200/30 blur-[110px] dark:bg-emerald-500/[0.06]" />
+                <div className="absolute right-[-10rem] top-[30rem] h-[32rem] w-[32rem] rounded-full bg-green-200/25 blur-[120px] dark:bg-green-600/[0.05]" />
+            </div>
 
-            <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
+            <div className="relative z-20">
+                <PublicNavbar />
+            </div>
+
+            <main className="relative z-10 mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
                 <div className="mb-10 text-center sm:text-left">
+                    <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/80 bg-white/65 text-green-500 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.05] dark:text-green-400">
+                        <ShieldCheck size={21} strokeWidth={1.8} />
+                    </div>
+
                     <p className="mb-2 text-sm font-semibold text-green-600 dark:text-green-400">
                         Takda
                     </p>
@@ -16,7 +28,7 @@ function PrivacyPolicy() {
                         Privacy Policy
                     </h1>
 
-                    <p className="mt-3 text-sm text-slate-500 dark:text-slate-500">
+                    <p className="mt-3 text-sm text-slate-500">
                         Last updated: September 2026
                     </p>
 
@@ -26,7 +38,7 @@ function PrivacyPolicy() {
                     </p>
                 </div>
 
-                <div className="space-y-8 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-200/30 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/20 sm:p-10">
+                <div className="space-y-8 rounded-2xl border border-white/70 bg-white/90 p-6 shadow-[0_15px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/90 dark:shadow-black/20 sm:p-10">
                     <section>
                         <h2 className="mb-2 text-lg font-semibold text-slate-800 dark:text-slate-100">
                             1. Information we collect
@@ -104,8 +116,9 @@ function PrivacyPolicy() {
                 <div className="mt-8 text-center">
                     <Link
                         to="/"
-                        className="text-sm font-medium text-green-600 transition hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                        className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-green-600 transition hover:bg-white/60 hover:text-green-700 dark:text-green-400 dark:hover:bg-white/[0.05] dark:hover:text-green-300"
                     >
+                        <ArrowLeft size={15} />
                         Back to Takda
                     </Link>
                 </div>

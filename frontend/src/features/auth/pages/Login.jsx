@@ -19,7 +19,7 @@ function Login({ embedded = false, initialEmail = "", onEmailChange, onSwitchToS
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    // Authenticate the user and redirect to the profile on success
+    // Authenticate the user and redirect to My Tasks on success
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -28,7 +28,7 @@ function Login({ embedded = false, initialEmail = "", onEmailChange, onSwitchToS
         try {
             await login(identifier.trim(), password);
             toast.success("Welcome back! You’re signed in.");
-            navigate("/profile", { replace: true });
+            navigate("/my-tasks", { replace: true });
         } catch (err) {
             const message = err.response?.data?.error || "";
             setError(
