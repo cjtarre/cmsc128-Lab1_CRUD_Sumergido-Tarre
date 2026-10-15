@@ -16,8 +16,8 @@ function Settings() {
                 </p>
             </div>
 
-            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:rounded-2xl">
-                <div className="border-b border-slate-100 px-4 py-4 dark:border-slate-700 sm:px-5">
+            <section className="overflow-hidden rounded-xl border border-white/70 bg-white/75 shadow-[0_10px_35px_rgba(15,23,42,0.055)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/75 dark:shadow-black/20 sm:rounded-2xl">
+                <div className="border-b border-slate-100/70 bg-white/25 px-4 py-4 dark:border-white/[0.07] dark:bg-white/[0.02] sm:px-5">
                     <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                         Appearance
                     </h2>
@@ -25,12 +25,8 @@ function Settings() {
 
                 <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-5">
                     <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-500 dark:bg-green-950 dark:text-green-400">
-                            {theme === "dark" ? (
-                                <Moon size={17} />
-                            ) : (
-                                <Sun size={17} />
-                            )}
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/80 bg-green-50/70 text-green-500 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-green-950/30 dark:text-green-400">
+                            {theme === "dark" ? <Moon size={17} /> : <Sun size={17} />}
                         </div>
 
                         <div className="min-w-0">
@@ -47,7 +43,7 @@ function Settings() {
                     <select
                         value={theme}
                         onChange={(event) => setTheme(event.target.value)}
-                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none transition focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                        className="rounded-lg border border-white/80 bg-white/60 px-3 py-2 text-sm text-slate-600 shadow-sm backdrop-blur-md outline-none transition hover:border-green-200 focus:border-green-400 focus:ring-2 focus:ring-green-100/60 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-200 dark:hover:border-green-900/60 dark:focus:border-green-600 dark:focus:ring-green-950/50"
                     >
                         <option value="light">Light</option>
                         <option value="dark">Dark</option>
