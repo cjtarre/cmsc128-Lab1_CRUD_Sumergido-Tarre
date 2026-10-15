@@ -1,9 +1,44 @@
+import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
+import TaskCompanion from "../features/companion/TaskCompanion";
+import { useAuth } from "../features/auth/hooks/useAuth";
 import Header from "../shared/components/header/Header";
-import Navbar from "../shared/components/navigation/NavBar";
 import MobileNavbar from "../shared/components/navigation/MobileNavBar";
+import Navbar from "../shared/components/navigation/NavBar";
+
+const getCompanionEnabledKey = (userId) => `takda-companion-enabled:${userId}`;
 
 function MainLayout() {
+    const { user } = useAuth();
+
+    const [companionEnabled, setCompanionEnabled] = useState(
+        () => localStorage.getItem(getCompanionEnabledKey(user.id)) !== "false"
+    );
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setCompanionEnabled(
+            localStorage.getItem(getCompanionEnabledKey(user.id)) !== "false"
+        );
+
+        const handleCompanionSettingChange = (event) => {
+            if (String(event.detail.userId) === String(user.id)) {
+                setCompanionEnabled(event.detail.enabled);
+            }
+        };
+
+        window.addEventListener(
+            "takda-companion-setting-change",
+            handleCompanionSettingChange
+        );
+
+        return () =>
+            window.removeEventListener(
+                "takda-companion-setting-change",
+                handleCompanionSettingChange
+            );
+    }, [user.id]);
+
     return (
         <div className="relative flex h-dvh flex-col overflow-hidden bg-[#f3f9f5] dark:bg-slate-950">
             <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -19,7 +54,7 @@ function MainLayout() {
             </div>
 
             <div className="relative z-10 flex min-h-0 flex-1">
-                <div className="hidden xl:block">
+                <div id="desktop-navbar" className="hidden xl:block">
                     <Navbar />
                 </div>
 
@@ -28,9 +63,11 @@ function MainLayout() {
                 </main>
             </div>
 
-            <div className="relative z-30">
+            <div id="mobile-navbar" className="relative z-30 xl:hidden">
                 <MobileNavbar />
             </div>
+
+            {companionEnabled && <TaskCompanion userId={user.id} />}
         </div>
     );
 }
