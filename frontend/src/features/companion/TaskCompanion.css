@@ -1,11 +1,15 @@
 .task-companion {
+    --companion-size: 88px;
+    --companion-sprite-size: 80px;
+    --companion-stage-inset: 4px;
+
     position: fixed;
     left: 0;
     top: 0;
     z-index: 45;
 
-    width: 88px;
-    height: 88px;
+    width: var(--companion-size);
+    height: var(--companion-size);
 
     pointer-events: none;
     transition: none;
@@ -13,11 +17,11 @@
 }
 
 /* Physical travel */
+
 .task-companion--walking {
     transition-property: transform;
     transition-timing-function: linear;
 }
-
 
 /* Glass orb */
 
@@ -26,8 +30,8 @@
     left: 0;
     bottom: 0;
 
-    width: 88px;
-    height: 88px;
+    width: var(--companion-size);
+    height: var(--companion-size);
     padding: 0;
 
     overflow: visible;
@@ -52,16 +56,15 @@
     pointer-events: auto;
 }
 
-
 /* Sprite stage */
 
 .task-companion__stage {
     position: absolute;
-    left: 4px;
-    right: 4px;
-    bottom: 4px;
+    left: var(--companion-stage-inset);
+    right: var(--companion-stage-inset);
+    bottom: var(--companion-stage-inset);
 
-    height: 80px;
+    height: var(--companion-sprite-size);
 
     display: flex;
     align-items: flex-end;
@@ -72,8 +75,8 @@
 }
 
 .task-companion__sprite {
-    width: 80px;
-    height: 80px;
+    width: var(--companion-sprite-size);
+    height: var(--companion-sprite-size);
 
     display: block;
     object-fit: contain;
@@ -83,7 +86,6 @@
     user-select: none;
     -webkit-user-drag: none;
 }
-
 
 /* Interaction */
 
@@ -106,7 +108,6 @@
     transform: scale(1.08) rotate(3deg);
 }
 
-
 /* Speech */
 
 .task-companion__message {
@@ -128,8 +129,7 @@
     background: rgba(255, 255, 255, 0.95);
     color: #475569;
 
-    box-shadow:
-        0 4px 14px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 
     font-size: 0.72rem;
     font-weight: 600;
@@ -140,132 +140,74 @@
     pointer-events: none;
 }
 
-
 /* State animations */
 
 .task-companion--idle .task-companion__stage {
-    animation:
-        companion-breathe 2.8s ease-in-out infinite;
+    animation: companion-breathe 2.8s ease-in-out infinite;
 }
 
 .task-companion--walking .task-companion__stage {
-    animation:
-        companion-walk 0.56s ease-in-out infinite alternate;
+    animation: companion-walk 0.56s ease-in-out infinite alternate;
 }
 
 .task-companion--sleeping .task-companion__stage {
-    animation:
-        companion-sleep 2.5s ease-in-out infinite;
+    animation: companion-sleep 2.5s ease-in-out infinite;
 }
 
 .task-companion--celebrating .task-companion__stage {
-    animation:
-        companion-celebrate 0.45s ease-in-out 4;
+    animation: companion-celebrate 0.45s ease-in-out 4;
 }
 
 .task-companion--concerned .task-companion__stage {
-    animation:
-        companion-concerned 0.45s ease-in-out 2;
+    animation: companion-concerned 0.45s ease-in-out 2;
 }
 
 .task-companion--reacting .task-companion__stage {
-    animation:
-        companion-bounce 0.45s ease-in-out 2;
+    animation: companion-bounce 0.45s ease-in-out 2;
 }
 
 .task-companion--landing .task-companion__stage {
-    animation:
-        companion-land 0.5s ease-out;
+    animation: companion-land 0.5s ease-out;
 }
-
 
 /* Animations */
 
 @keyframes companion-breathe {
-    0%,
-    100% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.015);
-    }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.015); }
 }
 
 @keyframes companion-walk {
-    from {
-        transform: translateY(0) rotate(-1deg);
-    }
-
-    to {
-        transform: translateY(-2px) rotate(1deg);
-    }
+    from { transform: translateY(0) rotate(-1deg); }
+    to { transform: translateY(-2px) rotate(1deg); }
 }
 
 @keyframes companion-sleep {
-    0%,
-    100% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(0.97);
-    }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(0.97); }
 }
 
 @keyframes companion-celebrate {
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-12px);
-    }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
 }
 
 @keyframes companion-concerned {
-    0%,
-    100% {
-        transform: rotate(0);
-    }
-
-    35% {
-        transform: rotate(-4deg);
-    }
-
-    70% {
-        transform: rotate(4deg);
-    }
+    0%, 100% { transform: rotate(0); }
+    35% { transform: rotate(-4deg); }
+    70% { transform: rotate(4deg); }
 }
 
 @keyframes companion-bounce {
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-7px);
-    }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
 }
 
 @keyframes companion-land {
-    0% {
-        transform: translateY(-8px);
-    }
-
-    60% {
-        transform:
-            translateY(-2px)
-            scale(0.97);
-    }
-
-    100% {
-        transform: translateY(0);
-    }
+    0% { transform: translateY(-8px); }
+    60% { transform: translateY(-2px) scale(0.97); }
+    100% { transform: translateY(0); }
 }
-
 
 /* Dark mode */
 
@@ -284,6 +226,34 @@
     color: #cbd5e1;
 }
 
+/* Mobile */
+
+@media (max-width: 639px) {
+    .task-companion {
+        --companion-size: 68px;
+        --companion-sprite-size: 62px;
+        --companion-stage-inset: 3px;
+    }
+
+    .task-companion__message {
+        max-width: min(9rem, calc(100vw - 24px));
+        padding: 0.35rem 0.55rem;
+        font-size: 0.68rem;
+    }
+
+    .task-companion--dragging .task-companion__pet {
+        transform: scale(1.04) rotate(2deg);
+    }
+
+    .task-companion--celebrating .task-companion__stage {
+        animation-name: companion-celebrate-mobile;
+    }
+}
+
+@keyframes companion-celebrate-mobile {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
 
 /* Reduced motion */
 

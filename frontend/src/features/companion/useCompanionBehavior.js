@@ -4,13 +4,26 @@ import { STATUS } from "../tasks/constants/taskOptions";
 import { COMPANION_STATE, COMPANION_TIMING } from "./companionStates";
 import { getRandomMessage } from "./companionMessages";
 
-const PET_SIZE = 88;
-const EDGE = 24;
+const DESKTOP_PET_SIZE = 88;
+const MOBILE_PET_SIZE = 68;
+const DESKTOP_EDGE = 24;
+const MOBILE_EDGE = 12;
+const MOBILE_BREAKPOINT = 640;
 const DRAG_THRESHOLD = 6;
-const POSITION_KEY = "takda-companion-x";
+
+const getPositionKey = (userId) => `takda-companion-x:${userId}`;
 
 const random = (min, max) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
+
+function getLayoutValues() {
+    const mobile = window.innerWidth < MOBILE_BREAKPOINT;
+
+    return {
+        petSize: mobile ? MOBILE_PET_SIZE : DESKTOP_PET_SIZE,
+        edge: mobile ? MOBILE_EDGE : DESKTOP_EDGE,
+    };
+}
 
 function getBounds() {
     const desktopNav = document.getElementById("desktop-navbar");
@@ -19,22 +32,21 @@ function getBounds() {
     const desktopRect = desktopNav?.getBoundingClientRect();
     const mobileRect = mobileNav?.getBoundingClientRect();
 
+    const { petSize, edge } = getLayoutValues();
+
     const navRight = desktopRect?.width > 0 ? desktopRect.right : 0;
-
     const mobileTop =
-        mobileRect?.height > 0
-            ? mobileRect.top
-            : window.innerHeight;
+        mobileRect?.height > 0 ? mobileRect.top : window.innerHeight;
 
-    const left = navRight + EDGE;
+    const left = navRight + edge;
     const right = Math.max(
         left,
-        window.innerWidth - PET_SIZE - EDGE
+        window.innerWidth - petSize - edge
     );
 
     const groundY = Math.max(
-        EDGE,
-        mobileTop - PET_SIZE - EDGE
+        edge,
+        mobileTop - petSize - edge
     );
 
     return { left, right, groundY };
@@ -50,21 +62,22 @@ function getHome() {
     return { x: right, y: groundY };
 }
 
-function getSavedPosition() {
-    const saved = Number(localStorage.getItem(POSITION_KEY));
+function getSavedPosition(userId) {
+    const key = getPositionKey(userId);
+    const saved = Number(localStorage.getItem(key));
     const { groundY } = getBounds();
 
     return {
         x:
-            localStorage.getItem(POSITION_KEY) !== null
+            localStorage.getItem(key) !== null
                 ? clampX(saved)
                 : getHome().x,
         y: groundY,
     };
 }
 
-function savePosition({ x }) {
-    localStorage.setItem(POSITION_KEY, String(x));
+function savePosition({ x }, userId) {
+    localStorage.setItem(getPositionKey(userId), String(x));
 }
 
 function snapToGround({ x }) {
@@ -78,10 +91,11 @@ function snapToGround({ x }) {
 
 function clampDrag(x, y) {
     const { left, right, groundY } = getBounds();
+    const { edge } = getLayoutValues();
 
     return {
         x: Math.min(right, Math.max(left, x)),
-        y: Math.min(groundY, Math.max(EDGE, y)),
+        y: Math.min(groundY, Math.max(edge, y)),
     };
 }
 
@@ -105,13 +119,13 @@ function getRandomSpot(currentX) {
     );
 }
 
-export default function useCompanionBehavior(tasks = []) {
+export default function useCompanionBehavior(tasks = [], userId) {
     const [state, setState] = useState(COMPANION_STATE.IDLE);
 
     const [position, setPosition] = useState(() =>
         typeof window === "undefined"
             ? { x: 900, y: 600 }
-            : getSavedPosition()
+            : getSavedPosition(userId)
     );
 
     const [message, setMessage] = useState("");
@@ -147,25 +161,27 @@ export default function useCompanionBehavior(tasks = []) {
         }, COMPANION_TIMING.REACTION_DURATION);
     }, []);
 
-    // Keep the latest position without restarting ambient behavior.
     useEffect(() => {
         positionRef.current = position;
     }, [position]);
 
-    // Save resting X position.
     useEffect(() => {
         if (!isDragging) {
-            savePosition(position);
+            savePosition(position, userId);
         }
-    }, [position, isDragging]);
+    }, [position, isDragging, userId]);
 
-    // Celebrate only when an existing task becomes completed.
+    // Reload the correct saved position if the authenticated user changes.
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPosition(getSavedPosition(userId));
+    }, [userId]);
+
     useEffect(() => {
         const currentStatuses = new Map(
             tasks.map((task) => [task.id, task.status])
         );
 
-        // Initial load should not trigger celebration.
         if (previousTaskStatuses.current === null) {
             previousTaskStatuses.current = currentStatuses;
             return;
@@ -189,7 +205,6 @@ export default function useCompanionBehavior(tasks = []) {
         }
     }, [tasks, react]);
 
-    // Ambient behavior.
     useEffect(() => {
         if (
             isDragging ||
@@ -206,7 +221,6 @@ export default function useCompanionBehavior(tasks = []) {
             timer = setTimeout(() => {
                 if (isDragging) return;
 
-                // Do not interrupt active reactions.
                 if (
                     [
                         COMPANION_STATE.WALKING,
@@ -223,18 +237,19 @@ export default function useCompanionBehavior(tasks = []) {
 
                 const roll = Math.random();
 
-                // Occasionally react to overdue tasks.
                 if (overdueCount && roll < 0.08) {
                     react(COMPANION_STATE.CONCERNED);
                     return;
                 }
 
-                // Sleep.
                 if (roll < 0.25) {
                     setState(COMPANION_STATE.SLEEPING);
+
                     setMessage(
                         Math.random() < 0.5
-                            ? getRandomMessage(COMPANION_STATE.SLEEPING)
+                            ? getRandomMessage(
+                                  COMPANION_STATE.SLEEPING
+                              )
                             : ""
                     );
 
@@ -246,29 +261,33 @@ export default function useCompanionBehavior(tasks = []) {
                     return;
                 }
 
-                // Walk.
                 if (roll < 0.5) {
                     const current = positionRef.current;
                     const next = getRandomSpot(current.x);
+                    const distance = Math.abs(
+                        next.x - current.x
+                    );
 
-                    const distance = Math.abs(next.x - current.x);
+                    const duration = Math.max(
+                        1800,
+                        distance * 8
+                    );
 
-                    // Constant-ish walking speed.
-                    const duration = Math.max(1800, distance * 8);
+                    setDirection(
+                        next.x < current.x ? -1 : 1
+                    );
 
-                    // Walking PNGs face right by default.
-                    setDirection(next.x < current.x ? -1 : 1);
                     setWalkDuration(duration);
                     setState(COMPANION_STATE.WALKING);
 
                     setMessage(
                         Math.random() < 0.35
-                            ? getRandomMessage(COMPANION_STATE.WALKING)
+                            ? getRandomMessage(
+                                  COMPANION_STATE.WALKING
+                              )
                             : ""
                     );
 
-                    // First render WALKING + direction,
-                    // then begin physical movement.
                     requestAnimationFrame(() => {
                         requestAnimationFrame(() => {
                             setPosition(next);
@@ -278,14 +297,15 @@ export default function useCompanionBehavior(tasks = []) {
                     return;
                 }
 
-                // Remain idle.
                 setState(COMPANION_STATE.IDLE);
+
                 setMessage(
                     Math.random() < 0.3
-                        ? getRandomMessage(COMPANION_STATE.IDLE)
+                        ? getRandomMessage(
+                              COMPANION_STATE.IDLE
+                          )
                         : ""
                 );
-
             }, random(
                 COMPANION_TIMING.MIN_IDLE,
                 COMPANION_TIMING.MAX_IDLE
@@ -297,7 +317,6 @@ export default function useCompanionBehavior(tasks = []) {
         return () => clearTimeout(timer);
     }, [isDragging, overdueCount, react, state]);
 
-    // CSS travel finished -> stop walking immediately.
     const handleWalkEnd = useCallback(() => {
         setState((current) =>
             current === COMPANION_STATE.WALKING
@@ -308,7 +327,6 @@ export default function useCompanionBehavior(tasks = []) {
         setMessage("");
     }, []);
 
-    // React to viewport/navbar size changes.
     useEffect(() => {
         const desktopNav =
             document.getElementById("desktop-navbar");
@@ -341,7 +359,6 @@ export default function useCompanionBehavior(tasks = []) {
         };
     }, []);
 
-    // Cleanup reaction/landing timers.
     useEffect(
         () => () => {
             clearTimeout(reactionTimer.current);
@@ -433,29 +450,33 @@ export default function useCompanionBehavior(tasks = []) {
 
             setIsDragging(false);
 
-            // Click without dragging.
             if (!moved) {
                 react(COMPANION_STATE.REACTING);
                 return;
             }
 
-            // Dragged pet returns to floor.
             setPosition((current) => {
                 const landed = snapToGround(current);
-                savePosition(landed);
+                savePosition(landed, userId);
                 return landed;
             });
 
             setState(COMPANION_STATE.LANDING);
+
             setMessage(
                 Math.random() < 0.5
-                    ? getRandomMessage(COMPANION_STATE.LANDING)
+                    ? getRandomMessage(
+                          COMPANION_STATE.LANDING
+                      )
                     : ""
             );
 
-            landingTimer.current = setTimeout(() => {setState(COMPANION_STATE.IDLE); setMessage("")
+            landingTimer.current = setTimeout(() => {
+                setState(COMPANION_STATE.IDLE);
+                setMessage("");
             }, COMPANION_TIMING.LANDING_DURATION);
-        }, [isDragging, react]
+        },
+        [isDragging, react, userId]
     );
 
     return {
