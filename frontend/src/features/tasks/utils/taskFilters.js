@@ -47,17 +47,9 @@ export function filterTasks(
             return false;
         }
 
-        if (filter === "completed") {
-            return task.status === STATUS.COMPLETED;
-        }
-        // un/comment to toggle inclusion of completed tasks from other filters
-        // if (task.status === STATUS.COMPLETED) {
-        //     return false;
-        // }
-
-        if (filter === "all") {
-            return true;
-        }
+        if (filter === "all") return true;
+        if (filter === "completed") return task.status === STATUS.COMPLETED;
+        if (task.status === STATUS.COMPLETED) return false;
 
         return getTaskCategory(task.dueDate) === filter;
     });

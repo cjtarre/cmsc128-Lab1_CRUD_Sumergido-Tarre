@@ -1,19 +1,17 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, Eye, EyeOff, GraduationCap, Lock, Mail, User } from "lucide-react";
+import { Check, ChevronLeft, Circle, Eye, EyeOff, GraduationCap, Lock, Mail, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import HoverText from "../../../shared/components/effects/HoverText";
 import { useAuth } from "../hooks/useAuth";
-import { DISPLAY_NAME_MAX_LENGTH, USERNAME_MAX_LENGTH, validateSignup } from "../../../shared/utils/validation";
+import { DISPLAY_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH, USERNAME_MAX_LENGTH, validateSignup } from "../../../shared/utils/validation";
 import { getAuthFormStyles } from "../styles/authStyles";
-
 
 function Signup({ embedded = false, onSwitchToLogin }) {
     const { signup } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Signup form state
     const [displayName, setDisplayName] = useState(() => sessionStorage.getItem("signupDisplayName") || "");
     const [username, setUsername] = useState(() => sessionStorage.getItem("signupUsername") || "");
     const [email, setEmail] = useState(() => sessionStorage.getItem("signupEmail") || "");
@@ -24,6 +22,16 @@ function Signup({ embedded = false, onSwitchToLogin }) {
     const [errors, setErrors] = useState({});
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    const passwordRequirements = [
+        { label: `At least ${PASSWORD_MIN_LENGTH} characters`, met: password.length >= PASSWORD_MIN_LENGTH },
+        { label: "One uppercase letter", met: /[A-Z]/.test(password) },
+        { label: "One lowercase letter", met: /[a-z]/.test(password) },
+        { label: "One number", met: /\d/.test(password) },
+        { label: "One special character", met: /[^A-Za-z0-9]/.test(password) },
+    ];
+
+    const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
 
     // Preserve non-sensitive signup progress across accidental refreshes
     useEffect(() => {
@@ -38,12 +46,8 @@ function Signup({ embedded = false, onSwitchToLogin }) {
         sessionStorage.removeItem("signupEmail");
     };
 
-    // Clear validation feedback as the user corrects a field
-    const clearFieldError = (field) => {
-        setErrors((prev) => ({ ...prev, [field]: undefined }));
-    };
+    const clearFieldError = (field) => setErrors((prev) => ({ ...prev, [field]: undefined }));
 
-    // Validate and create the account before redirecting to login
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -61,9 +65,7 @@ function Signup({ embedded = false, onSwitchToLogin }) {
         try {
             await signup(email.trim(), password, username.trim().toLowerCase(), displayName.trim());
 
-            sessionStorage.removeItem("signupDisplayName");
-            sessionStorage.removeItem("signupUsername");
-            sessionStorage.removeItem("signupEmail");
+            clearSignupDraft();
 
             toast.success("Account created successfully!");
             navigate("/login", { state: { accountCreated: true, email: email.trim() } });
@@ -79,7 +81,11 @@ function Signup({ embedded = false, onSwitchToLogin }) {
         }
     };
 
-    const {inputClass, labelClass, iconClass, eyeClass, fieldErrorClass,} = getAuthFormStyles(embedded);
+    const { inputClass, labelClass, iconClass, eyeClass, fieldErrorClass } = getAuthFormStyles(embedded);
+
+    const requirementClass = (met) => met
+        ? embedded ? "text-green-300 dark:text-green-600" : "text-green-600 dark:text-green-400"
+        : embedded ? "text-white/45 dark:text-slate-500" : "text-slate-400 dark:text-slate-500";
 
     const form = (
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -136,6 +142,7 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                             setEmail(e.target.value);
                             clearFieldError("email");
                         }}
+                        autoComplete="email"
                         placeholder="Enter your email"
                         className={inputClass}
                     />
@@ -154,7 +161,9 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                         onChange={(e) => {
                             setPassword(e.target.value);
                             clearFieldError("password");
+                            clearFieldError("confirmPassword");
                         }}
+                        autoComplete="new-password"
                         placeholder="Create a password"
                         className={inputClass}
                     />
@@ -162,7 +171,19 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                         {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                     </button>
                 </div>
+
                 {errors.password && <p className={fieldErrorClass}>{errors.password}</p>}
+
+                {password && (
+                    <div className="mt-3 grid gap-x-4 gap-y-1.5 text-xs sm:grid-cols-2">
+                        {passwordRequirements.map(({ label, met }) => (
+                            <div key={label} className={`flex items-center gap-1.5 transition-colors ${requirementClass(met)}`}>
+                                {met ? <Check size={13} strokeWidth={2.5} /> : <Circle size={10} />}
+                                <span>{label}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <div>
@@ -177,6 +198,7 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                             setConfirmPassword(e.target.value);
                             clearFieldError("confirmPassword");
                         }}
+                        autoComplete="new-password"
                         placeholder="Enter your password again"
                         className={inputClass}
                     />
@@ -184,7 +206,19 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                         {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                     </button>
                 </div>
+
                 {errors.confirmPassword && <p className={fieldErrorClass}>{errors.confirmPassword}</p>}
+
+                {confirmPassword && !errors.confirmPassword && (
+                    <p className={`mt-2 flex items-center gap-1.5 text-xs ${
+                        passwordsMatch
+                            ? embedded ? "text-green-300 dark:text-green-600" : "text-green-600 dark:text-green-400"
+                            : embedded ? "text-red-200 dark:text-red-600" : "text-red-500 dark:text-red-400"
+                    }`}>
+                        {passwordsMatch ? <Check size={13} strokeWidth={2.5} /> : <Circle size={10} />}
+                        {passwordsMatch ? "Passwords match" : "Passwords do not match"}
+                    </p>
+                )}
             </div>
 
             {error && <p className={`text-sm ${embedded ? "text-red-200 dark:text-red-600" : "text-red-500 dark:text-red-400"}`}>{error}</p>}
@@ -206,11 +240,13 @@ function Signup({ embedded = false, onSwitchToLogin }) {
                 <div className="mx-auto w-full max-w-md">
                     <div className="mb-8 flex flex-col items-center text-center">
                         <div className="flex items-center gap-2 text-green-300 dark:text-green-500">
-                        <GraduationCap size={24} />
-                        <span className="font-bold text-white dark:text-slate-800">Takda</span>
+                            <GraduationCap size={24} />
+                            <span className="font-bold text-white dark:text-slate-800">Takda</span>
                         </div>
 
-                        <h1 className="mt-8 text-center text-3xl font-black tracking-tight text-white dark:text-slate-800"><HoverText text="Create your account" /></h1>
+                        <h1 className="mt-8 text-center text-3xl font-black tracking-tight text-white dark:text-slate-800">
+                            <HoverText text="Create your account" />
+                        </h1>
                         <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-6 text-white/60 dark:text-slate-500">Start organizing your schoolwork with Takda.</p>
                     </div>
 
