@@ -11,6 +11,12 @@ const {
     restoreProject
 } = require('../controllers/projectController');
 const {
+    getMembers,
+    changeMemberRole,
+    removeMember,
+    leaveProject
+} = require('../controllers/memberController');
+const {
     createInvite,
     getProjectInvites,
     cancelInvite
@@ -27,6 +33,16 @@ router.put('/:project_id', requireAuth, requireProjectRole('owner'), updateProje
 router.delete('/:project_id', requireAuth, requireProjectRole('owner'), deleteProject);           // DELETE   http://localhost:5000/api/projects/123
 router.patch('/:project_id/restore', requireAuth,
     requireProjectRole('owner', { includeDeleted: true }), restoreProject);                    // PATCH    http://localhost:5000/api/projects/123/restore
+
+// Members                                                                               // samples
+router.get('/:project_id/members', requireAuth,
+    requireProjectRole('viewer'), getMembers);                                              // GET      http://localhost:5000/api/projects/123/members
+router.patch('/:project_id/members/:user_id', requireAuth,
+    requireProjectRole('owner'), changeMemberRole);                                         // PATCH    http://localhost:5000/api/projects/123/members/<uuid>   { role }
+router.delete('/:project_id/members/:user_id', requireAuth,
+    requireProjectRole('owner'), removeMember);                                             // DELETE   http://localhost:5000/api/projects/123/members/<uuid>
+router.post('/:project_id/leave', requireAuth,
+    requireProjectRole('viewer'), leaveProject);                                               // POST     http://localhost:5000/api/projects/123/leave
 
 // Invites (owner side; the invitee answers via /api/invites)
 router.post('/:project_id/invites', requireAuth, inviteRateLimiter,
