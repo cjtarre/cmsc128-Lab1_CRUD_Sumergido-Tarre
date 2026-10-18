@@ -13,6 +13,7 @@ const taskRoutes = require("./routes/taskRoutes");
 const tagRoutes = require("./routes/tagRoutes");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
+const listRoutes = require("./routes/listRoutes");
 
 // Middleware
 const app = express();
@@ -27,6 +28,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/lists", listRoutes);
 
 // Define your local hosting port
 const PORT = process.env.PORT || 5000;
