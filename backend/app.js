@@ -14,6 +14,7 @@ const tagRoutes = require("./routes/tagRoutes");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const projectRoutes = require("./routes/projectRoutes");
+const inviteRoutes = require("./routes/inviteRoutes");
 
 // Middleware
 const app = express();
@@ -29,6 +30,7 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/invites", inviteRoutes);
 
 // Define your local hosting port
 const PORT = process.env.PORT || 5000;
