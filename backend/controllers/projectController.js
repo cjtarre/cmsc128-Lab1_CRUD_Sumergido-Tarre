@@ -1,5 +1,6 @@
 const supabase = require("../config/supabaseAdmin");
 const { validateProjectName } = require("../utils/validation");
+const { notify, removeInviteNotifications } = require("../utils/notifications");
 
 const PROJECT_COLUMNS = "id, project_name, owner, is_default, created_at, deleted_at";
 
@@ -100,6 +101,37 @@ const deleteProject = async (req, res) => {
 
         if (!data || data.length === 0) {
             return res.status(404).json({ error: "Project not found" });
+        }
+
+        // Members lose access immediately (getRole ignores deleted projects).
+        // Notifying them and clearing pending invites is best-effort: the
+        // delete has already happened, so a failure here is logged, not returned.
+        try {
+            const { data: members, error: membersError } = await supabase
+                .from("project_user")
+                .select("user_id")
+                .eq("project_id", req.projectId)
+                .neq("user_id", req.user.id);
+
+            if (membersError) throw membersError;
+
+            await notify(members.map((m) => m.user_id), "project_deleted", {
+                actorId: req.user.id,
+                data: { project_id: req.projectId, project_name: project.project_name },
+            });
+
+            const { data: cancelled, error: cancelError } = await supabase
+                .from("project_invite")
+                .update({ status: "cancelled", responded_at: new Date().toISOString() })
+                .eq("project_id", req.projectId)
+                .eq("status", "pending")
+                .select("id");
+
+            if (cancelError) throw cancelError;
+
+            await removeInviteNotifications(cancelled.map((invite) => invite.id));
+        } catch (sideEffectError) {
+            console.error("Error sending project deletion side effects:", sideEffectError);
         }
 
         res.status(200).json({

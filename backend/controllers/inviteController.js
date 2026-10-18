@@ -4,6 +4,7 @@ const {
     validateIdentifier,
     validateInviteRole,
 } = require("../utils/validation");
+const { notify, removeInviteNotifications } = require("../utils/notifications");
 
 // ---------------------------------------------------------------------------
 // Project side: run behind requireProjectRole('owner'), which sets req.projectId.
@@ -93,6 +94,30 @@ const createInvite = async (req, res) => {
 
         if (inviteError) throw inviteError;
 
+        try {
+            const { data: project, error: projectError } = await supabase
+                .from("projects")
+                .select("project_name")
+                .eq("id", req.projectId)
+                .single();
+
+            if (projectError) throw projectError;
+
+            await notify([invitee.user_id], "project_invite", {
+                actorId: req.user.id,
+                data: {
+                    invite_id: invite.id,
+                    project_id: req.projectId,
+                    project_name: project.project_name,
+                    role,
+                },
+            });
+        } catch (notifyError) {
+            // An invite nobody is told about is worse than no invite: undo it.
+            await supabase.from("project_invite").delete().eq("id", invite.id);
+            throw notifyError;
+        }
+
         res.status(201).json({
             ...invite,
             invitee: { username: invitee.username, display_name: invitee.display_name },
@@ -143,6 +168,13 @@ const cancelInvite = async (req, res) => {
 
         if (!data || data.length === 0) {
             return res.status(404).json({ error: "Pending invite not found" });
+        }
+
+        // The invitee's notification is no longer actionable; remove it.
+        try {
+            await removeInviteNotifications([inviteId]);
+        } catch (cleanupError) {
+            console.error("Error removing invite notification:", cleanupError);
         }
 
         res.status(200).json({ message: "Invite cancelled" });
