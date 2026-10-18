@@ -6,6 +6,10 @@ const PASSWORD_MIN_LENGTH = 8;
 const USERNAME_MIN_LENGTH = 3;
 const USERNAME_MAX_LENGTH = 30;
 
+// Must match the Postgres enum `list_role`.
+const LIST_ROLES = ['owner', 'editor', 'viewer'];
+const LIST_NAME_MAX_LENGTH = 100;
+
 const validatePassword = (password) => {
     if (!password) return 'Password is required';
     if (password.length < PASSWORD_MIN_LENGTH) return `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
@@ -37,6 +41,27 @@ const validateUsername = (username) => {
     return null;
 };
 
+const validateListName = (name) => {
+    if (typeof name !== 'string' || !name.trim()) return 'List name is required';
+
+    if (name.trim().length > LIST_NAME_MAX_LENGTH) {
+        return `List name must be ${LIST_NAME_MAX_LENGTH} characters or fewer`;
+    }
+
+    return null;
+};
+
+const validateListRole = (role) =>
+    LIST_ROLES.includes(role) ? null : `role must be one of: ${LIST_ROLES.join(', ')}`;
+
+// int8 ids arrive as strings in URL params. Returns a number, or null if it
+// isn't a positive safe integer, so bad input is rejected before reaching Postgres.
+const parseId = (value) => {
+    if (!/^\d+$/.test(String(value))) return null;
+    const id = Number(value);
+    return Number.isSafeInteger(id) && id > 0 ? id : null;
+};
+
 // Fields are optional (undefined lets the DB default apply), but if present they must be valid enum values.
 const validateTaskEnums = ({ priority_level, status }) => {
     if (priority_level !== undefined && !TASK_PRIORITIES.includes(priority_level)) {
@@ -53,6 +78,11 @@ module.exports = {
     TASK_PRIORITIES,
     TASK_STATUSES,
     validateTaskEnums,
+    LIST_ROLES,
+    LIST_NAME_MAX_LENGTH,
+    validateListName,
+    validateListRole,
+    parseId,
     PASSWORD_MIN_LENGTH,
     USERNAME_MIN_LENGTH,
     USERNAME_MAX_LENGTH,
