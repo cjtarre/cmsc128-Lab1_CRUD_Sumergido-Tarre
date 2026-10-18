@@ -6,9 +6,9 @@ const PASSWORD_MIN_LENGTH = 8;
 const USERNAME_MIN_LENGTH = 3;
 const USERNAME_MAX_LENGTH = 30;
 
-// Must match the Postgres enum `list_role`.
-const LIST_ROLES = ['owner', 'editor', 'viewer'];
-const LIST_NAME_MAX_LENGTH = 100;
+// Must match the Postgres enum `project_role`.
+const PROJECT_ROLES = ['owner', 'editor', 'viewer'];
+const PROJECT_NAME_MAX_LENGTH = 100;
 
 const validatePassword = (password) => {
     if (!password) return 'Password is required';
@@ -41,18 +41,18 @@ const validateUsername = (username) => {
     return null;
 };
 
-const validateListName = (name) => {
-    if (typeof name !== 'string' || !name.trim()) return 'List name is required';
+const validateProjectName = (name) => {
+    if (typeof name !== 'string' || !name.trim()) return 'Project name is required';
 
-    if (name.trim().length > LIST_NAME_MAX_LENGTH) {
-        return `List name must be ${LIST_NAME_MAX_LENGTH} characters or fewer`;
+    if (name.trim().length > PROJECT_NAME_MAX_LENGTH) {
+        return `Project name must be ${PROJECT_NAME_MAX_LENGTH} characters or fewer`;
     }
 
     return null;
 };
 
-const validateListRole = (role) =>
-    LIST_ROLES.includes(role) ? null : `role must be one of: ${LIST_ROLES.join(', ')}`;
+const validateProjectRole = (role) =>
+    PROJECT_ROLES.includes(role) ? null : `role must be one of: ${PROJECT_ROLES.join(', ')}`;
 
 // int8 ids arrive as strings in URL params. Returns a number, or null if it
 // isn't a positive safe integer, so bad input is rejected before reaching Postgres.
@@ -78,10 +78,10 @@ module.exports = {
     TASK_PRIORITIES,
     TASK_STATUSES,
     validateTaskEnums,
-    LIST_ROLES,
-    LIST_NAME_MAX_LENGTH,
-    validateListName,
-    validateListRole,
+    PROJECT_ROLES,
+    PROJECT_NAME_MAX_LENGTH,
+    validateProjectName,
+    validateProjectRole,
     parseId,
     PASSWORD_MIN_LENGTH,
     USERNAME_MIN_LENGTH,

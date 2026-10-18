@@ -3,10 +3,10 @@ const { validateTaskEnums, parseId } = require("../utils/validation");
 const {
     ROLE_RANK,
     getRole,
-    getMemberListIds,
-    getDefaultListId,
-    validateTagIdsForList,
-} = require("../utils/listAccess");
+    getMemberProjectIds,
+    getDefaultProjectId,
+    validateTagIdsForProject,
+} = require("../utils/projectAccess");
 
 const TASK_SELECT = `
     *,
@@ -15,10 +15,10 @@ const TASK_SELECT = `
     )
 `;
 
-// Loads a task and checks the caller's role in the task's list.
+// Loads a task and checks the caller's role in the task's project.
 // Sends the error response itself and returns null when access isn't allowed,
 // so callers just do `if (!task) return;`.
-// Tasks in a soft-deleted list count as not found (getRole ignores deleted lists).
+// Tasks in a soft-deleted project count as not found (getRole ignores deleted projects).
 // Non-members get 404 (not 403) so task ids can't be probed for existence.
 const loadTaskForUser = async (req, res, { includeDeleted = false, minRole = "editor" } = {}) => {
     const taskId = parseId(req.params.task_id);
@@ -30,7 +30,7 @@ const loadTaskForUser = async (req, res, { includeDeleted = false, minRole = "ed
 
     let query = supabase
         .from("tasks")
-        .select("task_id, list_id, deleted_at")
+        .select("task_id, project_id, deleted_at")
         .eq("task_id", taskId);
 
     if (!includeDeleted) {
@@ -40,7 +40,7 @@ const loadTaskForUser = async (req, res, { includeDeleted = false, minRole = "ed
     const { data: task, error } = await query.maybeSingle();
     if (error) throw error;
 
-    const role = task ? await getRole(task.list_id, req.user.id) : null;
+    const role = task ? await getRole(task.project_id, req.user.id) : null;
 
     if (!role) {
         res.status(404).json({ error: "Task not found" });
@@ -55,8 +55,8 @@ const loadTaskForUser = async (req, res, { includeDeleted = false, minRole = "ed
     return task;
 };
 
-// GET /api/tasks              -> tasks from every list the user belongs to
-// GET /api/tasks?list_id=123  -> tasks from one list (user must be a member)
+// GET /api/tasks              -> tasks from every project the user belongs to
+// GET /api/tasks?project_id=123  -> tasks from one project (user must be a member)
 const getAllTasks = async (req, res) => {
     try {
         let query = supabase
@@ -65,25 +65,25 @@ const getAllTasks = async (req, res) => {
             .is("deleted_at", null)
             .order("created_at", { ascending: false });
 
-        if (req.query.list_id !== undefined) {
-            const listId = parseId(req.query.list_id);
-            if (listId === null) {
-                return res.status(400).json({ error: "Invalid list_id" });
+        if (req.query.project_id !== undefined) {
+            const projectId = parseId(req.query.project_id);
+            if (projectId === null) {
+                return res.status(400).json({ error: "Invalid project_id" });
             }
 
-            const role = await getRole(listId, req.user.id);
+            const role = await getRole(projectId, req.user.id);
             if (!role) {
-                return res.status(404).json({ error: "List not found" });
+                return res.status(404).json({ error: "Project not found" });
             }
 
-            query = query.eq("list_id", listId);
+            query = query.eq("project_id", projectId);
         } else {
-            const listIds = await getMemberListIds(req.user.id);
-            if (listIds.length === 0) {
+            const projectIds = await getMemberProjectIds(req.user.id);
+            if (projectIds.length === 0) {
                 return res.status(200).json([]);
             }
 
-            query = query.in("list_id", listIds);
+            query = query.in("project_id", projectIds);
         }
 
         const { data, error } = await query;
@@ -96,8 +96,8 @@ const getAllTasks = async (req, res) => {
     }
 };
 
-// list_id is optional: when omitted the task goes into the user's default list,
-// so clients that predate lists keep working. Requires editor or owner level access.
+// project_id is optional: when omitted the task goes into the user's default project,
+// so clients that predate projects keep working. Requires editor or owner level access.
 const createTask = async (req, res) => {
     try {
         const {
@@ -106,7 +106,7 @@ const createTask = async (req, res) => {
             priority_level,
             status,
             due_date,
-            list_id,
+            project_id,
             tag_ids
         } = req.body;
 
@@ -115,24 +115,24 @@ const createTask = async (req, res) => {
             return res.status(400).json({ error: enumError });
         }
 
-        let listId;
-        if (list_id === undefined || list_id === null) {
-            listId = await getDefaultListId(req.user.id);
+        let projectId;
+        if (project_id === undefined || project_id === null) {
+            projectId = await getDefaultProjectId(req.user.id);
 
-            if (listId === null) {
-                return res.status(400).json({ error: "list_id is required" });
+            if (projectId === null) {
+                return res.status(400).json({ error: "project_id is required" });
             }
         } else {
-            listId = parseId(list_id);
+            projectId = parseId(project_id);
 
-            if (listId === null) {
-                return res.status(400).json({ error: "Invalid list_id" });
+            if (projectId === null) {
+                return res.status(400).json({ error: "Invalid project_id" });
             }
         }
 
-        const role = await getRole(listId, req.user.id);
+        const role = await getRole(projectId, req.user.id);
         if (!role) {
-            return res.status(404).json({ error: "List not found" });
+            return res.status(404).json({ error: "Project not found" });
         }
 
         if (ROLE_RANK[role] < ROLE_RANK.editor) {
@@ -141,7 +141,7 @@ const createTask = async (req, res) => {
 
         let tagIdList = [];
         if (tag_ids != null) {
-            const tagError = await validateTagIdsForList(tag_ids, listId);
+            const tagError = await validateTagIdsForProject(tag_ids, projectId);
 
             if (tagError) {
                 return res.status(400).json({ error: tagError });
@@ -158,8 +158,8 @@ const createTask = async (req, res) => {
                 priority_level,
                 status,
                 due_date,
-                list_id: listId,
-                user_id: req.user.id // creator; access is decided by list membership
+                project_id: projectId,
+                user_id: req.user.id // creator; access is decided by project membership
             }])
             .select()
             .single();
@@ -193,8 +193,8 @@ const createTask = async (req, res) => {
     }
 };
 
-// Requires editor or owner. list_id in the body is ignored: moving a task
-// between lists isn't supported yet (it needs its own tag handling).
+// Requires editor or owner. project_id in the body is ignored: moving a task
+// between projects isn't supported yet (it needs its own tag handling).
 const updateTask = async (req, res) => {
     try {
         const {
@@ -217,7 +217,7 @@ const updateTask = async (req, res) => {
         // Validate tags before writing anything, so a bad tag can't leave a half-applied update.
         let tagIdList;
         if (tag_ids != null) {
-            const tagError = await validateTagIdsForList(tag_ids, task.list_id);
+            const tagError = await validateTagIdsForProject(tag_ids, task.project_id);
             if (tagError) {
                 return res.status(400).json({ error: tagError });
             }
@@ -279,7 +279,7 @@ const updateTask = async (req, res) => {
     }
 };
 
-// Soft delete. Requires editor or owner (any task in the list, not just your own).
+// Soft delete. Requires editor or owner (any task in the project, not just your own).
 const deleteTask = async (req, res) => {
     try {
         const task = await loadTaskForUser(req, res);
@@ -310,8 +310,8 @@ const deleteTask = async (req, res) => {
     }
 };
 
-// Requires editor or owner. A task whose list is deleted can't be restored
-// until the list itself is restored (loadTaskForUser treats it as not found).
+// Requires editor or owner. A task whose project is deleted can't be restored
+// until the project itself is restored (loadTaskForUser treats it as not found).
 const restoreTask = async (req, res) => {
     try {
         const task = await loadTaskForUser(req, res, { includeDeleted: true });

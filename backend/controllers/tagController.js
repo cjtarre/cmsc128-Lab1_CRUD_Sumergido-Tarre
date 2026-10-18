@@ -1,26 +1,26 @@
 const supabase = require('../config/supabaseAdmin');
 const { parseId } = require('../utils/validation');
-const { getRole, getMemberListIds } = require('../utils/listAccess');
+const { getRole, getMemberProjectIds } = require('../utils/projectAccess');
 
-// Tags with list_id = null are global presets visible to everyone.
-// Tags with a list_id belong to that list and are visible only to its members.
+// Tags with project_id = null are global presets visible to everyone.
+// Tags with a project_id belong to that project and are visible only to its members.
 //
-// GET /api/tags              -> global presets + tags from every list the user belongs to
-// GET /api/tags?list_id=123  -> global presets + tags from that one list (user must be a member)
+// GET /api/tags              -> global presets + tags from every project the user belongs to
+// GET /api/tags?project_id=123  -> global presets + tags from that one project (user must be a member)
 const getAllTags = async (req, res) => {
     try {
-        let listIds;
+        let projectIds;
 
-        if (req.query.list_id !== undefined) {
-            const listId = parseId(req.query.list_id);
-            if (listId === null) return res.status(400).json({ error: 'Invalid list_id' });
+        if (req.query.project_id !== undefined) {
+            const projectId = parseId(req.query.project_id);
+            if (projectId === null) return res.status(400).json({ error: 'Invalid project_id' });
             
-            const role = await getRole(listId, req.user.id);
-            if (!role) return res.status(404).json({ error: 'List not found' });
+            const role = await getRole(projectId, req.user.id);
+            if (!role) return res.status(404).json({ error: 'Project not found' });
             
-            listIds = [listId];
+            projectIds = [projectId];
         } else {
-            listIds = await getMemberListIds(req.user.id);
+            projectIds = await getMemberProjectIds(req.user.id);
         }
 
         let query = supabase
@@ -28,10 +28,10 @@ const getAllTags = async (req, res) => {
             .select('*')
             .order('tag_name', { ascending: true });
 
-        // listIds come from the database / parseId, so they are always integers.
-        query = listIds.length > 0
-            ? query.or(`list_id.is.null,list_id.in.(${listIds.join(',')})`)
-            : query.is('list_id', null);
+        // projectIds come from the database / parseId, so they are always integers.
+        query = projectIds.length > 0
+            ? query.or(`project_id.is.null,project_id.in.(${projectIds.join(',')})`)
+            : query.is('project_id', null);
 
         const { data, error } = await query;
         if (error) throw error;

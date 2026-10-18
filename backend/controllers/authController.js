@@ -89,19 +89,19 @@ const signUpUser = async (req, res) => {
             throw profileError;
         }
 
-        // Every user needs a default list, since tasks.list_id is required.
-        // create_list inserts the list and the owner's list_user row atomically.
-        const { error: listError } = await supabaseAdmin.rpc('create_list', {
+        // Every user needs a default project, since tasks.project_id is required.
+        // create_project inserts the project and the owner's project_user row atomically.
+        const { error: projectError } = await supabaseAdmin.rpc('create_project', {
             p_owner: data.user.id,
             p_name: 'My Tasks',
             p_is_default: true,
         });
 
         // Roll back the profile and Auth account so no half-created user remains.
-        if (listError) {
+        if (projectError) {
             await supabaseAdmin.from('profiles').delete().eq('user_id', data.user.id);
             await supabaseAdmin.auth.admin.deleteUser(data.user.id);
-            throw listError;
+            throw projectError;
         }
 
         return res.status(201).json({
