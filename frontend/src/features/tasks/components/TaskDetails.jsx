@@ -2,7 +2,7 @@ import { CalendarDays, X, Pencil, Trash2 } from "lucide-react";
 import { useEffect } from "react";
 
 import taskStyles from "../styles/taskStyles";
-import { STATUS, priorityLabels, statusLabels } from "../constants/taskOptions";
+import { STATUS, PRIORITY, priorityLabels, statusLabels } from "../constants/taskOptions";
 import { formatDueDate } from "../../../shared/utils/dateUtils";
 
 function TaskDetails({ task, onClose, onEdit, onDelete }) {
@@ -65,7 +65,7 @@ function TaskDetails({ task, onClose, onEdit, onDelete }) {
                         <div className="rounded-xl border border-white/70 bg-white/45 px-3.5 py-3 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]">
                             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Priority</p>
 
-                            {task.priority > 0 ? (
+                            {task.priority && task.priority !== PRIORITY.NONE ? (
                                 <span className={`mt-1.5 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${isCompleted ? "bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500" : taskStyles.priority[task.priority]}`}>
                                     {priorityLabels[task.priority]}
                                 </span>

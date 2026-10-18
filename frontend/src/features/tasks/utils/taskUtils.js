@@ -1,4 +1,4 @@
-import { STATUS } from "../constants/taskOptions";
+import { STATUS, PRIORITY, PRIORITY_RANK } from "../constants/taskOptions";
 
 // Available sorting modes.
 export const TASK_SORT_MODES = {
@@ -83,10 +83,10 @@ export function sortTasksByTaskColumn(tasks, mode) {
                 return (b.title || "").localeCompare(a.title || "");
 
             case TASK_SORT_MODES.PRIORITY_ASC:
-                return (a.priority || 0) - (b.priority || 0);
+                return (PRIORITY_RANK[a.priority] ?? PRIORITY_RANK[PRIORITY.NONE]) - (PRIORITY_RANK[b.priority] ?? PRIORITY_RANK[PRIORITY.NONE]);
 
             case TASK_SORT_MODES.PRIORITY_DESC:
-                return (b.priority || 0) - (a.priority || 0);
+                return (PRIORITY_RANK[b.priority] ?? PRIORITY_RANK[PRIORITY.NONE]) - (PRIORITY_RANK[a.priority] ?? PRIORITY_RANK[PRIORITY.NONE]);
 
             default:
                 return 0;

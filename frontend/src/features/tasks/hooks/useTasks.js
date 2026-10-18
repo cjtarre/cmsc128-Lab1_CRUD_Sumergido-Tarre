@@ -1,4 +1,4 @@
-import { STATUS } from "../constants/taskOptions";
+import { STATUS, PRIORITY } from "../constants/taskOptions";
 import { taskService } from "../services/taskService";
 
 const toApiTask = (task, includeTags = true) => {
@@ -8,7 +8,7 @@ const toApiTask = (task, includeTags = true) => {
     return {
         task_name: task.title?.trim() || "",
         task_info: task.description?.trim() || "",
-        priority_level: task.priority ?? 0,
+        priority_level: task.priority ?? PRIORITY.NONE,
         status: task.status ?? STATUS.NOT_STARTED,
         due_date: dueDate,
         ...(includeTags && { tag_ids: (task.tags || []).map((tag) => typeof tag === "object" ? tag.tag_id : tag) }),

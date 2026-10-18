@@ -5,13 +5,13 @@ import { CalendarDays, Check, ChevronDown } from "lucide-react";
 import ActionButtons from "./ActionButtons";
 import taskStyles from "../styles/taskStyles";
 import { formatDueDate } from "../../../shared/utils/dateUtils";
-import { STATUS, priorityLabels, statusLabels } from "../constants/taskOptions";
+import { STATUS, PRIORITY, priorityLabels, statusLabels } from "../constants/taskOptions";
 
 function TaskRow({
     title = "Untitled Task",
     description = "",
     status = STATUS.NOT_STARTED,
-    priority = 0,
+    priority = PRIORITY.NONE,
     dueDate = "",
     dueTime = "",
     tags = [],
@@ -112,7 +112,7 @@ function TaskRow({
                     )}
 
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5 sm:gap-2">
-                        {priority > 0 && (
+                        {priority && priority !== PRIORITY.NONE && (
                             <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:text-[10px] ${isCompleted ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500" : taskStyles.priority[priority]}`}>
                                 {priorityLabels[priority]}
                             </span>

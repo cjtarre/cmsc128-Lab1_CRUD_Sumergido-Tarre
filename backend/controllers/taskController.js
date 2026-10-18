@@ -1,4 +1,5 @@
 const supabase = require("../config/supabaseAdmin");
+const { validateTaskEnums } = require("../utils/validation");
 
 const getAllTasks = async (req, res) => {
     try {
@@ -37,6 +38,11 @@ const createTask = async (req, res) => {
             due_date,
             tag_ids
         } = req.body;
+
+        const enumError = validateTaskEnums({ priority_level, status });
+        if (enumError) {
+            return res.status(400).json({ error: enumError });
+        }
 
         const { data: newTask, error: newTaskError } = await supabase
             .from('tasks')
@@ -99,6 +105,11 @@ const updateTask = async (req, res) => {
             due_date,
             tag_ids
         } = req.body;
+
+        const enumError = validateTaskEnums({ priority_level, status });
+        if (enumError) {
+            return res.status(400).json({ error: enumError });
+        }
 
         const { data, error: updateError } = await supabase
             .from("tasks")

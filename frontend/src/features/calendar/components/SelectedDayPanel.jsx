@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CalendarDays, Check, ChevronDown, ChevronUp, Plus } from "lucide-react";
 
 import { formatDueTime } from "../../../shared/utils/dateUtils";
-import { STATUS, priorityLabels } from "../../tasks/constants/taskOptions";
+import { STATUS, PRIORITY, priorityLabels, statusLabels } from "../../tasks/constants/taskOptions";
 import taskStyles from "../../tasks/styles/taskStyles";
 
 function SelectedDayPanel({ date, tasks, onTaskClick, onToggleComplete, onAddTask }) {
@@ -61,7 +61,7 @@ function SelectedDayPanel({ date, tasks, onTaskClick, onToggleComplete, onAddTas
                                             <div className="mt-1 flex items-center gap-2">
                                                 {task.dueTime && <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDueTime(task.dueTime)}</span>}
 
-                                                {task.priority > 0 && (
+                                                {task.priority && task.priority !== PRIORITY.NONE && (
                                                     <span className={`rounded-full px-1.5 py-0.5 text-[8px] font-semibold uppercase ${isCompleted ? "bg-slate-100/80 text-slate-400 dark:bg-slate-700/70 dark:text-slate-500" : taskStyles.priority[task.priority]}`}>
                                                         {priorityLabels[task.priority]}
                                                     </span>
@@ -82,10 +82,10 @@ function SelectedDayPanel({ date, tasks, onTaskClick, onToggleComplete, onAddTas
                                             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[10px]">
                                                 <div>
                                                     <span className="text-slate-400 dark:text-slate-500">Status: </span>
-                                                    <span className="font-medium text-slate-600 dark:text-slate-300">{task.status}</span>
+                                                    <span className="font-medium text-slate-600 dark:text-slate-300">{statusLabels[task.status] || task.status}</span>
                                                 </div>
 
-                                                {task.priority > 0 && (
+                                                {task.priority && task.priority !== PRIORITY.NONE && (
                                                     <div>
                                                         <span className="text-slate-400 dark:text-slate-500">Priority: </span>
                                                         <span className="font-medium text-slate-600 dark:text-slate-300">{priorityLabels[task.priority]}</span>

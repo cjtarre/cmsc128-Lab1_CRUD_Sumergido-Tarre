@@ -1,3 +1,7 @@
+// Must match the Postgres enums `task_priority` and `task_status`.
+const TASK_PRIORITIES = ['none', 'low', 'medium', 'high'];
+const TASK_STATUSES = ['not_started', 'in_progress', 'completed'];
+
 const PASSWORD_MIN_LENGTH = 8;
 const USERNAME_MIN_LENGTH = 3;
 const USERNAME_MAX_LENGTH = 30;
@@ -33,7 +37,22 @@ const validateUsername = (username) => {
     return null;
 };
 
+// Fields are optional (undefined lets the DB default apply), but if present they must be valid enum values.
+const validateTaskEnums = ({ priority_level, status }) => {
+    if (priority_level !== undefined && !TASK_PRIORITIES.includes(priority_level)) {
+        return `priority_level must be one of: ${TASK_PRIORITIES.join(', ')}`;
+    }
+    if (status !== undefined && !TASK_STATUSES.includes(status)) {
+        return `status must be one of: ${TASK_STATUSES.join(', ')}`;
+    }
+
+    return null;
+};
+
 module.exports = {
+    TASK_PRIORITIES,
+    TASK_STATUSES,
+    validateTaskEnums,
     PASSWORD_MIN_LENGTH,
     USERNAME_MIN_LENGTH,
     USERNAME_MAX_LENGTH,

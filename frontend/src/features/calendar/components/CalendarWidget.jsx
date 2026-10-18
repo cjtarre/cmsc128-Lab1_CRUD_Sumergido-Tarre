@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 import calendarStyles from "../styles/calendarStyles";
+import { PRIORITY } from "../../tasks/constants/taskOptions";
 
 function CalendarWidget({ tasks = [] }) {
     const navigate = useNavigate();
@@ -27,9 +28,9 @@ function CalendarWidget({ tasks = [] }) {
         const date = `${String(day).padStart(2, "0")}/${String(month + 1).padStart(2, "0")}/${year}`;
         const priorities = tasks.filter((task) => task.dueDate === date).map((task) => task.priority);
 
-        if (priorities.includes(3)) return "high";
-        if (priorities.includes(2)) return "medium";
-        if (priorities.includes(1)) return "low";
+        if (priorities.includes(PRIORITY.HIGH)) return PRIORITY.HIGH;
+        if (priorities.includes(PRIORITY.MEDIUM)) return PRIORITY.MEDIUM;
+        if (priorities.includes(PRIORITY.LOW)) return PRIORITY.LOW;
         return null;
     };
 

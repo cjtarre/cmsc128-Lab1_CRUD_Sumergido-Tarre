@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
-import { PRIORITY } from "../constants/taskOptions";
+import { PRIORITY, PRIORITY_OPTIONS } from "../constants/taskOptions";
 import { validateTask, INFO_MAX_LENGTH, NAME_MAX_LENGTH } from "../../../shared/utils/validation";
 import { useTaskData } from "../context/TaskContext";
 
@@ -35,8 +35,7 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "" }) {
     if (!isOpen) return null;
 
     const handleChange = ({ target }) => {
-        const value = target.name === "priority" ? Number(target.value) : target.value;
-        setFormData((prev) => ({ ...prev, [target.name]: value }));
+        setFormData((prev) => ({ ...prev, [target.name]: target.value }));
         if (target.value.trim?.()) setErrors((prev) => ({ ...prev, [target.name]: "" }));
     };
 
@@ -86,12 +85,7 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "" }) {
         ["dueTime", "Due Time", "time"],
     ];
 
-    const priorityOptions = [
-        [PRIORITY.NONE, "None"],
-        [PRIORITY.LOW, "Low"],
-        [PRIORITY.MEDIUM, "Medium"],
-        [PRIORITY.HIGH, "High"],
-    ];
+    const priorityOptions = PRIORITY_OPTIONS;
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/20 px-3 pb-4 pt-20 backdrop-blur-sm dark:bg-black/55 sm:px-4 sm:pb-5 sm:pt-20">

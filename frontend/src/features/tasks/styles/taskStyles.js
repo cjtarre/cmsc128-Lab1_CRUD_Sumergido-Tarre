@@ -1,15 +1,17 @@
+import { PRIORITY, STATUS } from "../constants/taskOptions";
+
 const taskStyles = {
     priority: {
-        0: "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500",
-        1: "bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400",
-        2: "bg-yellow-50 text-yellow-600 dark:bg-yellow-950/50 dark:text-yellow-400",
-        3: "bg-red-50 text-red-500 dark:bg-red-950/50 dark:text-red-400",
+        [PRIORITY.NONE]: "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500",
+        [PRIORITY.LOW]: "bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400",
+        [PRIORITY.MEDIUM]: "bg-yellow-50 text-yellow-600 dark:bg-yellow-950/50 dark:text-yellow-400",
+        [PRIORITY.HIGH]: "bg-red-50 text-red-500 dark:bg-red-950/50 dark:text-red-400",
     },
 
     status: {
-        0: "text-slate-500 dark:text-slate-400",
-        1: "text-amber-600 dark:text-amber-400",
-        2: "text-green-600 dark:text-green-400",
+        [STATUS.NOT_STARTED]: "text-slate-500 dark:text-slate-400",
+        [STATUS.IN_PROGRESS]: "text-amber-600 dark:text-amber-400",
+        [STATUS.COMPLETED]: "text-green-600 dark:text-green-400",
     },
 
 tag: {
