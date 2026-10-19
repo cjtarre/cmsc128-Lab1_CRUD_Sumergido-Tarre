@@ -51,8 +51,7 @@ function EditTask({ task, isOpen, onClose, onSave }) {
     if (!isOpen || !task) return null;
 
     const handleChange = ({ target }) => {
-        const value = ["priority", "status"].includes(target.name) ? Number(target.value) : target.value;
-        setFormData((previous) => ({ ...previous, [target.name]: value }));
+        setFormData((previous) => ({ ...previous, [target.name]: target.value }));
         if (target.value.trim?.()) setErrors((previous) => ({ ...previous, [target.name]: "" }));
     };
 

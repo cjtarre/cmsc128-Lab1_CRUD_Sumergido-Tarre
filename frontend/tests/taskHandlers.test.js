@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTaskHandlers } from "../src/features/tasks/handlers/taskHandlers";
-import { STATUS } from "../src/features/tasks/constants/taskOptions";
+import { STATUS, PRIORITY } from "../src/features/tasks/constants/taskOptions";
 
 vi.mock("sonner", () => {
     const toast = vi.fn();
@@ -37,7 +37,7 @@ describe("createTaskHandlers", () => {
     
         const handlers = createTaskHandlers(mocks);
         const formData = {
-            title: "  New Task  ", description: "  Task description  ", priority: 1,
+            title: "  New Task  ", description: "  Task description  ", priority: PRIORITY.LOW,
             dueDate: "2026-09-25", dueTime: "10:30", tags: [],
         };
     
@@ -60,7 +60,7 @@ describe("createTaskHandlers", () => {
         const handlers = createTaskHandlers(mocks);
     
         const result = await handlers.handleAddTaskSubmit({
-            title: "   ", description: "", priority: 1, dueDate: "", dueTime: "", tags: [],
+            title: "   ", description: "", priority: PRIORITY.LOW, dueDate: "", dueTime: "", tags: [],
         });
     
         expect(result).toBe(false);
@@ -75,7 +75,7 @@ describe("createTaskHandlers", () => {
 
         const handlers = createTaskHandlers(mocks);
         const task = {
-            id: 1, title: "  Updated Task  ", description: "  Updated description  ", priority: 2,
+            id: 1, title: "  Updated Task  ", description: "  Updated description  ", priority: PRIORITY.MEDIUM,
             status: STATUS.NOT_STARTED, dueDate: "2026-09-30", dueTime: "14:00", tags: [],
         };
 
@@ -95,7 +95,7 @@ describe("createTaskHandlers", () => {
         const mocks = createMocks();
 
         mocks.updateTask.mockResolvedValue({
-            id: 1, title: "Updated Task", description: "", priority: 1,
+            id: 1, title: "Updated Task", description: "", priority: PRIORITY.LOW,
             status: STATUS.NOT_STARTED, dueDate: "", dueTime: "", tags: [],
         });
 
@@ -107,7 +107,7 @@ describe("createTaskHandlers", () => {
         const handlers = createTaskHandlers(mocks);
 
         await handlers.handleUpdateTask({
-            id: 1, title: "Updated Task", description: "", priority: 1,
+            id: 1, title: "Updated Task", description: "", priority: PRIORITY.LOW,
             status: STATUS.NOT_STARTED, dueDate: "", dueTime: "", tags: [],
         });
 

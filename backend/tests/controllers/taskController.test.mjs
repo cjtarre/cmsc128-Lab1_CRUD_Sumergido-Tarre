@@ -56,8 +56,8 @@ describe("createTask", () => {
         const req = {
             user: mockUser,
             body: {
-                task_name: "New Task", task_info: "Task information", priority_level: "High",
-                status: "Pending", due_date: "2026-10-05",
+                task_name: "New Task", task_info: "Task information", priority_level: "high",
+                status: "not_started", due_date: "2026-10-05",
             },
         };
         const res = createResponse();
@@ -70,8 +70,8 @@ describe("createTask", () => {
 
         expect(supabase.from).toHaveBeenCalledWith("tasks");
         expect(mockQuery.insert).toHaveBeenCalledWith([{
-            task_name: "New Task", task_info: "Task information", priority_level: "High",
-            status: "Pending", due_date: "2026-10-05", user_id: mockUser.id,
+            task_name: "New Task", task_info: "Task information", priority_level: "high",
+            status: "not_started", due_date: "2026-10-05", user_id: mockUser.id,
         }]);
         expect(res.status).toHaveBeenCalledWith(201);
         expect(res.json).toHaveBeenCalledWith({ task_id: 1, task_name: "New Task", task_tag: [] });
@@ -81,8 +81,8 @@ describe("createTask", () => {
         const req = {
             user: mockUser,
             body: {
-                task_name: "Tagged Task", task_info: "Task information", priority_level: "Medium",
-                status: "Pending", due_date: "2026-10-06", tag_ids: [1, 2],
+                task_name: "Tagged Task", task_info: "Task information", priority_level: "medium",
+                status: "not_started", due_date: "2026-10-06", tag_ids: [1, 2],
             },
         };
         const res = createResponse();
@@ -100,8 +100,8 @@ describe("createTask", () => {
         await createTask(req, res);
 
         expect(mockQuery.insert).toHaveBeenCalledWith([{
-            task_name: "Tagged Task", task_info: "Task information", priority_level: "Medium",
-            status: "Pending", due_date: "2026-10-06", user_id: mockUser.id,
+            task_name: "Tagged Task", task_info: "Task information", priority_level: "medium",
+            status: "not_started", due_date: "2026-10-06", user_id: mockUser.id,
         }]);
         expect(supabase.from).toHaveBeenCalledWith("task_tag");
         expect(mockQuery.insert).toHaveBeenCalledWith([
@@ -111,12 +111,23 @@ describe("createTask", () => {
         expect(res.status).toHaveBeenCalledWith(201);
     });
 
+    it("should return 400 when creating a task with an invalid priority or status", async () => {
+        const res = createResponse();
+        await createTask({ user: mockUser, body: { task_name: "Bad", priority_level: "urgent", status: "not_started" } }, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+
+        const res2 = createResponse();
+        await createTask({ user: mockUser, body: { task_name: "Bad", priority_level: "high", status: "Pending" } }, res2);
+        expect(res2.status).toHaveBeenCalledWith(400);
+        expect(mockQuery.insert).not.toHaveBeenCalled();
+    });
+
     it("should return 500 when creating a task fails", async () => {
         const req = {
             user: mockUser,
             body: {
-                task_name: "Failed Task", task_info: "Task information", priority_level: "Low",
-                status: "Pending", due_date: "2026-10-07",
+                task_name: "Failed Task", task_info: "Task information", priority_level: "low",
+                status: "not_started", due_date: "2026-10-07",
             },
         };
         const res = createResponse();
@@ -130,12 +141,19 @@ describe("createTask", () => {
 });
 
 describe("updateTask", () => {
+
+    it("should return 400 when updating a task with an invalid status", async () => {
+        const res = createResponse();
+        await updateTask({ user: mockUser, params: { task_id: 1 }, body: { status: "Completed" } }, res);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(mockQuery.update).not.toHaveBeenCalled();
+    });
     it("should update a task belonging to the authenticated user without changing tags", async () => {
         const req = {
             user: mockUser, params: { task_id: "1" },
             body: {
-                task_name: "Updated Task", task_info: "Updated information", priority_level: "High",
-                status: "Completed", due_date: "2026-10-10",
+                task_name: "Updated Task", task_info: "Updated information", priority_level: "high",
+                status: "completed", due_date: "2026-10-10",
             },
         };
         const res = createResponse();
@@ -147,7 +165,7 @@ describe("updateTask", () => {
         mockQuery.single.mockResolvedValueOnce({
             data: {
                 task_id: 1, task_name: "Updated Task", task_info: "Updated information",
-                priority_level: "High", status: "Completed", due_date: "2026-10-10",
+                priority_level: "high", status: "completed", due_date: "2026-10-10",
             },
             error: null,
         });
@@ -155,15 +173,15 @@ describe("updateTask", () => {
         await updateTask(req, res);
 
         expect(mockQuery.update).toHaveBeenCalledWith({
-            task_name: "Updated Task", task_info: "Updated information", priority_level: "High",
-            status: "Completed", due_date: "2026-10-10",
+            task_name: "Updated Task", task_info: "Updated information", priority_level: "high",
+            status: "completed", due_date: "2026-10-10",
         });
         expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
         expect(mockQuery.eq).toHaveBeenCalledWith("task_id", "1");
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({
             task_id: 1, task_name: "Updated Task", task_info: "Updated information",
-            priority_level: "High", status: "Completed", due_date: "2026-10-10",
+            priority_level: "high", status: "completed", due_date: "2026-10-10",
         });
     });
 
@@ -172,7 +190,7 @@ describe("updateTask", () => {
             user: mockUser, params: { task_id: "1" },
             body: {
                 task_name: "Updated Tagged Task", task_info: "Updated information",
-                priority_level: "Medium", status: "Pending", due_date: "2026-10-11", tag_ids: [2, 3],
+                priority_level: "medium", status: "not_started", due_date: "2026-10-11", tag_ids: [2, 3],
             },
         };
         const res = createResponse();
@@ -207,8 +225,8 @@ describe("updateTask", () => {
         const req = {
             user: mockUser, params: { task_id: "1" },
             body: {
-                task_name: "No Tags", task_info: "Updated information", priority_level: "Low",
-                status: "Pending", due_date: "2026-10-12", tag_ids: [],
+                task_name: "No Tags", task_info: "Updated information", priority_level: "low",
+                status: "not_started", due_date: "2026-10-12", tag_ids: [],
             },
         };
         const res = createResponse();
@@ -238,7 +256,7 @@ describe("updateTask", () => {
             user: mockUser, params: { task_id: "99" },
             body: {
                 task_name: "Unauthorized Update", task_info: "Should not be updated",
-                priority_level: "High", status: "Pending", due_date: "2026-10-15", tag_ids: [1, 2],
+                priority_level: "high", status: "not_started", due_date: "2026-10-15", tag_ids: [1, 2],
             },
         };
         const res = createResponse();
@@ -260,7 +278,7 @@ describe("updateTask", () => {
             user: mockUser, params: { task_id: "1" },
             body: {
                 task_name: "Failed Update", task_info: "Updated information",
-                priority_level: "High", status: "Pending", due_date: "2026-10-05",
+                priority_level: "high", status: "not_started", due_date: "2026-10-05",
             },
         };
         const res = createResponse();

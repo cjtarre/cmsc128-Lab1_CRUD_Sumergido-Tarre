@@ -4,13 +4,14 @@ import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import TaskRow from "../src/features/tasks/components/TaskRow";
+import { STATUS, PRIORITY } from "../src/features/tasks/constants/taskOptions";
 
 describe("TaskRow notification highlight", () => {
     const props = {
         title: "Target task",
         description: "Test description",
-        status: "Not Started",
-        priority: 0,
+        status: STATUS.NOT_STARTED,
+        priority: PRIORITY.NONE,
         dueDate: "",
         dueTime: "",
         tags: [],

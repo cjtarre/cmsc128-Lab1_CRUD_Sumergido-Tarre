@@ -39,8 +39,8 @@ describe("taskService", () => {
         const taskData = {
             task_name: "Task A",
             task_info: "Test task",
-            priority_level: 1,
-            status: "Not Started",
+            priority_level: "low",
+            status: "not_started",
             due_date: null,
         };
         const createdTask = { task_id: 1, ...taskData };
@@ -57,8 +57,8 @@ describe("taskService", () => {
         const taskData = {
             task_name: "Updated Task",
             task_info: "Updated description",
-            priority_level: 2,
-            status: "Completed",
+            priority_level: "medium",
+            status: "completed",
             due_date: null,
         };
         const updatedTask = { task_id: 1, ...taskData };
