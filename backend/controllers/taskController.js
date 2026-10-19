@@ -1,5 +1,5 @@
 const supabase = require("../config/supabaseAdmin");
-const { validateTaskEnums, parseId } = require("../utils/validation");
+const { validateTaskEnums, parseId, isUuid } = require("../utils/validation");
 const {
     ROLE_RANK,
     getRole,
@@ -10,10 +10,50 @@ const {
 
 const TASK_SELECT = `
     *,
+    assignee:profiles!tasks_assignee_id_fkey (
+        user_id,
+        username,
+        display_name
+    ),
     task_tag (
         tags ( tag_id, tag_name, tag_info )
     )
 `;
+
+// assignee_id is optional, but when provided it must belong to the task's project.
+const validateAssigneeForProject = async (assigneeId, projectId) => {
+    if (assigneeId === undefined || assigneeId === null || assigneeId === "") return null;
+
+    if (!isUuid(assigneeId)) {
+        return "Invalid assignee_id";
+    }
+
+    const { data, error } = await supabase
+        .from("project_user")
+        .select("user_id")
+        .eq("project_id", projectId)
+        .eq("user_id", assigneeId)
+        .maybeSingle();
+
+    if (error) throw error;
+    return data ? null : "Assignee must be a member of this project";
+};
+
+// Records meaningful project changes for the Recent Activity view.
+// Activity logging is intentionally kept separate from user notifications.
+const logProjectActivity = async ({ projectId, actorId, taskId = null, activityType, data = {} }) => {
+    const { error } = await supabase
+        .from("project_activity")
+        .insert([{
+            project_id: projectId,
+            actor_id: actorId,
+            task_id: taskId,
+            activity_type: activityType,
+            data
+        }]);
+
+    if (error) throw error;
+};
 
 // Loads a task and checks the caller's role in the task's project.
 // Sends the error response itself and returns null when access isn't allowed,
@@ -30,7 +70,7 @@ const loadTaskForUser = async (req, res, { includeDeleted = false, minRole = "ed
 
     let query = supabase
         .from("tasks")
-        .select("task_id, project_id, deleted_at")
+        .select("task_id, task_name, project_id, status, assignee_id, deleted_at")
         .eq("task_id", taskId);
 
     if (!includeDeleted) {
@@ -107,6 +147,7 @@ const createTask = async (req, res) => {
             status,
             due_date,
             project_id,
+            assignee_id,
             tag_ids
         } = req.body;
 
@@ -139,6 +180,12 @@ const createTask = async (req, res) => {
             return res.status(403).json({ error: "Insufficient permissions" });
         }
 
+        // An assignment is optional, but the selected user must already be a project member.
+        const assigneeError = await validateAssigneeForProject(assignee_id, projectId);
+        if (assigneeError) {
+            return res.status(400).json({ error: assigneeError });
+        }
+
         let tagIdList = [];
         if (tag_ids != null) {
             const tagError = await validateTagIdsForProject(tag_ids, projectId);
@@ -157,14 +204,16 @@ const createTask = async (req, res) => {
                 task_info,
                 priority_level,
                 status,
-                due_date,
+                due_date: due_date || null,
                 project_id: projectId,
+                assignee_id: assignee_id || null,
                 user_id: req.user.id // creator; access is decided by project membership
             }])
             .select()
             .single();
 
         if (newTaskError) throw newTaskError;
+
         if (tagIdList.length > 0) {
             const taskTags = tagIdList.map(tag_id => ({
                 task_id: newTask.task_id,
@@ -176,6 +225,29 @@ const createTask = async (req, res) => {
                 .insert(taskTags);
 
             if (taskTagsError) throw taskTagsError;
+        }
+
+        // Creating a project task is a meaningful collaboration event.
+        await logProjectActivity({
+            projectId,
+            actorId: req.user.id,
+            taskId: newTask.task_id,
+            activityType: "task_created",
+            data: { task_name: newTask.task_name }
+        });
+
+        // Assignment is recorded separately so Recent Activity can show who received the task.
+        if (newTask.assignee_id) {
+            await logProjectActivity({
+                projectId,
+                actorId: req.user.id,
+                taskId: newTask.task_id,
+                activityType: "task_assigned",
+                data: {
+                    task_name: newTask.task_name,
+                    assignee_id: newTask.assignee_id
+                }
+            });
         }
 
         const { data: taskWithTags, error: taskWithTagsError } = await supabase
@@ -203,6 +275,7 @@ const updateTask = async (req, res) => {
             priority_level,
             status,
             due_date,
+            assignee_id,
             tag_ids
         } = req.body;
 
@@ -225,15 +298,30 @@ const updateTask = async (req, res) => {
             tagIdList = [...new Set(tag_ids.map(Number))];
         }
 
+        // Only validate assignment when the client explicitly includes assignee_id.
+        const assigneeWasProvided = Object.prototype.hasOwnProperty.call(req.body, "assignee_id");
+        if (assigneeWasProvided) {
+            const assigneeError = await validateAssigneeForProject(assignee_id, task.project_id);
+            if (assigneeError) {
+                return res.status(400).json({ error: assigneeError });
+            }
+        }
+
+        const updates = {
+            task_name,
+            task_info,
+            priority_level,
+            status,
+            due_date: due_date || null
+        };
+
+        if (assigneeWasProvided) {
+            updates.assignee_id = assignee_id || null;
+        }
+
         const { data, error: updateError } = await supabase
             .from("tasks")
-            .update({
-                task_name,
-                task_info,
-                priority_level,
-                status,
-                due_date
-            })
+            .update(updates)
             .eq("task_id", task.task_id)
             .select();
 
@@ -262,6 +350,36 @@ const updateTask = async (req, res) => {
 
                 if (insertError) throw insertError;
             }
+        }
+
+        // Status changes are recorded independently so the activity feed stays meaningful.
+        if (status !== undefined && status !== task.status) {
+            await logProjectActivity({
+                projectId: task.project_id,
+                actorId: req.user.id,
+                taskId: task.task_id,
+                activityType: status === "completed" ? "task_completed" : "task_status_changed",
+                data: {
+                    task_name: task_name || task.task_name,
+                    from: task.status,
+                    to: status
+                }
+            });
+        }
+
+        // Assignment changes include assignment, reassignment, and returning a task to unassigned.
+        if (assigneeWasProvided && (assignee_id || null) !== (task.assignee_id || null)) {
+            await logProjectActivity({
+                projectId: task.project_id,
+                actorId: req.user.id,
+                taskId: task.task_id,
+                activityType: assignee_id ? "task_assigned" : "task_unassigned",
+                data: {
+                    task_name: task_name || task.task_name,
+                    from_assignee_id: task.assignee_id || null,
+                    assignee_id: assignee_id || null
+                }
+            });
         }
 
         const { data: updatedTask, error: fetchError } = await supabase
@@ -300,6 +418,14 @@ const deleteTask = async (req, res) => {
             return res.status(404).json({ error: "Task not found" });
         }
 
+        await logProjectActivity({
+            projectId: task.project_id,
+            actorId: req.user.id,
+            taskId: task.task_id,
+            activityType: "task_deleted",
+            data: { task_name: task.task_name }
+        });
+
         res.status(200).json({
             message: `Task with ID ${task.task_id} deleted successfully`,
             data
@@ -325,6 +451,14 @@ const restoreTask = async (req, res) => {
             .eq("task_id", task.task_id);
 
         if (error) throw error;
+
+        await logProjectActivity({
+            projectId: task.project_id,
+            actorId: req.user.id,
+            taskId: task.task_id,
+            activityType: "task_restored",
+            data: { task_name: task.task_name }
+        });
 
         const { data: restoredTask, error: fetchError } = await supabase
             .from("tasks")

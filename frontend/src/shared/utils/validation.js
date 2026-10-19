@@ -5,14 +5,15 @@ export const DISPLAY_NAME_MAX_LENGTH = 50;
 export const USERNAME_MIN_LENGTH = 3;
 export const USERNAME_MAX_LENGTH = 30;
 
-export function validateTask({ title, description, dueDate, dueTime }) {
+export function validateTask({ title, description, dueDate, dueTime }, { deadlineRequired = true } = {}) {
     const errors = {};
 
     if (!title?.trim()) errors.title = "Task title is required.";
     else if (title.trim().length > NAME_MAX_LENGTH) errors.title = `Task title must be ${NAME_MAX_LENGTH} characters or fewer.`;
     else if (description?.trim().length > INFO_MAX_LENGTH) errors.description = `Description must be ${INFO_MAX_LENGTH} characters or fewer.`;
-    else if (!dueDate) errors.dueDate = "Due date is required.";
-    else if (!dueTime) errors.dueTime = "Due time is required.";
+    else if (deadlineRequired && !dueDate) errors.dueDate = "Due date is required.";
+    else if (deadlineRequired && !dueTime) errors.dueTime = "Due time is required.";
+    else if (dueTime && !dueDate) errors.dueDate = "Choose a due date before adding a due time.";
 
     return errors;
 }

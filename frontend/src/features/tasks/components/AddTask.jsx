@@ -11,9 +11,10 @@ const initialFormData = {
     dueTime: "",
     priority: PRIORITY.NONE,
     tags: [],
+    assigneeId: "",
 };
 
-function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "" }) {
+function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative = false, members = [] }) {
     const { availableTags } = useTaskData();
     const [formData, setFormData] = useState(initialFormData);
     const [errors, setErrors] = useState({});
@@ -35,23 +36,28 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "" }) {
     if (!isOpen) return null;
 
     const handleChange = ({ target }) => {
-        setFormData((prev) => ({ ...prev, [target.name]: target.value }));
-        if (target.value.trim?.()) setErrors((prev) => ({ ...prev, [target.name]: "" }));
+        const { name, value } = target;
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+            ...(collaborative && name === "dueDate" && !value ? { dueTime: "" } : {}),
+        }));
+
+        if (value.trim?.()) setErrors((prev) => ({ ...prev, [name]: "" }));
     };
 
     const handleTagToggle = (tagId) => {
         setFormData((prev) => ({
             ...prev,
-            tags: prev.tags.includes(tagId)
-                ? prev.tags.filter((id) => id !== tagId)
-                : [...prev.tags, tagId],
+            tags: prev.tags.includes(tagId) ? prev.tags.filter((id) => id !== tagId) : [...prev.tags, tagId],
         }));
     };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
 
-        const validationErrors = validateTask(formData);
+        const validationErrors = validateTask(formData, { deadlineRequired: !collaborative });
 
         if (Object.keys(validationErrors).length) {
             setErrors(validationErrors);
@@ -85,7 +91,28 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "" }) {
         ["dueTime", "Due Time", "time"],
     ];
 
-    const priorityOptions = PRIORITY_OPTIONS;
+    const tagButtons = (
+        <div className="flex min-h-[38px] flex-wrap content-start gap-1.5">
+            {availableTags.map((tag) => {
+                const selected = formData.tags.includes(tag.tag_id);
+
+                return (
+                    <button
+                        key={tag.tag_id}
+                        type="button"
+                        onClick={() => handleTagToggle(tag.tag_id)}
+                        className={`rounded-full border px-2.5 py-1.5 text-[11px] font-medium leading-none transition ${
+                            selected
+                                ? "border-green-400 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950/50 dark:text-green-400"
+                                : "border-white/80 bg-white/50 text-slate-500 hover:bg-white/80 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400 dark:hover:bg-white/[0.08]"
+                        }`}
+                    >
+                        {tag.tag_name}
+                    </button>
+                );
+            })}
+        </div>
+    );
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/20 px-3 pb-4 pt-20 backdrop-blur-sm dark:bg-black/55 sm:px-4 sm:pb-5 sm:pt-20">
@@ -93,7 +120,9 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "" }) {
                 <div className="flex items-start justify-between border-b border-white/60 bg-white/25 px-5 py-3.5 dark:border-white/10 dark:bg-white/[0.02]">
                     <div>
                         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Add Task</h2>
-                        <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">Create a new task.</p>
+                        <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">
+                            {collaborative ? "Create a task for this project." : "Create a new task."}
+                        </p>
                     </div>
 
                     <button type="button" onClick={handleClose} aria-label="Close" className="rounded-lg p-1.5 text-slate-400 transition hover:bg-white/70 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-200/60 dark:text-slate-500 dark:hover:bg-white/[0.06] dark:hover:text-slate-300">
@@ -118,7 +147,6 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "" }) {
 
                         <div>
                             <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300">Description</label>
-
                             <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Add a description..." rows={2} className={`${inputClass("description")} resize-none`} />
 
                             <div className="mt-1 flex justify-between">
@@ -127,57 +155,87 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "" }) {
                             </div>
                         </div>
 
+                        {collaborative && (
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="min-w-0">
+                                    <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300">Priority</label>
+
+                                    <div className="relative">
+                                        <select name="priority" value={formData.priority} onChange={handleChange} className={`${inputClass("priority")} appearance-none pr-8`}>
+                                            {PRIORITY_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                                        </select>
+                                        <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    </div>
+                                </div>
+
+                                <div className="min-w-0">
+                                    <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300">Assign to</label>
+
+                                    <div className="relative">
+                                        <select name="assigneeId" value={formData.assigneeId} onChange={handleChange} className={`${inputClass("assigneeId")} appearance-none pr-8`}>
+                                            <option value="">Unassigned</option>
+                                            {members.map((member) => (
+                                                <option key={member.user_id} value={member.user_id}>
+                                                    {member.display_name || member.username || "Project member"}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {collaborative && (
+                            <div>
+                                <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300">Tags</label>
+                                {tagButtons}
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-2 gap-3">
                             {dateTimeFields.map(([field, label, type]) => (
                                 <div key={field} className="min-w-0">
                                     <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300">
-                                        {label} <span className="text-red-400">*</span>
+                                        {label}{" "}
+                                        {collaborative
+                                            ? <span className="font-normal text-slate-400 dark:text-slate-500">(Optional)</span>
+                                            : <span className="text-red-400">*</span>}
                                     </label>
 
-                                    <input type={type} name={field} value={formData[field]} onChange={handleChange} className={inputClass(field)} />
+                                    <input
+                                        type={type}
+                                        name={field}
+                                        value={formData[field]}
+                                        onChange={handleChange}
+                                        disabled={collaborative && field === "dueTime" && !formData.dueDate}
+                                        className={`${inputClass(field)} disabled:cursor-not-allowed disabled:opacity-50`}
+                                    />
+
                                     {errors[field] && <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors[field]}</p>}
                                 </div>
                             ))}
                         </div>
 
-                        <div className="grid grid-cols-[minmax(90px,1fr)_minmax(0,2fr)] gap-3">
-                            <div className="min-w-0">
-                                <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300">Priority</label>
+                        {!collaborative && (
+                            <div className="grid grid-cols-[minmax(90px,1fr)_minmax(0,2fr)] gap-3">
+                                <div className="min-w-0">
+                                    <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300">Priority</label>
 
-                                <div className="relative">
-                                    <select name="priority" value={formData.priority} onChange={handleChange} className={`${inputClass("priority")} min-w-0 appearance-none pr-8 text-xs sm:text-sm`}>
-                                        {priorityOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                                    </select>
+                                    <div className="relative">
+                                        <select name="priority" value={formData.priority} onChange={handleChange} className={`${inputClass("priority")} appearance-none pr-8`}>
+                                            {PRIORITY_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                                        </select>
+                                        <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    </div>
+                                </div>
 
-                                    <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                                <div className="min-w-0">
+                                    <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300">Tags</label>
+                                    {tagButtons}
                                 </div>
                             </div>
-
-                            <div className="min-w-0">
-                                <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300">Tags</label>
-
-                                <div className="flex min-h-[38px] flex-wrap content-start gap-1.5">
-                                    {availableTags.map((tag) => {
-                                        const selected = formData.tags.includes(tag.tag_id);
-
-                                        return (
-                                            <button
-                                                key={tag.tag_id}
-                                                type="button"
-                                                onClick={() => handleTagToggle(tag.tag_id)}
-                                                className={`rounded-full border px-2.5 py-1.5 text-[11px] font-medium leading-none transition ${
-                                                    selected
-                                                        ? "border-green-400 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950/50 dark:text-green-400"
-                                                        : "border-white/80 bg-white/50 text-slate-500 hover:bg-white/80 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400 dark:hover:bg-white/[0.08]"
-                                                }`}
-                                            >
-                                                {tag.tag_name}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </div>
 
                     <div className="flex flex-col-reverse gap-2 border-t border-white/60 bg-white/30 px-5 py-3 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.025] sm:flex-row sm:justify-end">

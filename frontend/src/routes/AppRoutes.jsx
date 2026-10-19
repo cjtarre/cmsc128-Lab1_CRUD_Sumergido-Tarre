@@ -13,6 +13,7 @@ import Profile from "../features/profile/pages/Profile";
 import Projects from "../features/projects/pages/Projects";
 import { TaskProvider } from "../features/tasks/context/TaskContext";
 import MyTasks from "../features/tasks/pages/MyTasks";
+import ProjectWorkspace from "../features/projects/pages/ProjectWorkspace";
 
 import MainLayout from "../layouts/MainLayout";
 import About from "../pages/About";
@@ -59,6 +60,7 @@ function AppRoutes() {
                     >
                         <Route path="/my-tasks" element={<MyTasks />} />
                         <Route path="/projects" element={<Projects />} />
+                        <Route path="/projects/:projectId" element={<ProjectWorkspace />} />
                         <Route path="/calendar" element={<Calendar />} />
                         <Route path="/focus" element={<FocusMode />} />
                         <Route path="/profile" element={<Profile />} />
