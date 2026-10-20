@@ -5,7 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
 import Notifications from "../src/features/notifications/pages/Notifications";
+import { useNotifications } from "../src/features/notifications/context/NotificationContext";
 import { useTaskData } from "../src/features/tasks/context/TaskContext";
+
+vi.mock("../src/features/notifications/context/NotificationContext", () => ({
+    useNotifications: vi.fn(),
+}));
 
 vi.mock("../src/features/tasks/context/TaskContext", () => ({
     useTaskData: vi.fn(),
@@ -25,12 +30,48 @@ function getRelativeDate(days) {
 describe("Notifications", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+
+        useNotifications.mockReturnValue({
+            notifications: [],
+            unreadCount: 0,
+            loading: false,
+            markRead: vi.fn(),
+            markAllRead: vi.fn(),
+            refresh: vi.fn(),
+        });
+
+        useTaskData.mockReturnValue({
+            tasks: [],
+            loading: false,
+        });
     });
 
     afterEach(cleanup);
 
+    it("shows the loading state while notifications are loading", () => {
+        useNotifications.mockReturnValue({
+            notifications: [],
+            unreadCount: 0,
+            loading: true,
+            markRead: vi.fn(),
+            markAllRead: vi.fn(),
+            refresh: vi.fn(),
+        });
+
+        render(
+            <MemoryRouter>
+                <Notifications />
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText("Loading notifications...")).toBeTruthy();
+    });
+
     it("shows the loading state while tasks are loading", () => {
-        useTaskData.mockReturnValue({ tasks: [], loading: true });
+        useTaskData.mockReturnValue({
+            tasks: [],
+            loading: true,
+        });
 
         render(
             <MemoryRouter>
@@ -42,8 +83,6 @@ describe("Notifications", () => {
     });
 
     it("shows the empty state when there are no notifications", () => {
-        useTaskData.mockReturnValue({ tasks: [], loading: false });
-
         render(
             <MemoryRouter>
                 <Notifications />
@@ -51,10 +90,9 @@ describe("Notifications", () => {
         );
 
         expect(screen.getByText("You're all caught up")).toBeTruthy();
-        expect(screen.getByText("No task reminders or overdue tasks right now.")).toBeTruthy();
     });
 
-    it("renders overdue and due-today notifications", () => {
+    it("renders overdue and due-today task reminders", () => {
         useTaskData.mockReturnValue({
             loading: false,
             tasks: [
@@ -85,15 +123,17 @@ describe("Notifications", () => {
         expect(screen.getByText("Study CMSC 128")).toBeTruthy();
     });
 
-    it("links an overdue notification to its exact task", () => {
+    it("links an overdue task reminder to its exact task", () => {
         useTaskData.mockReturnValue({
             loading: false,
-            tasks: [{
-                id: 42,
-                title: "Important task",
-                status: "Not Started",
-                dueDate: getRelativeDate(-1),
-            }],
+            tasks: [
+                {
+                    id: 42,
+                    title: "Important task",
+                    status: "Not Started",
+                    dueDate: getRelativeDate(-1),
+                },
+            ],
         });
 
         render(
@@ -106,15 +146,52 @@ describe("Notifications", () => {
             .toBe("/my-tasks?task=42");
     });
 
-    it("does not display future tasks as notifications", () => {
+    it("renders a task assignment notification", () => {
+        useNotifications.mockReturnValue({
+            notifications: [
+                {
+                    id: 50,
+                    type: "task_assigned",
+                    read_at: null,
+                    created_at: new Date().toISOString(),
+                    data: {
+                        task_id: 8,
+                        project_id: 3,
+                        task_name: "Implement notifications",
+                    },
+                    actor: {
+                        username: "gabrielle",
+                        display_name: "Gabrielle",
+                    },
+                },
+            ],
+            unreadCount: 1,
+            loading: false,
+            markRead: vi.fn(),
+            markAllRead: vi.fn(),
+            refresh: vi.fn(),
+        });
+
+        render(
+            <MemoryRouter>
+                <Notifications />
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText("Implement notifications")).toBeTruthy();
+    });
+
+    it("does not display future tasks as reminders", () => {
         useTaskData.mockReturnValue({
             loading: false,
-            tasks: [{
-                id: 3,
-                title: "Future task",
-                status: "Not Started",
-                dueDate: getRelativeDate(3),
-            }],
+            tasks: [
+                {
+                    id: 3,
+                    title: "Future task",
+                    status: "Not Started",
+                    dueDate: getRelativeDate(3),
+                },
+            ],
         });
 
         render(
