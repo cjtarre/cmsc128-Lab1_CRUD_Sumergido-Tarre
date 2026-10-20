@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Crown, Eye, MoreHorizontal, Pencil, Plus, UserPlus, Users } from "lucide-react";
+import { Crown, Eye, MoreHorizontal, Pencil, Plus, Sprout, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 
+import ConfirmDialog from "../../../shared/components/common/ConfirmDialog";
 import InviteMember from "./InviteMember";
 import { projectService } from "../services/projectService";
 import { inviteService } from "../services/inviteService";
@@ -22,6 +23,8 @@ function ProjectMembers({ project }) {
     const [invites, setInvites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
+    const [memberToRemove, setMemberToRemove] = useState(null);
+    const [removingMember, setRemovingMember] = useState(false);
 
     const isOwner = project.role === "owner";
 
@@ -77,16 +80,25 @@ function ProjectMembers({ project }) {
         }
     };
 
-    const handleRemove = async (userId) => {
-        if (!window.confirm("Remove this member from the project?")) return;
+    const handleRemove = async () => {
+        if (!memberToRemove || removingMember) return;
 
         try {
-            await projectService.removeMember(project.id, userId);
-            setMembers((current) => current.filter((member) => member.user_id !== userId));
-            toast.success("Member removed.");
+            setRemovingMember(true);
+
+            await projectService.removeMember(project.id, memberToRemove.user_id);
+
+            setMembers((current) =>
+                current.filter((member) => member.user_id !== memberToRemove.user_id)
+            );
+
+            toast.success(`${memberToRemove.display_name || memberToRemove.username || "Member"} removed.`);
+            setMemberToRemove(null);
         } catch (error) {
             console.error("Error removing member:", error);
             toast.error(error.response?.data?.error || "Unable to remove member.");
+        } finally {
+            setRemovingMember(false);
         }
     };
 
@@ -146,7 +158,7 @@ function ProjectMembers({ project }) {
                 </div>
 
                 {/* Content */}
-                <div className={`mt-4 grid items-start gap-3 ${isOwner ? "lg:grid-cols-[minmax(0,2fr)_minmax(260px,0.8fr)]" : ""}`}>
+                <div className="mt-4 grid items-start gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(260px,0.8fr)]">
 
                     {/* Project Members */}
                     <section className="overflow-hidden rounded-2xl border border-white/80 bg-white/60 shadow-[0_6px_22px_rgba(15,23,42,0.035)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/45">
@@ -165,11 +177,11 @@ function ProjectMembers({ project }) {
                         </div>
 
                         {members.length ? (
-                            <div className="divide-y divide-slate-100/70 dark:divide-white/[0.06]">
+                            <div className="max-h-[360px] divide-y divide-slate-100/70 overflow-y-auto overscroll-contain dark:divide-white/[0.06]">
                                 {members.map((member) => (
                                     <div
                                         key={member.user_id}
-                                        className="flex min-h-[58px] items-center gap-3 px-4 py-3 transition hover:bg-white/30 dark:hover:bg-white/[0.015]"
+                                        className="flex min-h-[58px] flex-wrap items-center gap-3 px-4 py-3 transition hover:bg-white/30 dark:hover:bg-white/[0.015] sm:flex-nowrap"
                                     >
                                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-50 text-[10px] font-semibold text-green-600 dark:bg-green-950/40 dark:text-green-400">
                                             {getInitials(member)}
@@ -188,12 +200,13 @@ function ProjectMembers({ project }) {
                                         </div>
 
                                         {isOwner && member.role !== "owner" ? (
-                                            <div className="flex shrink-0 items-center gap-1">
+                                            <div className="ml-11 flex w-full items-center gap-1 sm:ml-0 sm:w-auto sm:shrink-0">
                                                 <select
                                                     value={member.role}
                                                     onChange={(event) => handleRoleChange(member.user_id, event.target.value)}
                                                     aria-label={`Role for ${member.display_name || member.username}`}
-                                                    className="h-8 rounded-lg border border-slate-100/80 bg-slate-50/60 px-2 text-[11px] font-medium text-slate-500 outline-none transition focus:border-green-300 dark:border-white/10 dark:bg-white/[0.035] dark:text-slate-400"
+                                                    className="h-8 min-w-0 flex-1 rounded-lg border border-slate-100/80 bg-slate-50/60 px-2 font-medium text-slate-500 outline-none transition focus:border-green-300 dark:border-white/10 dark:bg-white/[0.035] dark:text-slate-400 sm:flex-none"
+                                                    style={{ fontSize: "11px", lineHeight: "1" }}
                                                 >
                                                     <option value="editor">Editor</option>
                                                     <option value="viewer">Viewer</option>
@@ -201,8 +214,9 @@ function ProjectMembers({ project }) {
 
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleRemove(member.user_id)}
+                                                    onClick={() => setMemberToRemove(member)}
                                                     aria-label={`Remove ${member.display_name || member.username}`}
+                                                    title="Remove member"
                                                     className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/20"
                                                 >
                                                     <MoreHorizontal size={15} />
@@ -223,8 +237,8 @@ function ProjectMembers({ project }) {
                         )}
                     </section>
 
-                    {/* Owner Sidebar */}
-                    {isOwner && (
+                    {isOwner ? (
+                        /* Owner Sidebar */
                         <aside className="overflow-hidden rounded-2xl border border-white/80 bg-white/40 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/30">
 
                             {/* Pending Invitations */}
@@ -238,7 +252,7 @@ function ProjectMembers({ project }) {
                                 </div>
 
                                 {invites.length ? (
-                                    <div className="divide-y divide-slate-100/60 dark:divide-white/[0.05]">
+                                    <div className="max-h-[220px] divide-y divide-slate-100/60 overflow-y-auto overscroll-contain dark:divide-white/[0.05]">
                                         {invites.map((invite) => (
                                             <div
                                                 key={invite.id}
@@ -256,6 +270,7 @@ function ProjectMembers({ project }) {
                                                         {invite.role}
                                                     </p>
                                                 </div>
+
                                                 <button
                                                     type="button"
                                                     onClick={() => handleCancelInvite(invite.id)}
@@ -290,10 +305,7 @@ function ProjectMembers({ project }) {
 
                                 <div className="space-y-0.5">
                                     {accessRoles.map(({ role, description, icon: Icon }) => (
-                                        <div
-                                            key={role}
-                                            className="flex items-center gap-2.5 py-1.5"
-                                        >
+                                        <div key={role} className="flex items-center gap-2.5 py-1.5">
                                             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/65 text-green-500 dark:bg-white/[0.04] dark:text-green-400">
                                                 <Icon size={12} />
                                             </div>
@@ -312,6 +324,32 @@ function ProjectMembers({ project }) {
                                 </div>
                             </section>
                         </aside>
+                    ) : (
+                        /* Editor / Viewer Encouragement Card */
+                        <aside className="relative overflow-hidden rounded-2xl border border-green-100/70 bg-gradient-to-br from-green-50/70 via-white/45 to-emerald-50/60 p-5 shadow-[0_6px_22px_rgba(15,23,42,0.025)] backdrop-blur-xl dark:border-green-900/30 dark:from-green-950/25 dark:via-slate-900/35 dark:to-emerald-950/20">
+                            <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-green-200/30 blur-3xl dark:bg-green-500/[0.06]" />
+
+                            <div className="relative flex h-full min-h-[150px] flex-col justify-center">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/70 text-green-500 shadow-sm dark:bg-white/[0.05] dark:text-green-400">
+                                    <Sprout size={16} />
+                                </div>
+
+                                <p className="mt-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                    Better together
+                                </p>
+
+                                <p className="mt-1.5 max-w-[230px] text-[11px] leading-5 text-slate-400 dark:text-slate-500">
+                                    Small progress adds up when everyone works together.
+                                </p>
+
+                                <div className="mt-4 flex items-center gap-1.5">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+                                    <span className="text-[10px] font-medium capitalize text-green-600 dark:text-green-400">
+                                        {project.role} access
+                                    </span>
+                                </div>
+                            </div>
+                        </aside>
                     )}
                 </div>
             </section>
@@ -320,6 +358,23 @@ function ProjectMembers({ project }) {
                 isOpen={isInviteOpen}
                 onClose={() => setIsInviteOpen(false)}
                 onSubmit={handleInvite}
+            />
+
+            <ConfirmDialog
+                isOpen={Boolean(memberToRemove)}
+                title="Remove member?"
+                message={
+                    memberToRemove
+                        ? `Remove ${memberToRemove.display_name || memberToRemove.username || "this member"} from ${project.project_name}? They will lose access to this project.`
+                        : ""
+                }
+                confirmText="Remove Member"
+                loading={removingMember}
+                loadingText="Removing..."
+                onConfirm={handleRemove}
+                onCancel={() => {
+                    if (!removingMember) setMemberToRemove(null);
+                }}
             />
         </>
     );

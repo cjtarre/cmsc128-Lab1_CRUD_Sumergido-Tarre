@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, ChevronRight, ClipboardList, Clock3, ListChecks, ListTodo } from "lucide-react";
+import { Activity, AlertTriangle, ChevronRight, ClipboardList, Clock3, ListChecks, ListTodo, RefreshCw } from "lucide-react";
 import { priorityLabels, STATUS } from "../../tasks/constants/taskOptions";
 
 const getActorName = (activity) => activity.actor?.display_name || activity.actor?.username || "A project member";
@@ -33,57 +33,28 @@ const getActivityContent = (activity) => {
             return { actor, action: "created", subject: taskName };
 
         case "task_status_changed":
-            return {
-                actor,
-                action: "moved",
-                subject: taskName,
-                detail: `to ${String(data.status || data.new_status || "a new status").replaceAll("_", " ")}`,
-            };
+            return { actor, action: "moved", subject: taskName, detail: `to ${String(data.status || data.new_status || "a new status").replaceAll("_", " ")}` };
 
         case "task_completed":
             return { actor, action: "completed", subject: taskName };
 
         case "task_assigned":
-            return {
-                actor,
-                action: "assigned",
-                subject: taskName,
-                detail: `to ${data.assignee_name || data.assigneeName || "a project member"}`,
-            };
+            return { actor, action: "assigned", subject: taskName, detail: `to ${data.assignee_name || data.assigneeName || "a project member"}` };
 
         case "task_reassigned":
-            return {
-                actor,
-                action: "reassigned",
-                subject: taskName,
-                detail: `to ${data.assignee_name || data.assigneeName || "a project member"}`,
-            };
+            return { actor, action: "reassigned", subject: taskName, detail: `to ${data.assignee_name || data.assigneeName || "a project member"}` };
 
         case "task_unassigned":
             return { actor, action: "unassigned", subject: taskName };
 
         case "member_joined":
-            return {
-                actor: data.display_name || data.username || data.member_name || "A member",
-                action: "joined",
-                subject: "the project",
-            };
+            return { actor: data.display_name || data.username || data.member_name || "A member", action: "joined", subject: "the project" };
 
         case "member_removed":
-            return {
-                actor,
-                action: "removed",
-                subject: data.display_name || data.username || data.member_name || "a member",
-                detail: "from the project",
-            };
+            return { actor, action: "removed", subject: data.display_name || data.username || data.member_name || "a member", detail: "from the project" };
 
         case "member_role_changed":
-            return {
-                actor,
-                action: "changed",
-                subject: data.display_name || data.username || data.member_name || "a member",
-                detail: `to ${data.role || data.new_role || "a new role"}`,
-            };
+            return { actor, action: "changed", subject: data.display_name || data.username || data.member_name || "a member", detail: `to ${data.role || data.new_role || "a new role"}` };
 
         default:
             return { actor, action: "updated", subject: "the project" };
@@ -96,7 +67,7 @@ const statusStyles = {
     [STATUS.COMPLETED]: "bg-green-50 text-green-600 dark:bg-green-950/35 dark:text-green-400",
 };
 
-function ProjectOverview({ tasks, activities = [], loading, onOpenList }) {
+function ProjectOverview({ tasks, activities = [], loading, onOpenList, onRefreshActivity, refreshingActivity = false }) {
     const completed = tasks.filter((task) => task.status === STATUS.COMPLETED).length;
 
     const overdue = tasks.filter((task) => {
@@ -149,7 +120,6 @@ function ProjectOverview({ tasks, activities = [], loading, onOpenList }) {
             </div>
 
             <div className="mt-5 grid items-stretch gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(260px,1.15fr)_minmax(210px,0.8fr)]">
-
                 {/* Current Work */}
                 <section className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/80 bg-white/70 shadow-[0_6px_22px_rgba(15,23,42,0.035)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/55">
                     <div className="flex shrink-0 items-center justify-between border-b border-white/60 px-4 py-3 dark:border-white/[0.07]">
@@ -158,15 +128,8 @@ function ProjectOverview({ tasks, activities = [], loading, onOpenList }) {
                             <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">Tasks currently in this project.</p>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={onOpenList}
-                            aria-label="See all project tasks"
-                            className="group flex h-8 items-center justify-end overflow-hidden rounded-full border border-green-100/80 bg-green-50/60 px-2.5 text-[11px] font-medium text-green-600 transition-all duration-300 ease-out hover:bg-green-100/70 dark:border-green-900/40 dark:bg-green-950/20 dark:text-green-400 dark:hover:bg-green-950/35"
-                            >
-                                <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 ease-out group-hover:mr-1.5 group-hover:max-w-12 group-hover:opacity-100">
-                                    See all
-                                </span>
+                        <button type="button" onClick={onOpenList} aria-label="See all project tasks" className="group flex h-8 items-center justify-end overflow-hidden rounded-full border border-green-100/80 bg-green-50/60 px-2.5 text-[11px] font-medium text-green-600 transition-all duration-300 ease-out hover:bg-green-100/70 dark:border-green-900/40 dark:bg-green-950/20 dark:text-green-400 dark:hover:bg-green-950/35">
+                            <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 ease-out group-hover:mr-1.5 group-hover:max-w-12 group-hover:opacity-100">See all</span>
                             <ChevronRight size={13} strokeWidth={2} className="shrink-0 transition-transform duration-300 group-hover:translate-x-0.5" />
                         </button>
                     </div>
@@ -220,9 +183,15 @@ function ProjectOverview({ tasks, activities = [], loading, onOpenList }) {
 
                 {/* Recent Activity */}
                 <section className="flex flex-col overflow-hidden rounded-2xl border border-white/75 bg-white/50 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/40">
-                    <div className="border-b border-white/60 px-4 py-3 dark:border-white/[0.07]">
-                        <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-300">Recent Activity</h3>
-                        <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">Latest project updates.</p>
+                    <div className="flex items-center justify-between border-b border-white/60 px-4 py-3 dark:border-white/[0.07]">
+                        <div>
+                            <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-300">Recent Activity</h3>
+                            <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">Latest project updates.</p>
+                        </div>
+
+                        <button type="button" onClick={onRefreshActivity} disabled={refreshingActivity} aria-label="Refresh recent activity" title="Refresh activity" className="rounded-lg p-1.5 text-slate-400 transition hover:bg-green-50 hover:text-green-500 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-green-950/30 dark:hover:text-green-400">
+                            <RefreshCw size={13} className={refreshingActivity ? "animate-spin" : ""} />
+                        </button>
                     </div>
 
                     {activities.length ? (

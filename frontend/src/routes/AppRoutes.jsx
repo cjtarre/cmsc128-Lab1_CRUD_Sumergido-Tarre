@@ -8,12 +8,14 @@ import ResetPassword from "../features/auth/pages/ResetPassword";
 import Signup from "../features/auth/pages/Signup";
 import Calendar from "../features/calendar/pages/Calendar";
 import FocusMode from "../features/focus/pages/FocusMode";
+import { NotificationProvider } from "../features/notifications/context/NotificationContext";
 import Notifications from "../features/notifications/pages/Notifications";
 import Profile from "../features/profile/pages/Profile";
 import Projects from "../features/projects/pages/Projects";
+import ProjectSettings from "../features/projects/pages/ProjectSettings";
+import ProjectWorkspace from "../features/projects/pages/ProjectWorkspace";
 import { TaskProvider } from "../features/tasks/context/TaskContext";
 import MyTasks from "../features/tasks/pages/MyTasks";
-import ProjectWorkspace from "../features/projects/pages/ProjectWorkspace";
 
 import MainLayout from "../layouts/MainLayout";
 import About from "../pages/About";
@@ -53,7 +55,9 @@ function AppRoutes() {
                         element={
                             <ProtectedRoute>
                                 <TaskProvider>
-                                    <MainLayout />
+                                    <NotificationProvider>
+                                        <MainLayout />
+                                    </NotificationProvider>
                                 </TaskProvider>
                             </ProtectedRoute>
                         }
@@ -61,6 +65,7 @@ function AppRoutes() {
                         <Route path="/my-tasks" element={<MyTasks />} />
                         <Route path="/projects" element={<Projects />} />
                         <Route path="/projects/:projectId" element={<ProjectWorkspace />} />
+                        <Route path="/projects/:projectId/settings" element={<ProjectSettings />} />
                         <Route path="/calendar" element={<Calendar />} />
                         <Route path="/focus" element={<FocusMode />} />
                         <Route path="/profile" element={<Profile />} />

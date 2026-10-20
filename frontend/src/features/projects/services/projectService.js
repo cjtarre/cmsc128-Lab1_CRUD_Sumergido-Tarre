@@ -8,6 +8,11 @@ export const projectService = {
         return response.data;
     },
 
+    getDeletedProjects: async () => {
+        const response = await api.get(API_URL, { params: { deleted: true } });
+        return response.data;
+    },
+
     createProject: async (projectName) => {
         const response = await api.post(API_URL, { project_name: projectName });
         return response.data;

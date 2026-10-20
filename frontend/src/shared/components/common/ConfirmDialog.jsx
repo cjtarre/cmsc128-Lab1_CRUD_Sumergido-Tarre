@@ -8,6 +8,8 @@ function ConfirmDialog({
     message = "This action cannot be undone.",
     confirmText = "Confirm",
     cancelText = "Cancel",
+    loading = false,
+    loadingText = "Please wait...",
     onConfirm,
     onCancel,
 }) {
@@ -20,7 +22,12 @@ function ConfirmDialog({
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/25 px-4 backdrop-blur-sm dark:bg-black/55" onClick={onCancel}>
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/25 px-4 backdrop-blur-sm dark:bg-black/55"
+            onClick={() => {
+                if (!loading) onCancel?.();
+            }}
+        >
             <div
                 ref={dialogRef}
                 tabIndex="-1"
@@ -37,23 +44,43 @@ function ConfirmDialog({
                             <AlertTriangle size={21} strokeWidth={2.1} />
                         </div>
 
-                        <h2 id="confirm-dialog-title" className="text-lg font-semibold text-slate-800 dark:text-slate-100">{title}</h2>
+                        <h2 id="confirm-dialog-title" className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                            {title}
+                        </h2>
                     </div>
 
-                    <button type="button" onClick={onCancel} aria-label="Close dialog" className="rounded-lg p-1.5 text-slate-400 transition hover:bg-white/70 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-200/70 dark:text-slate-500 dark:hover:bg-white/[0.06] dark:hover:text-slate-300 dark:focus:ring-slate-700">
+                    <button
+                        type="button"
+                        disabled={loading}
+                        onClick={onCancel}
+                        aria-label="Close dialog"
+                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-white/70 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-200/70 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-500 dark:hover:bg-white/[0.06] dark:hover:text-slate-300 dark:focus:ring-slate-700"
+                    >
                         <X size={18} />
                     </button>
                 </div>
 
-                <p id="confirm-dialog-message" className="mt-4 text-sm leading-6 text-slate-500 dark:text-slate-400">{message}</p>
+                <p id="confirm-dialog-message" className="mt-4 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                    {message}
+                </p>
 
-                <div className="mt-6 flex justify-end gap-2.5">
-                    <button type="button" onClick={onCancel} className="rounded-xl border border-slate-200/80 bg-white/50 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-200/70 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.07] dark:hover:text-slate-100 dark:focus:ring-slate-700">
+                <div className="mt-6 flex flex-col-reverse gap-2.5 min-[360px]:flex-row min-[360px]:justify-end">
+                    <button
+                        type="button"
+                        disabled={loading}
+                        onClick={onCancel}
+                        className="rounded-xl border border-slate-200/80 bg-white/50 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-200/70 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.07] dark:hover:text-slate-100 dark:focus:ring-slate-700"
+                    >
                         {cancelText}
                     </button>
 
-                    <button type="button" onClick={onConfirm} className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(239,68,68,0.18)] transition hover:bg-red-600 hover:shadow-[0_8px_22px_rgba(239,68,68,0.24)] focus:outline-none focus:ring-2 focus:ring-red-200 dark:bg-red-600 dark:hover:bg-red-500 dark:focus:ring-red-900">
-                        {confirmText}
+                    <button
+                        type="button"
+                        disabled={loading}
+                        onClick={onConfirm}
+                        className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(239,68,68,0.18)] transition hover:bg-red-600 hover:shadow-[0_8px_22px_rgba(239,68,68,0.24)] focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-600 dark:hover:bg-red-500 dark:focus:ring-red-900"
+                    >
+                        {loading ? loadingText : confirmText}
                     </button>
                 </div>
             </div>
