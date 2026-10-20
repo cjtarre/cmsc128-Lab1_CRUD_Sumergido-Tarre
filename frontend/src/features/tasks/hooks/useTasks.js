@@ -35,6 +35,7 @@ export const convertApiTask = (task) => {
         creatorId: task.user_id ?? null,
         assigneeId: task.assignee_id ?? null,
         assignee: task.assignee ?? null,
+        project: task.project ?? null,
     };
 };
 

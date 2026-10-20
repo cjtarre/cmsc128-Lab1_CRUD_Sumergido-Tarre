@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, FolderKanban } from "lucide-react";
 
 import { formatDueTime } from "../../../shared/utils/dateUtils";
 import { STATUS } from "../../tasks/constants/taskOptions";
@@ -19,6 +19,8 @@ function CalendarView({
     canEdit = true,
     allowAddTask = true,
     getTaskMeta,
+    getTaskProject,
+    taskMetaLabel = "Created by",
 }) {
     const [currentDate, setCurrentDate] = useState(initialDate);
     const [selectedDate, setSelectedDate] = useState(initialDate);
@@ -137,27 +139,33 @@ function CalendarView({
                                             <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-[10px] font-medium sm:text-sm ${isToday ? "bg-green-500 font-semibold text-white shadow-sm" : isSelected ? "text-green-600 dark:text-green-400" : "text-slate-500 dark:text-slate-400"}`}>{day}</span>
 
                                             <div className="mt-1 space-y-1 sm:mt-2 sm:space-y-1.5">
-                                                {dayTasks.slice(0, dayTasks.length > 3 ? 2 : 3).map((task) => (
-                                                
-                                                <div key={task.id} className={`overflow-hidden rounded-md px-1 py-1 text-[8px] sm:px-2 sm:py-1.5 sm:text-[10px] ${taskStyles.priority[task.priority] || "bg-slate-100/80 text-slate-400 dark:bg-slate-800/80 dark:text-slate-500"}`}>
-                                                    <div className="flex min-w-0 items-center gap-1">
-                                                        {getTaskMeta?.(task)?.initials && (
-                                                            <span
-                                                                title={getTaskMeta(task).name}
-                                                                className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/70 text-[6px] font-bold text-green-700 shadow-sm dark:bg-black/20 dark:text-green-300"
-                                                            >
-                                                                {getTaskMeta(task).initials}
-                                                            </span>
-                                                        )}
+                                                {dayTasks.slice(0, dayTasks.length > 3 ? 2 : 3).map((task) => {
+                                                    const taskMeta = getTaskMeta?.(task);
+                                                    const taskProject = getTaskProject?.(task);
 
-                                                        <p className={`min-w-0 truncate font-semibold ${task.status === STATUS.COMPLETED ? "line-through opacity-60" : ""}`}>
-                                                            {task.title}
-                                                        </p>
-                                                    </div>
+                                                    return (
+                                                        <div key={task.id} className={`overflow-hidden rounded-md px-1 py-1 text-[8px] sm:px-2 sm:py-1.5 sm:text-[10px] ${taskStyles.priority[task.priority] || "bg-slate-100/80 text-slate-400 dark:bg-slate-800/80 dark:text-slate-500"}`}>
+                                                            <div className="flex min-w-0 items-center gap-1">
+                                                                {taskMeta?.initials && (
+                                                                    <span title={taskMeta.name} className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/70 text-[6px] font-bold text-green-700 shadow-sm dark:bg-black/20 dark:text-green-300">
+                                                                        {taskMeta.initials}
+                                                                    </span>
+                                                                )}
 
-                                                    <p className="mt-0.5 hidden truncate opacity-70 sm:block">{formatDueTime(task.dueTime)}</p>
-                                                </div>
-                                                ))}
+                                                                <p className={`min-w-0 truncate font-semibold ${task.status === STATUS.COMPLETED ? "line-through opacity-60" : ""}`}>{task.title}</p>
+                                                            </div>
+
+                                                            {taskProject && (
+                                                                <div className="mt-0.5 hidden min-w-0 items-center gap-1 opacity-70 sm:flex">
+                                                                    <FolderKanban size={8} className="shrink-0" />
+                                                                    <span className="truncate">{taskProject.name}</span>
+                                                                </div>
+                                                            )}
+
+                                                            <p className="mt-0.5 hidden truncate opacity-70 sm:block">{formatDueTime(task.dueTime)}</p>
+                                                        </div>
+                                                    );
+                                                })}
 
                                                 {dayTasks.length > 3 && <div className="overflow-hidden rounded-md bg-slate-100/70 px-1 py-1 text-[8px] font-semibold text-slate-500 dark:bg-white/[0.05] dark:text-slate-400 sm:px-2 sm:py-1.5 sm:text-[10px]">+{dayTasks.length - 2} more</div>}
                                             </div>
@@ -177,6 +185,8 @@ function CalendarView({
                     onAddTask={canEdit && allowAddTask ? () => setIsAddTaskOpen(true) : undefined}
                     readOnly={!canEdit}
                     getTaskMeta={getTaskMeta}
+                    getTaskProject={getTaskProject}
+                    taskMetaLabel={taskMetaLabel}
                 />
             </div>
 
@@ -184,8 +194,8 @@ function CalendarView({
                 <TaskDetails
                     task={selectedTask}
                     onClose={() => setSelectedTask(null)}
-                    onEdit={canEdit ? () => calendarHandlers.handleEditTask(selectedTask.id) : undefined}
-                    onDelete={canEdit ? () => calendarHandlers.handleDeleteTask(selectedTask.id) : undefined}
+                    onEdit={canEdit && selectedTask.calendarSource !== "project" ? () => calendarHandlers.handleEditTask(selectedTask.id) : undefined}
+                    onDelete={canEdit && selectedTask.calendarSource !== "project" ? () => calendarHandlers.handleDeleteTask(selectedTask.id) : undefined}
                 />
             )}
 

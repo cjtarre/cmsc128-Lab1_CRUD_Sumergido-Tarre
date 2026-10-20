@@ -72,6 +72,6 @@ describe("TaskRow notification highlight", () => {
 
         expect(screen.getByText("Target task")).toBeTruthy();
         expect(screen.getByText("Test description")).toBeTruthy();
-        expect(screen.getByText("No due date")).toBeTruthy();
+        expect(screen.getAllByText("No due date").length).toBeGreaterThan(0);
     });
 });

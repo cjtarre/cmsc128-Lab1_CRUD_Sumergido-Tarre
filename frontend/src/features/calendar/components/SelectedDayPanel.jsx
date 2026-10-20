@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarDays, Check, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ChevronUp, FolderKanban, Plus } from "lucide-react";
 
 import { formatDueTime } from "../../../shared/utils/dateUtils";
 import { STATUS, PRIORITY, priorityLabels, statusLabels } from "../../tasks/constants/taskOptions";
@@ -13,6 +13,8 @@ function SelectedDayPanel({
     onAddTask,
     readOnly = false,
     getTaskMeta,
+    getTaskProject,
+    taskMetaLabel = "Created by",
 }) {
     const [expandedTaskId, setExpandedTaskId] = useState(null);
 
@@ -54,11 +56,13 @@ function SelectedDayPanel({
                             const isCompleted = task.status === STATUS.COMPLETED;
                             const isExpanded = expandedTaskId === task.id;
                             const taskMeta = getTaskMeta?.(task);
+                            const taskProject = getTaskProject?.(task);
+                            const canToggle = !readOnly && onToggleComplete && !taskProject;
 
                             return (
                                 <div key={task.id} className="overflow-hidden rounded-xl border border-white/80 bg-white/65 shadow-sm transition hover:border-green-200 hover:bg-white/80 hover:shadow-md dark:border-white/10 dark:bg-white/[0.035] dark:hover:border-green-900/60 dark:hover:bg-white/[0.05]">
                                     <div className="flex items-start gap-2.5 p-3">
-                                        {!readOnly && onToggleComplete && (
+                                        {canToggle && (
                                             <button type="button" onClick={() => onToggleComplete(task.id)} aria-label={isCompleted ? `Mark ${task.title} as incomplete` : `Mark ${task.title} as complete`} className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${isCompleted ? "border-green-500 bg-green-500 text-white" : "border-slate-300 bg-white/40 hover:border-green-500 dark:border-slate-600 dark:bg-white/[0.03]"}`}>
                                                 {isCompleted && <Check size={11} strokeWidth={3} />}
                                             </button>
@@ -72,23 +76,24 @@ function SelectedDayPanel({
 
                                         <div className="min-w-0 flex-1">
                                             <button type="button" onClick={() => onTaskClick?.(task)} className="block max-w-full text-left">
-                                                <p className={`truncate text-xs font-semibold transition hover:text-green-600 dark:hover:text-green-400 ${isCompleted ? "text-slate-400 line-through dark:text-slate-500" : "text-slate-700 dark:text-slate-200"}`}>
-                                                    {task.title}
-                                                </p>
+                                                <p className={`truncate text-xs font-semibold transition hover:text-green-600 dark:hover:text-green-400 ${isCompleted ? "text-slate-400 line-through dark:text-slate-500" : "text-slate-700 dark:text-slate-200"}`}>{task.title}</p>
                                             </button>
 
                                             <div className="mt-1 flex flex-wrap items-center gap-2">
-                                                {taskMeta?.name && (
-                                                    <span className="text-[9px] text-slate-400 dark:text-slate-500">
-                                                        Created by {taskMeta.name}
+                                                {taskProject && (
+                                                    <span className="inline-flex min-w-0 items-center gap-1 text-[9px] font-medium text-green-600 dark:text-green-400">
+                                                        <FolderKanban size={10} className="shrink-0" />
+                                                        <span className="max-w-32 truncate">{taskProject.name}</span>
+                                                        <span className="text-slate-300 dark:text-slate-600">·</span>
+                                                        <span className="text-slate-400 dark:text-slate-500">Project task</span>
                                                     </span>
                                                 )}
 
-                                                {task.dueTime && (
-                                                    <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                                                        {formatDueTime(task.dueTime)}
-                                                    </span>
+                                                {taskMeta?.name && (
+                                                    <span className="text-[9px] text-slate-400 dark:text-slate-500">{taskMeta.name === "Unassigned" ? "Unassigned" : `${taskMetaLabel} ${taskMeta.name}`}</span>
                                                 )}
+
+                                                {task.dueTime && <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDueTime(task.dueTime)}</span>}
 
                                                 {task.priority && task.priority !== PRIORITY.NONE && (
                                                     <span className={`rounded-full px-1.5 py-0.5 text-[8px] font-semibold uppercase ${isCompleted ? "bg-slate-100/80 text-slate-400 dark:bg-slate-700/70 dark:text-slate-500" : taskStyles.priority[task.priority]}`}>
@@ -121,10 +126,23 @@ function SelectedDayPanel({
                                                     </div>
                                                 )}
 
+                                                {taskProject && (
+                                                    <div>
+                                                        <span className="text-slate-400 dark:text-slate-500">Project: </span>
+                                                        <span className="font-medium text-green-600 dark:text-green-400">{taskProject.name}</span>
+                                                    </div>
+                                                )}
+
                                                 {taskMeta?.name && (
                                                     <div>
-                                                        <span className="text-slate-400 dark:text-slate-500">Created by: </span>
-                                                        <span className="font-medium text-slate-600 dark:text-slate-300">{taskMeta.name}</span>
+                                                        {taskMeta.name === "Unassigned" ? (
+                                                            <span className="font-medium text-slate-500 dark:text-slate-400">Unassigned</span>
+                                                        ) : (
+                                                            <>
+                                                                <span className="text-slate-400 dark:text-slate-500">{taskMetaLabel}: </span>
+                                                                <span className="font-medium text-slate-600 dark:text-slate-300">{taskMeta.name}</span>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
@@ -132,9 +150,7 @@ function SelectedDayPanel({
                                             {task.tags?.length > 0 && (
                                                 <div className="mt-3 flex flex-wrap gap-1">
                                                     {task.tags.map((tag) => (
-                                                        <span key={tag.tag_id} className="rounded-full bg-white/65 px-2 py-0.5 text-[9px] text-slate-500 shadow-sm dark:bg-white/[0.05] dark:text-slate-300">
-                                                            {tag.tag_name}
-                                                        </span>
+                                                        <span key={tag.tag_id} className="rounded-full bg-white/65 px-2 py-0.5 text-[9px] text-slate-500 shadow-sm dark:bg-white/[0.05] dark:text-slate-300">{tag.tag_name}</span>
                                                     ))}
                                                 </div>
                                             )}

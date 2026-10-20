@@ -3,8 +3,9 @@ import api from "../../../shared/services/api";
 const API_URL = "/api/tasks";
 
 export const taskService = {
-    getTasks: async (projectId = null) => {
-        const response = await api.get(API_URL, { params: projectId ? { project_id: projectId } : {} });
+    getTasks: async (projectId = null, scope = null) => {
+        const params = projectId ? { project_id: projectId } : scope ? { scope } : {};
+        const response = await api.get(API_URL, { params });
         return response.data;
     },
 

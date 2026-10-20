@@ -31,7 +31,19 @@ describe("taskService", () => {
 
         const result = await taskService.getTasks();
 
-        expect(mocks.apiInstance.get).toHaveBeenCalledWith("/api/tasks");
+        expect(mocks.apiInstance.get).toHaveBeenCalledWith("/api/tasks", { params: {} });
+        expect(result).toEqual(tasks);
+    });
+
+    it("gets tasks for a project", async () => {
+        const tasks = [{ task_id: 1, task_name: "Project Task", project_id: 7 }];
+        mocks.apiInstance.get.mockResolvedValue({ data: tasks });
+
+        const result = await taskService.getTasks(7);
+
+        expect(mocks.apiInstance.get).toHaveBeenCalledWith("/api/tasks", {
+            params: { project_id: 7 },
+        });
         expect(result).toEqual(tasks);
     });
 
