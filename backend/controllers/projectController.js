@@ -277,6 +277,29 @@ const restoreProject = async (req, res) => {
             return res.status(409).json({ error: "Project is not deleted" });
         }
 
+        // Notify existing project members that the restored project is available again.
+        // Membership rows are preserved during soft deletion, so restored members regain access.
+        // Notification failure is best-effort because the project has already been restored.
+        try {
+            const { data: members, error: membersError } = await supabase
+                .from("project_user")
+                .select("user_id")
+                .eq("project_id", req.projectId)
+                .neq("user_id", req.user.id);
+
+            if (membersError) throw membersError;
+
+            await notify((members || []).map((member) => member.user_id), "project_restored", {
+                actorId: req.user.id,
+                data: {
+                    project_id: req.projectId,
+                    project_name: data[0].project_name,
+                },
+            });
+        } catch (sideEffectError) {
+            console.error("Error sending project restoration notifications:", sideEffectError);
+        }
+
         res.status(200).json({ ...data[0], role: req.projectRole });
     } catch (error) {
         console.error("Error restoring project:", error);

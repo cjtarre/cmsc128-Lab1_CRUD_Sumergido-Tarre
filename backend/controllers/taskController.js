@@ -7,6 +7,7 @@ const {
     getDefaultProjectId,
     validateTagIdsForProject,
 } = require("../utils/projectAccess");
+const { notify } = require("../utils/notifications");
 
 const TASK_SELECT = `
     *,
@@ -14,6 +15,13 @@ const TASK_SELECT = `
         user_id,
         username,
         display_name
+    ),
+    project:projects!tasks_project_id_fkey (
+        id,
+        project_name,
+        icon,
+        accent,
+        is_default
     ),
     task_tag (
         tags ( tag_id, tag_name, tag_info )
@@ -95,8 +103,10 @@ const loadTaskForUser = async (req, res, { includeDeleted = false, minRole = "ed
     return task;
 };
 
-// GET /api/tasks              -> tasks from every project the user belongs to
+// GET /api/tasks                 -> tasks from every project the user belongs to
 // GET /api/tasks?project_id=123  -> tasks from one project (user must be a member)
+// GET /api/tasks?scope=default   -> tasks from the user's default project only
+// GET /api/tasks?scope=assigned  -> project tasks assigned to the current user
 const getAllTasks = async (req, res) => {
     try {
         let query = supabase
@@ -110,19 +120,42 @@ const getAllTasks = async (req, res) => {
             if (projectId === null) {
                 return res.status(400).json({ error: "Invalid project_id" });
             }
-
+        
             const role = await getRole(projectId, req.user.id);
             if (!role) {
                 return res.status(404).json({ error: "Project not found" });
             }
-
+        
             query = query.eq("project_id", projectId);
+        } else if (req.query.scope === "default") {
+            const projectId = await getDefaultProjectId(req.user.id);
+        
+            if (projectId === null) {
+                return res.status(200).json([]);
+            }
+        
+            query = query.eq("project_id", projectId);
+        } else if (req.query.scope === "assigned") {
+            const projectIds = await getMemberProjectIds(req.user.id);
+            const defaultProjectId = await getDefaultProjectId(req.user.id);
+        
+            if (projectIds.length === 0) {
+                return res.status(200).json([]);
+            }
+        
+            query = query
+                .in("project_id", projectIds)
+                .eq("assignee_id", req.user.id);
+        
+            if (defaultProjectId !== null) {
+                query = query.neq("project_id", defaultProjectId);
+            }
         } else {
             const projectIds = await getMemberProjectIds(req.user.id);
             if (projectIds.length === 0) {
                 return res.status(200).json([]);
             }
-
+        
             query = query.in("project_id", projectIds);
         }
 
@@ -248,6 +281,21 @@ const createTask = async (req, res) => {
                     assignee_id: newTask.assignee_id
                 }
             });
+        }
+
+        if (newTask.assignee_id && newTask.assignee_id !== req.user.id) {
+            try {
+                await notify([newTask.assignee_id], "task_assigned", {
+                    actorId: req.user.id,
+                    data: {
+                        task_id: newTask.task_id,
+                        project_id: newTask.project_id,
+                        task_name: newTask.task_name
+                    }
+                });
+            } catch (notifyError) {
+                console.error("Error sending task assignment notification:", notifyError);
+            }
         }
 
         const { data: taskWithTags, error: taskWithTagsError } = await supabase
@@ -380,6 +428,26 @@ const updateTask = async (req, res) => {
                     assignee_id: assignee_id || null
                 }
             });
+        }
+
+        if (
+            assigneeWasProvided &&
+            assignee_id &&
+            assignee_id !== task.assignee_id &&
+            assignee_id !== req.user.id
+        ) {
+            try {
+                await notify([assignee_id], "task_assigned", {
+                    actorId: req.user.id,
+                    data: {
+                        task_id: task.task_id,
+                        project_id: task.project_id,
+                        task_name: task_name || task.task_name
+                    }
+                });
+            } catch (notifyError) {
+                console.error("Error sending task assignment notification:", notifyError);
+            }
         }
 
         const { data: updatedTask, error: fetchError } = await supabase

@@ -17,6 +17,7 @@ const supabase = {
 
 const supabaseAdmin = {
     from: vi.fn(),
+    rpc: vi.fn(),
     auth: {
         admin: {
             getUserById: vi.fn(),
@@ -62,6 +63,7 @@ const mockProfileQuery = ({ data = null, error = null } = {}) => {
 beforeEach(() => {
     vi.clearAllMocks();
     process.env.FRONTEND_URL = "http://localhost:5173";
+    supabaseAdmin.rpc.mockResolvedValue({ data: 1, error: null });
 });
 
 describe("requireAuth", () => {
