@@ -10,6 +10,7 @@ vi.mock("../../src/features/projects/services/projectService", () => ({
         getMembers: vi.fn(),
         changeMemberRole: vi.fn(),
         removeMember: vi.fn(),
+        leaveProject: vi.fn(),
     },
 }));
 
@@ -128,6 +129,22 @@ describe("useProjectMembers", () => {
 
         expect(success).toBe(false);
         expect(projectService.removeMember).not.toHaveBeenCalled();
+    });
+
+    it("leaves the project", async () => {
+        projectService.leaveProject.mockResolvedValue({});
+
+        const { result } = renderHook(() => useProjectMembers({ id: 10 }, false));
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        let success;
+        await act(async () => {
+            success = await result.current.leaveProject();
+        });
+
+        expect(success).toBe(true);
+        expect(projectService.leaveProject).toHaveBeenCalledWith(10);
+        expect(result.current.leavingProject).toBe(false);
     });
 
     it("cancels an invitation locally", async () => {
