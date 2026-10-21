@@ -1,7 +1,7 @@
 import { CalendarDays, GripVertical, User } from "lucide-react";
 
 import { BOARD_COLUMNS, PRIORITY } from "../../constants/taskOptions";
-import taskStyles from "../../styles/taskStyles";
+import taskStyles, { getTagInlineStyle } from "../../styles/taskStyles";
 
 function BoardTaskCard({ task, canEdit, isDragging, isUpdating, onDragStart, onDragEnd, onStatusChange }) {
     const assigneeName = task.assignee?.display_name || task.assignee?.username || task.assigneeName || task.assignee_name || "Unassigned";
@@ -27,7 +27,11 @@ function BoardTaskCard({ task, canEdit, isDragging, isUpdating, onDragStart, onD
 
                 {task.dueDate && <span className="inline-flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500"><CalendarDays size={10} />{task.dueDate}</span>}
 
-                {(task.tags || []).slice(0, 2).map((tag, index) => <span key={tag.tag_id} className={`rounded-md px-1.5 py-0.5 text-[8px] font-medium ${taskStyles.tag[index + 1] || taskStyles.tag[3]}`}>{tag.tag_name}</span>)}
+                {(task.tags || []).slice(0, 2).map((tag) => (
+                    <span key={tag.tag_id} className="rounded-md px-1.5 py-0.5 text-[8px] font-medium" style={getTagInlineStyle(tag)}>
+                        {tag.tag_name}
+                    </span>
+                ))}
             </div>
 
             {/* Touch screens use a status selector instead of native drag. */}

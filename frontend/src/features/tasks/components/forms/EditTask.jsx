@@ -101,11 +101,22 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
     const mobileDateStyle = isMobile ? { fontSize: "10px", lineHeight: "1" } : undefined;
 
     const tagButtons = (
-        <TagPicker
-            selectedIds={formData.tags}
-            onToggle={handleTagToggle}
-            projectId={projectId}
-        />
+        <TagPicker selectedIds={formData.tags} onToggle={handleTagToggle} projectId={projectId} />
+    );
+
+    const selectField = ([field, label, options]) => (
+        <div key={field} className="min-w-0">
+            <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">{label}</label>
+            <div className="relative">
+                <select name={field} value={formData[field]} onChange={handleChange} disabled={submitting}
+                    className={`${inputClass(field)} min-w-0 appearance-none pr-6 disabled:cursor-not-allowed disabled:opacity-60 sm:pr-8`}
+                    style={mobileControlStyle}>
+                    {options.map(([value, text]) => <option key={value} value={value}>{text}</option>)}
+                </select>
+                <ChevronDown size={isMobile ? 11 : 14}
+                    className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 sm:right-2.5" />
+            </div>
+        </div>
     );
 
     return (
@@ -173,23 +184,27 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
                         </div>
 
                         {collaborative ? (
-                            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                                <div className="min-w-0">
-                                    <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">Assign to</label>
-                                    <div className="relative">
-                                        <select name="assigneeId" value={formData.assigneeId} onChange={handleChange} disabled={submitting}
-                                            className={`${inputClass("assigneeId")} appearance-none pr-6 disabled:cursor-not-allowed disabled:opacity-60 sm:pr-8`}
-                                            style={mobileControlStyle}>
-                                            <option value="">Unassigned</option>
-                                            {members.map((member) => (
-                                                <option key={member.user_id} value={member.user_id}>
-                                                    {member.display_name || member.username || "Project member"}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <ChevronDown size={isMobile ? 11 : 14}
-                                            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 sm:right-2.5" />
+                            <div className="grid grid-cols-2 items-start gap-2 sm:gap-3">
+                                <div className="min-w-0 space-y-2 sm:space-y-3">
+                                    <div>
+                                        <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">Assign to</label>
+                                        <div className="relative">
+                                            <select name="assigneeId" value={formData.assigneeId} onChange={handleChange} disabled={submitting}
+                                                className={`${inputClass("assigneeId")} appearance-none pr-6 disabled:cursor-not-allowed disabled:opacity-60 sm:pr-8`}
+                                                style={mobileControlStyle}>
+                                                <option value="">Unassigned</option>
+                                                {members.map((member) => (
+                                                    <option key={member.user_id} value={member.user_id}>
+                                                        {member.display_name || member.username || "Project member"}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown size={isMobile ? 11 : 14}
+                                                className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 sm:right-2.5" />
+                                        </div>
                                     </div>
+
+                                    {EDIT_SELECT_FIELDS.map(selectField)}
                                 </div>
 
                                 <div className="min-w-0">
@@ -198,28 +213,17 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
                                 </div>
                             </div>
                         ) : (
-                            <div>
-                                <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">Tags</label>
-                                {tagButtons}
-                            </div>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                            {EDIT_SELECT_FIELDS.map(([field, label, options]) => (
-                                <div key={field} className="min-w-0">
-                                    <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">{label}</label>
-                                    <div className="relative">
-                                        <select name={field} value={formData[field]} onChange={handleChange} disabled={submitting}
-                                            className={`${inputClass(field)} min-w-0 appearance-none pr-6 disabled:cursor-not-allowed disabled:opacity-60 sm:pr-8`}
-                                            style={mobileControlStyle}>
-                                            {options.map(([value, text]) => <option key={value} value={value}>{text}</option>)}
-                                        </select>
-                                        <ChevronDown size={isMobile ? 11 : 14}
-                                            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 sm:right-2.5" />
-                                    </div>
+                            <>
+                                <div>
+                                    <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">Tags</label>
+                                    {tagButtons}
                                 </div>
-                            ))}
-                        </div>
+
+                                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                                    {EDIT_SELECT_FIELDS.map(selectField)}
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     <div className="flex shrink-0 justify-end gap-1.5 border-t border-white/60 bg-white/30 px-3.5 py-2 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.025] sm:gap-2 sm:px-5 sm:py-2.5">

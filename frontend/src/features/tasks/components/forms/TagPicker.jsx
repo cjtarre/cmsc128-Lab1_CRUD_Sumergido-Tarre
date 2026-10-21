@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
+import ConfirmDialog from "../../../../shared/components/common/ConfirmDialog";
 import { useTaskData } from "../../context/TaskContext";
 import { tagService } from "../../services/tagService";
 import { DEFAULT_TAG_COLOR, getTagColor, getTagInlineStyle } from "../../styles/taskStyles";
@@ -19,6 +20,8 @@ function TagPicker({ selectedIds = [], onToggle, projectId = null, canManage = t
     const [tagName, setTagName] = useState("");
     const [color, setColor] = useState(DEFAULT_TAG_COLOR);
     const [saving, setSaving] = useState(false);
+    const [tagToDelete, setTagToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     // Personal tags use shared context; collaborative tags are loaded per project.
     useEffect(() => {
@@ -53,12 +56,12 @@ function TagPicker({ selectedIds = [], onToggle, projectId = null, canManage = t
 
     const handleTagClick = (tagId) => {
         const selected = selectedIds.includes(tagId);
-    
+
         if (!selected && selectedIds.length >= MAX_SELECTED_TAGS) {
             toast.error(`You can select up to ${MAX_SELECTED_TAGS} tags.`);
             return;
         }
-    
+
         onToggle(tagId);
     };
 
@@ -95,18 +98,24 @@ function TagPicker({ selectedIds = [], onToggle, projectId = null, canManage = t
         setManageOpen(true);
     };
 
-    const handleDelete = async (tag) => {
-        if (!window.confirm(`Delete "${tag.tag_name}"?`)) return;
+    const handleDelete = (tag) => setTagToDelete(tag);
+
+    const handleConfirmDelete = async () => {
+        if (!tagToDelete || deleting) return;
 
         try {
-            await tagService.deleteTag(tag.tag_id);
-            syncTags(tags.filter((item) => item.tag_id !== tag.tag_id));
-            if (selectedIds.includes(tag.tag_id)) onToggle(tag.tag_id);
-            if (editingId === tag.tag_id) resetEditor();
+            setDeleting(true);
+            await tagService.deleteTag(tagToDelete.tag_id);
+            syncTags(tags.filter((tag) => tag.tag_id !== tagToDelete.tag_id));
+            if (selectedIds.includes(tagToDelete.tag_id)) onToggle(tagToDelete.tag_id);
+            if (editingId === tagToDelete.tag_id) resetEditor();
             toast.success("Tag deleted.");
+            setTagToDelete(null);
         } catch (error) {
             console.error("Error deleting tag:", error);
             toast.error(error.response?.data?.error || "Unable to delete tag.");
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -125,18 +134,13 @@ function TagPicker({ selectedIds = [], onToggle, projectId = null, canManage = t
                     const tagColor = getTagColor(tag);
 
                     return (
-                        <button
-                            key={tag.tag_id}
-                            type="button"
-                            onClick={() => handleTagClick(tag.tag_id)}
-                            aria-pressed={selected}
+                        <button key={tag.tag_id} type="button" onClick={() => handleTagClick(tag.tag_id)} aria-pressed={selected}
                             className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[9px] font-medium transition sm:px-2.5 sm:text-[11px] ${
                                 selected
                                     ? "text-slate-700 shadow-sm dark:text-slate-100"
                                     : "bg-white/45 text-slate-500 hover:bg-white/75 dark:bg-white/[0.035] dark:text-slate-400 dark:hover:bg-white/[0.07]"
                             }`}
-                            style={getTagInlineStyle(tag, selected)}
-                        >
+                            style={getTagInlineStyle(tag, selected)}>
                             <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: tagColor }} />
                             {tag.tag_name}
                             {selected && <Check size={10} strokeWidth={2.5} style={{ color: tagColor }} />}
@@ -145,21 +149,15 @@ function TagPicker({ selectedIds = [], onToggle, projectId = null, canManage = t
                 })}
 
                 {(hiddenTagCount > 0 || showAll) && tags.length > VISIBLE_TAG_COUNT && (
-                    <button
-                        type="button"
-                        onClick={() => setShowAll((current) => !current)}
-                        className="rounded-full border border-white/80 bg-white/40 px-2 py-1 text-[9px] font-medium text-slate-400 transition hover:bg-white/70 hover:text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-500 dark:hover:bg-white/[0.07] dark:hover:text-slate-300 sm:px-2.5 sm:text-[11px]"
-                    >
+                    <button type="button" onClick={() => setShowAll((current) => !current)}
+                        className="rounded-full border border-white/80 bg-white/40 px-2 py-1 text-[9px] font-medium text-slate-400 transition hover:bg-white/70 hover:text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-500 dark:hover:bg-white/[0.07] dark:hover:text-slate-300 sm:px-2.5 sm:text-[11px]">
                         {showAll ? "Show less" : `+${hiddenTagCount} more`}
                     </button>
                 )}
 
                 {canManage && (
-                    <button
-                        type="button"
-                        onClick={() => setManageOpen((current) => !current)}
-                        className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300/80 px-2 py-1 text-[9px] font-medium text-slate-400 transition hover:border-green-300 hover:text-green-600 dark:border-slate-700 dark:text-slate-500 dark:hover:border-green-800 dark:hover:text-green-400 sm:px-2.5 sm:text-[11px]"
-                    >
+                    <button type="button" onClick={() => setManageOpen((current) => !current)}
+                        className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300/80 px-2 py-1 text-[9px] font-medium text-slate-400 transition hover:border-green-300 hover:text-green-600 dark:border-slate-700 dark:text-slate-500 dark:hover:border-green-800 dark:hover:text-green-400 sm:px-2.5 sm:text-[11px]">
                         <Plus size={10} />Tag
                     </button>
                 )}
@@ -176,29 +174,19 @@ function TagPicker({ selectedIds = [], onToggle, projectId = null, canManage = t
                         </button>
                     </div>
 
-                    <input
-                        type="text"
-                        value={tagName}
-                        onChange={(event) => setTagName(event.target.value)}
-                        maxLength={50}
+                    <input type="text" value={tagName} onChange={(event) => setTagName(event.target.value)} maxLength={50}
                         placeholder="Tag name"
-                        className="mt-2 h-8 w-full rounded-lg border border-white/80 bg-white/70 px-2.5 text-[11px] text-slate-700 outline-none transition focus:border-green-300 focus:ring-2 focus:ring-green-100/60 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-200 dark:focus:border-green-800 dark:focus:ring-green-950/40"
-                    />
+                        className="mt-2 h-8 w-full rounded-lg border border-white/80 bg-white/70 px-2.5 text-[11px] text-slate-700 outline-none transition focus:border-green-300 focus:ring-2 focus:ring-green-100/60 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-200 dark:focus:border-green-800 dark:focus:ring-green-950/40" />
 
                     <div className="mt-2 flex flex-wrap gap-1.5">
                         {TAG_COLORS.map((value) => (
-                            <button
-                                key={value}
-                                type="button"
-                                onClick={() => setColor(value)}
-                                aria-label={`Select ${value}`}
+                            <button key={value} type="button" onClick={() => setColor(value)} aria-label={`Select ${value}`}
                                 className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
                                     color === value
                                         ? "ring-2 ring-slate-400 ring-offset-2 dark:ring-slate-500 dark:ring-offset-slate-900"
                                         : "hover:scale-110"
                                 }`}
-                                style={{ backgroundColor: value }}
-                            >
+                                style={{ backgroundColor: value }}>
                                 {color === value && <Check size={12} className="text-white" />}
                             </button>
                         ))}
@@ -237,6 +225,17 @@ function TagPicker({ selectedIds = [], onToggle, projectId = null, canManage = t
                     )}
                 </div>
             )}
+
+            <ConfirmDialog
+                isOpen={Boolean(tagToDelete)}
+                title="Delete tag?"
+                message={tagToDelete ? `Delete "${tagToDelete.tag_name}"? This custom tag will no longer be available in this project.` : ""}
+                confirmText="Delete Tag"
+                loading={deleting}
+                loadingText="Deleting..."
+                onConfirm={handleConfirmDelete}
+                onCancel={() => { if (!deleting) setTagToDelete(null); }}
+            />
         </div>
     );
 }

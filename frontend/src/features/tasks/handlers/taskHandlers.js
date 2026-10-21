@@ -39,17 +39,28 @@ export function createTaskHandlers({
         handleCloseEditTask: () => setTaskToEdit(null),
 
         handleUpdateTask: async (task) => {
-            if (!task.title.trim()) return toast.error("Task title is required.");
+            if (!task.title.trim()) {
+                toast.error("Task title is required.");
+                return false;
+            }
 
             try {
-                const updatedTask = { ...task, title: task.title.trim(), description: task.description.trim(), dueDate: formatDate(task.dueDate) };
+                const updatedTask = {
+                    ...task,
+                    title: task.title.trim(),
+                    description: task.description.trim(),
+                    dueDate: formatDate(task.dueDate),
+                };
+
                 const savedTask = await updateTask(updatedTask);
                 setSelectedTask((selected) => selected?.id === savedTask.id ? savedTask : selected);
                 setTaskToEdit(null);
                 toast.success("Task updated successfully!");
+                return true;
             } catch (error) {
                 console.error("Error updating task:", error);
                 toast.error("Failed to update task.");
+                return false;
             }
         },
 

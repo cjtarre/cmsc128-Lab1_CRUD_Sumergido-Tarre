@@ -21,6 +21,9 @@ function CalendarView({
     getTaskMeta,
     getTaskProject,
     taskMetaLabel = "Created by",
+    collaborative = false,
+    projectId = null,
+    members = [],
 }) {
     const [currentDate, setCurrentDate] = useState(initialDate);
     const [selectedDate, setSelectedDate] = useState(initialDate);
@@ -196,13 +199,14 @@ function CalendarView({
                     onClose={() => setSelectedTask(null)}
                     onEdit={canEdit && selectedTask.calendarSource !== "project" ? () => calendarHandlers.handleEditTask(selectedTask.id) : undefined}
                     onDelete={canEdit && selectedTask.calendarSource !== "project" ? () => calendarHandlers.handleDeleteTask(selectedTask.id) : undefined}
+                    collaborative={collaborative}
                 />
             )}
 
             {canEdit && (
                 <>
                     <AddTask isOpen={isAddTaskOpen} onClose={() => setIsAddTaskOpen(false)} onSubmit={handlers.handleAddTaskSubmit} initialDueDate={selectedDateValue} />
-                    <EditTask task={taskToEdit} isOpen={Boolean(taskToEdit)} onClose={() => setTaskToEdit(null)} onSave={handlers.handleUpdateTask} />
+                    <EditTask task={taskToEdit} isOpen={Boolean(taskToEdit)} onClose={() => setTaskToEdit(null)} onSave={handlers.handleUpdateTask} collaborative={collaborative} members={members} projectId={projectId} />
                     <DeleteTask task={taskToDelete} onConfirm={() => handlers.handleConfirmDelete(taskToDelete)} onCancel={() => setTaskToDelete(null)} />
                 </>
             )}

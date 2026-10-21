@@ -26,11 +26,22 @@ function ProjectCalendar({ projectId, tasks, setTasks, canEdit }) {
             </div>
 
             <div className="mt-4 overflow-hidden rounded-2xl border border-white/65 bg-white/30 p-2 backdrop-blur-xl dark:border-white/[0.08] dark:bg-white/[0.015] sm:p-3">
-                <CalendarView tasks={calendarTasks} handlers={handlers} title="" description="" canEdit={canEdit} allowAddTask={false} getTaskMeta={getTaskMeta} taskMetaLabel="Assigned to" />
+                <CalendarView
+                    tasks={calendarTasks}
+                    handlers={handlers}
+                    title=""
+                    description=""
+                    canEdit={canEdit}
+                    allowAddTask={false}
+                    getTaskMeta={getTaskMeta}
+                    taskMetaLabel="Assigned to"
+                    collaborative
+                    projectId={projectId}
+                    members={members}
+                />
             </div>
         </section>
     );
 }
 
 export default ProjectCalendar;
-

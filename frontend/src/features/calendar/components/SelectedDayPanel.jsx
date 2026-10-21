@@ -3,7 +3,7 @@ import { CalendarDays, Check, ChevronDown, ChevronUp, FolderKanban, Plus } from 
 
 import { formatDueTime } from "../../../shared/utils/dateUtils";
 import { STATUS, PRIORITY, priorityLabels, statusLabels } from "../../tasks/constants/taskOptions";
-import taskStyles from "../../tasks/styles/taskStyles";
+import taskStyles, { getTagInlineStyle } from "../../tasks/styles/taskStyles";
 
 function SelectedDayPanel({
     date,
@@ -150,7 +150,9 @@ function SelectedDayPanel({
                                             {task.tags?.length > 0 && (
                                                 <div className="mt-3 flex flex-wrap gap-1">
                                                     {task.tags.map((tag) => (
-                                                        <span key={tag.tag_id} className="rounded-full bg-white/65 px-2 py-0.5 text-[9px] text-slate-500 shadow-sm dark:bg-white/[0.05] dark:text-slate-300">{tag.tag_name}</span>
+                                                        <span key={tag.tag_id} className="rounded-full border border-transparent px-2 py-0.5 text-[9px] font-medium shadow-sm" style={getTagInlineStyle(tag)}>
+                                                            {tag.tag_name}
+                                                        </span>
                                                     ))}
                                                 </div>
                                             )}

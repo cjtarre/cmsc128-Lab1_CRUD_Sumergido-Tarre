@@ -228,8 +228,13 @@ function TaskRow({
             {/* Status - desktop */}
             <div className="relative hidden min-w-0 sm:block">
                 <button
-                    ref={statusButtonRef} type="button" disabled={!onStatusChange}
-                    onClick={(event) => { event.stopPropagation(); if (onStatusChange) setIsStatusOpen((prev) => !prev); }}
+                    type="button" disabled={!onStatusChange}
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        if (!onStatusChange) return;
+                        statusButtonRef.current = event.currentTarget;
+                        setIsStatusOpen((prev) => !prev);
+                    }}
                     aria-haspopup={onStatusChange ? "listbox" : undefined}
                     aria-expanded={onStatusChange ? isStatusOpen : undefined}
                     aria-label={onStatusChange ? `Change status for ${title}` : undefined}
@@ -293,8 +298,13 @@ function TaskRow({
             {/* Mobile footer */}
             <div className="ml-9 flex min-w-0 items-center border-t border-slate-100/80 pt-2 dark:border-white/[0.05] sm:hidden">
                 <button
-                    ref={statusButtonRef} type="button" disabled={!onStatusChange}
-                    onClick={(event) => { event.stopPropagation(); if (onStatusChange) setIsStatusOpen((prev) => !prev); }}
+                    type="button" disabled={!onStatusChange}
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        if (!onStatusChange) return;
+                        statusButtonRef.current = event.currentTarget;
+                        setIsStatusOpen((prev) => !prev);
+                    }}
                     className={`flex h-7 shrink-0 items-center gap-1 rounded-lg px-2 font-medium transition ${
                         status === STATUS.COMPLETED
                             ? "bg-green-50/70 text-green-600 dark:bg-green-950/30 dark:text-green-400"

@@ -117,8 +117,8 @@ function ProjectList({ projectId, tasks, setTasks, canEdit }) {
 
             {canEdit && (
                 <>
-                    <AddTask isOpen={isAddTaskOpen} onClose={handlers.handleCloseAddTask} onSubmit={handlers.handleAddTaskSubmit} collaborative members={members} />
-                    <EditTask task={taskToEdit} isOpen={Boolean(taskToEdit)} onClose={handlers.handleCloseEditTask} onSave={handlers.handleUpdateTask} collaborative members={members} />
+                    <AddTask isOpen={isAddTaskOpen} onClose={handlers.handleCloseAddTask} onSubmit={handlers.handleAddTaskSubmit} collaborative members={members} projectId={projectId} />
+                    <EditTask task={taskToEdit} isOpen={Boolean(taskToEdit)} onClose={handlers.handleCloseEditTask} onSave={handlers.handleUpdateTask} collaborative members={members} projectId={projectId} />
                     <DeleteTask task={taskToDelete} onConfirm={() => handlers.handleConfirmDelete(taskToDelete)} onCancel={handlers.handleCancelDelete} />
                 </>
             )}
