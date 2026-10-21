@@ -10,40 +10,56 @@ const mockQuery = {
     order: vi.fn(),
     or: vi.fn(),
     is: vi.fn(),
+    insert: vi.fn(),
+    single: vi.fn(),
 };
 
 const supabase = { from: vi.fn() };
 
+const projectAccess = {
+    ROLE_RANK: { viewer: 1, editor: 2, owner: 3 },
+    getRole: vi.fn(),
+    getMemberProjectIds: vi.fn(),
+    getDefaultProjectId: vi.fn(),
+};
+
 mock(path.resolve("config/supabaseAdmin.js"), supabase);
-mock(path.resolve("utils/projectAccess.js"), {
-    getRole: vi.fn().mockResolvedValue("owner"),
-    getMemberProjectIds: vi.fn().mockResolvedValue([7]),
+mock(path.resolve("utils/projectAccess.js"), projectAccess);
+
+const { getAllTags, createTag } = require("../../controllers/tagController.js");
+
+const createResponse = () => ({
+    status: vi.fn().mockReturnThis(),
+    json: vi.fn(),
 });
 
-const { getAllTags } = require("../../controllers/tagController.js");
+beforeEach(() => {
+    vi.clearAllMocks();
 
-const createResponse = () => ({ status: vi.fn().mockReturnThis(), json: vi.fn() });
+    supabase.from.mockReturnValue(mockQuery);
+    mockQuery.select.mockReturnValue(mockQuery);
+    mockQuery.order.mockReturnValue(mockQuery);
+    mockQuery.insert.mockReturnValue(mockQuery);
 
-describe("getAllTags", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
+    projectAccess.getRole.mockResolvedValue("owner");
+    projectAccess.getMemberProjectIds.mockResolvedValue([7]);
+    projectAccess.getDefaultProjectId.mockResolvedValue(7);
 
-        supabase.from.mockReturnValue(mockQuery);
-        mockQuery.select.mockReturnValue(mockQuery);
-        mockQuery.order.mockReturnValue(mockQuery);
-        mockQuery.or.mockResolvedValue({
-            data: [
-                { tag_id: 2, tag_name: "Personal", project_id: null },
-                { tag_id: 1, tag_name: "School", project_id: 7 },
-            ],
-            error: null,
-        });
-        mockQuery.is.mockResolvedValue({
-            data: [{ tag_id: 2, tag_name: "Personal", project_id: null }],
-            error: null,
-        });
+    mockQuery.or.mockResolvedValue({
+        data: [
+            { tag_id: 2, tag_name: "Personal", project_id: null },
+            { tag_id: 1, tag_name: "School", project_id: 7 },
+        ],
+        error: null,
     });
 
+    mockQuery.is.mockResolvedValue({
+        data: [{ tag_id: 2, tag_name: "Personal", project_id: null }],
+        error: null,
+    });
+});
+
+describe("getAllTags", () => {
     it("should return global and project tags available to the authenticated user", async () => {
         const req = { user: { id: "test-user-id" }, query: {} };
         const res = createResponse();
@@ -61,11 +77,62 @@ describe("getAllTags", () => {
         const req = { user: { id: "test-user-id" }, query: {} };
         const res = createResponse();
 
-        mockQuery.or.mockResolvedValue({ data: null, error: new Error("Database error") });
+        mockQuery.or.mockResolvedValue({
+            data: null,
+            error: new Error("Database error"),
+        });
 
         await getAllTags(req, res);
 
         expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+        expect(res.json).toHaveBeenCalledWith({
+            error: "Internal Server Error",
+        });
+    });
+});
+
+describe("createTag", () => {
+    it("should create a custom project tag for an authorized user", async () => {
+        const createdTag = {
+            tag_id: 4,
+            tag_name: "CMSC 128",
+            color: "#eab308",
+            project_id: 7,
+        };
+
+        const req = {
+            user: { id: "test-user-id" },
+            body: {
+                tag_name: "CMSC 128",
+                color: "#eab308",
+                project_id: 7,
+            },
+        };
+        const res = createResponse();
+
+        mockQuery.single.mockResolvedValue({
+            data: createdTag,
+            error: null,
+        });
+
+        await createTag(req, res);
+
+        expect(projectAccess.getRole).toHaveBeenCalledWith(
+            7,
+            "test-user-id"
+        );
+        expect(supabase.from).toHaveBeenCalledWith("tags");
+
+        const insertArg = mockQuery.insert.mock.calls[0][0];
+        const payload = Array.isArray(insertArg) ? insertArg[0] : insertArg;
+
+        expect(payload).toMatchObject({
+            tag_name: "CMSC 128",
+            color: "#eab308",
+            project_id: 7,
+        });
+
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.json).toHaveBeenCalledWith(createdTag);
     });
 });

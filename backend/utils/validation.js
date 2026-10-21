@@ -10,6 +10,10 @@ const USERNAME_MAX_LENGTH = 30;
 const PROJECT_ROLES = ['owner', 'editor', 'viewer'];
 const PROJECT_NAME_MAX_LENGTH = 100;
 
+// Tag validation.
+const TAG_NAME_MAX_LENGTH = 50;
+const TAG_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+
 // Roles that can be granted by invite or role change. Ownership is never granted
 // directly: it only moves when the current owner leaves.
 const INVITE_ROLES = ['editor', 'viewer'];
@@ -61,6 +65,26 @@ const validateProjectRole = (role) =>
 const validateInviteRole = (role) =>
     INVITE_ROLES.includes(role) ? null : `role must be one of: ${INVITE_ROLES.join(', ')}`;
 
+// Validate custom tag names before storing them.
+const validateTagName = (name) => {
+    if (typeof name !== 'string' || !name.trim()) return 'Tag name is required';
+
+    if (name.trim().length > TAG_NAME_MAX_LENGTH) {
+        return `Tag name must be ${TAG_NAME_MAX_LENGTH} characters or fewer`;
+    }
+
+    return null;
+};
+
+// Tag colors are stored as six-digit hex values.
+const validateTagColor = (color) => {
+    if (typeof color !== 'string' || !TAG_COLOR_PATTERN.test(color)) {
+        return 'Tag color must be a valid hex color';
+    }
+
+    return null;
+};
+
 // Invitee is identified by username or email (same convention as login).
 const validateIdentifier = (identifier) => {
     if (typeof identifier !== 'string' || !identifier.trim()) return 'Username or email is required';
@@ -85,6 +109,7 @@ const validateTaskEnums = ({ priority_level, status }) => {
     if (priority_level !== undefined && !TASK_PRIORITIES.includes(priority_level)) {
         return `priority_level must be one of: ${TASK_PRIORITIES.join(', ')}`;
     }
+
     if (status !== undefined && !TASK_STATUSES.includes(status)) {
         return `status must be one of: ${TASK_STATUSES.join(', ')}`;
     }
@@ -100,6 +125,10 @@ module.exports = {
     PROJECT_NAME_MAX_LENGTH,
     validateProjectName,
     validateProjectRole,
+    TAG_NAME_MAX_LENGTH,
+    TAG_COLOR_PATTERN,
+    validateTagName,
+    validateTagColor,
     INVITE_ROLES,
     validateInviteRole,
     validateIdentifier,

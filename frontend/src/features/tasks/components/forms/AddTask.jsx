@@ -3,15 +3,14 @@ import { ChevronDown, X } from "lucide-react";
 
 import { INFO_MAX_LENGTH, NAME_MAX_LENGTH, validateTask } from "../../../../shared/utils/validation";
 import { PRIORITY, PRIORITY_OPTIONS } from "../../constants/taskOptions";
-import { useTaskData } from "../../context/TaskContext";
+import TagPicker from "./TagPicker";
 
 const initialFormData = {
     title: "", description: "", dueDate: "", dueTime: "",
     priority: PRIORITY.NONE, tags: [], assigneeId: "",
 };
 
-function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative = false, members = [] }) {
-    const { availableTags } = useTaskData();
+function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative = false, members = [], projectId = null }) {
     const [formData, setFormData] = useState(initialFormData);
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
@@ -97,23 +96,11 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
     const mobileDateStyle = isMobile ? { fontSize: "10px", lineHeight: "1" } : undefined;
 
     const tagButtons = (
-        <div className="flex flex-wrap content-start gap-1 sm:min-h-[38px] sm:gap-1.5">
-            {availableTags.map((tag) => {
-                const selected = formData.tags.includes(tag.tag_id);
-
-                return (
-                    <button key={tag.tag_id} type="button" onClick={() => handleTagToggle(tag.tag_id)} disabled={submitting}
-                        className={`rounded-full border px-2 py-0.5 font-medium leading-none transition disabled:cursor-not-allowed disabled:opacity-60 sm:px-2.5 sm:py-1.5 sm:text-[11px] ${
-                            selected
-                                ? "border-green-400 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950/50 dark:text-green-400"
-                                : "border-white/80 bg-white/50 text-slate-500 hover:bg-white/80 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400 dark:hover:bg-white/[0.08]"
-                        }`}
-                        style={isMobile ? { fontSize: "9px", lineHeight: "1" } : undefined}>
-                        {tag.tag_name}
-                    </button>
-                );
-            })}
-        </div>
+        <TagPicker
+            selectedIds={formData.tags}
+            onToggle={handleTagToggle}
+            projectId={projectId}
+        />
     );
 
     const prioritySelect = (

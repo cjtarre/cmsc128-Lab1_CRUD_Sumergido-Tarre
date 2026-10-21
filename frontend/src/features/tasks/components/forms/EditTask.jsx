@@ -4,15 +4,14 @@ import { ChevronDown, X } from "lucide-react";
 import { convertToInputDate, convertToInputTime } from "../../../../shared/utils/dateUtils";
 import { INFO_MAX_LENGTH, NAME_MAX_LENGTH, validateTask } from "../../../../shared/utils/validation";
 import { DATE_TIME_FIELDS, EDIT_SELECT_FIELDS, PRIORITY, STATUS } from "../../constants/taskOptions";
-import { useTaskData } from "../../context/TaskContext";
+import TagPicker from "./TagPicker";
 
 const emptyFormData = {
     title: "", description: "", dueDate: "", dueTime: "",
     priority: PRIORITY.NONE, status: STATUS.NOT_STARTED, tags: [], assigneeId: "",
 };
 
-function EditTask({ task, isOpen, onClose, onSave, collaborative = false, members = [] }) {
-    const { availableTags } = useTaskData();
+function EditTask({ task, isOpen, onClose, onSave, collaborative = false, members = [], projectId = null }) {
     const [formData, setFormData] = useState(emptyFormData);
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
@@ -102,27 +101,15 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
     const mobileDateStyle = isMobile ? { fontSize: "10px", lineHeight: "1" } : undefined;
 
     const tagButtons = (
-        <div className="flex flex-wrap content-center gap-1 sm:min-h-10 sm:gap-1.5">
-            {availableTags.map((tag) => {
-                const selected = formData.tags.includes(tag.tag_id);
-
-                return (
-                    <button key={tag.tag_id} type="button" disabled={submitting} onClick={() => handleTagToggle(tag.tag_id)}
-                        className={`rounded-full border px-2 py-0.5 font-medium leading-none transition disabled:cursor-not-allowed disabled:opacity-60 sm:px-2.5 sm:py-1.5 sm:text-[11px] ${
-                            selected
-                                ? "border-green-400 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950/50 dark:text-green-400"
-                                : "border-white/80 bg-white/50 text-slate-500 hover:bg-white/80 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400 dark:hover:bg-white/[0.08]"
-                        }`}
-                        style={isMobile ? { fontSize: "9px", lineHeight: "1" } : undefined}>
-                        {tag.tag_name}
-                    </button>
-                );
-            })}
-        </div>
+        <TagPicker
+            selectedIds={formData.tags}
+            onToggle={handleTagToggle}
+            projectId={projectId}
+        />
     );
 
     return (
-        <div className="fixed inset-x-0 bottom-[68px] top-[60px] z-[9999] flex items-start justify-center overflow-hidden bg-slate-900/20 px-2 py-2 backdrop-blur-sm dark:bg-black/55 sm:inset-0 sm:overflow-y-auto sm:px-4 sm:pb-4 sm:pt-14"
+        <div className="fixed inset-x-0 bottom-[68px] top-[60px] z-[9999] flex items-start justify-center overflow-hidden bg-slate-900/20 px-2 py-2 backdrop-blur-sm dark:bg-black/55 sm:inset-0 sm:overflow-y-auto sm:px-4 sm:pb-4 sm:pt-20"
             role="dialog" aria-modal="true" aria-labelledby="edit-task-title">
             <div className="mx-auto flex max-h-full w-full max-w-[560px] flex-col overflow-hidden rounded-2xl border border-white/70 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/40 sm:max-h-[calc(100dvh-6.5rem)]">
 

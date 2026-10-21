@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { CalendarDays, Check, ChevronDown, UserRound } from "lucide-react";
+
 import ActionButtons from "./ActionButtons";
-import taskStyles from "../../styles/taskStyles";
+import taskStyles, { getTagInlineStyle } from "../../styles/taskStyles";
 import { formatDueDate } from "../../../../shared/utils/dateUtils";
 import { STATUS, PRIORITY, priorityLabels, statusLabels } from "../../constants/taskOptions";
 
@@ -19,9 +20,11 @@ function TaskRow({
     const isCompleted = status === STATUS.COMPLETED;
     const statusOptions = Object.values(STATUS).map((value) => ({ value, label: statusLabels[value] || value }));
     const currentStatus = statusOptions.find((option) => option.value === status) || statusOptions[0];
-    const getTagStyle = (id) => taskStyles.tag[Number(id)] || "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400";
     const assigneeName = assignee?.display_name || assignee?.username || "Unassigned";
     const assigneeInitials = assignee ? assigneeName.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase() : null;
+
+    const tagStyle = (tag) => isCompleted ? undefined : getTagInlineStyle(tag, true);
+    const completedTagClass = isCompleted ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500" : "";
 
     const updateMenuPosition = useCallback(() => {
         const rect = statusButtonRef.current?.getBoundingClientRect();
@@ -113,9 +116,7 @@ function TaskRow({
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition sm:mt-0.5 sm:h-4 sm:w-4 ${!onToggleComplete ? "cursor-default" : ""}`}
                 >
                     <span className={`flex h-3.5 w-3.5 items-center justify-center rounded-full border transition sm:h-4 sm:w-4 ${
-                        isCompleted
-                            ? "border-green-500 bg-green-500 text-white"
-                            : "border-slate-300 bg-white/30 hover:border-green-400 dark:border-slate-600 dark:bg-transparent"
+                        isCompleted ? "border-green-500 bg-green-500 text-white" : "border-slate-300 bg-white/30 hover:border-green-400 dark:border-slate-600 dark:bg-transparent"
                     }`}>
                         {isCompleted && <Check size={8} strokeWidth={3} />}
                     </span>
@@ -123,9 +124,7 @@ function TaskRow({
 
                 <button type="button" onClick={onView} className="min-w-0 flex-1 pt-1 text-left sm:pt-0">
                     <h3 className={`truncate ${collaborative ? "text-xs font-medium" : "text-[13px] font-medium"} ${
-                        isCompleted
-                            ? "text-slate-400 line-through dark:text-slate-500"
-                            : "text-slate-700 hover:text-green-600 dark:text-slate-200 dark:hover:text-green-400"
+                        isCompleted ? "text-slate-400 line-through dark:text-slate-500" : "text-slate-700 hover:text-green-600 dark:text-slate-200 dark:hover:text-green-400"
                     }`}>
                         {title}
                     </h3>
@@ -142,9 +141,7 @@ function TaskRow({
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5 sm:gap-2">
                             {priority && priority !== PRIORITY.NONE && (
                                 <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:text-[10px] ${
-                                    isCompleted
-                                        ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-                                        : taskStyles.priority[priority]
+                                    isCompleted ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500" : taskStyles.priority[priority]
                                 }`}>
                                     {priorityLabels[priority]}
                                 </span>
@@ -153,11 +150,8 @@ function TaskRow({
                             {tags.map((tag) => (
                                 <span
                                     key={tag.tag_id}
-                                    className={`inline-flex max-w-[110px] truncate rounded-full px-2 py-0.5 text-[9px] font-medium sm:max-w-none sm:text-[10px] ${
-                                        isCompleted
-                                            ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-                                            : getTagStyle(tag.tag_id)
-                                    }`}
+                                    className={`inline-flex max-w-[110px] truncate rounded-full border border-transparent px-2 py-0.5 text-[9px] font-medium sm:max-w-none sm:text-[10px] ${completedTagClass}`}
+                                    style={tagStyle(tag)}
                                 >
                                     {tag.tag_name}
                                 </span>
@@ -186,9 +180,7 @@ function TaskRow({
                     {priority && priority !== PRIORITY.NONE && (
                         <span
                             className={`rounded-full px-2 py-1 font-semibold uppercase ${
-                                isCompleted
-                                    ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-                                    : taskStyles.priority[priority]
+                                isCompleted ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500" : taskStyles.priority[priority]
                             }`}
                             style={{ fontSize: "9px", lineHeight: "1" }}
                         >
@@ -199,12 +191,8 @@ function TaskRow({
                     {tags.map((tag) => (
                         <span
                             key={tag.tag_id}
-                            className={`max-w-[100px] truncate rounded-full px-2 py-1 font-medium ${
-                                isCompleted
-                                    ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-                                    : getTagStyle(tag.tag_id)
-                            }`}
-                            style={{ fontSize: "9px", lineHeight: "1" }}
+                            className={`max-w-[100px] truncate rounded-full border px-2 py-1 font-medium ${completedTagClass}`}
+                            style={{ ...tagStyle(tag), fontSize: "9px", lineHeight: "1" }}
                         >
                             {tag.tag_name}
                         </span>
@@ -265,9 +253,7 @@ function TaskRow({
                 <div className="hidden sm:block">
                     {priority && priority !== PRIORITY.NONE ? (
                         <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-                            isCompleted
-                                ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-                                : taskStyles.priority[priority]
+                            isCompleted ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500" : taskStyles.priority[priority]
                         }`}>
                             {priorityLabels[priority]}
                         </span>
@@ -282,9 +268,7 @@ function TaskRow({
                 isCompleted ? "text-slate-300 dark:text-slate-600" : "text-slate-500 dark:text-slate-400"
             }`}>
                 <CalendarDays size={13} className="shrink-0" />
-                <span className="truncate">
-                    {dueDate ? formatDueDate(dueDate) : "No due date"}{dueTime && ` · ${dueTime}`}
-                </span>
+                <span className="truncate">{dueDate ? formatDueDate(dueDate) : "No due date"}{dueTime && ` · ${dueTime}`}</span>
             </div>
 
             {/* Tags - desktop */}
@@ -294,11 +278,8 @@ function TaskRow({
                         tags.map((tag) => (
                             <span
                                 key={tag.tag_id}
-                                className={`max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                                    isCompleted
-                                        ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-                                        : getTagStyle(tag.tag_id)
-                                }`}
+                                className={`max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-medium ${completedTagClass}`}
+                                style={tagStyle(tag)}
                             >
                                 {tag.tag_name}
                             </span>
@@ -330,9 +311,7 @@ function TaskRow({
                 {statusMenu}
 
                 <div
-                    className={`ml-2 flex min-w-0 flex-1 items-center gap-1 ${
-                        isCompleted ? "text-slate-300 dark:text-slate-600" : "text-slate-500 dark:text-slate-400"
-                    }`}
+                    className={`ml-2 flex min-w-0 flex-1 items-center gap-1 ${isCompleted ? "text-slate-300 dark:text-slate-600" : "text-slate-500 dark:text-slate-400"}`}
                     style={{ fontSize: "9px", lineHeight: "1" }}
                 >
                     <CalendarDays size={10} className="shrink-0" />
