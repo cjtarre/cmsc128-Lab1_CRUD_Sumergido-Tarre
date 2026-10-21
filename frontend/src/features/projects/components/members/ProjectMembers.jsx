@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { MoreHorizontal, Plus, Sprout, UserPlus, Users } from "lucide-react";
+import { LogOut, MoreHorizontal, Plus, Sprout, UserPlus, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import ConfirmDialog from "../../../../shared/components/common/ConfirmDialog";
 import { getDisplayName, getInitials } from "../../../../shared/utils/userUtils";
@@ -12,8 +13,13 @@ import { handleRemoveMember } from "../../handlers/projectMemberHandlers";
 function ProjectMembers({ project }) {
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [memberToRemove, setMemberToRemove] = useState(null);
+    const [isLeaveOpen, setIsLeaveOpen] = useState(false);
+    const navigate = useNavigate();
     const isOwner = project.role === PROJECT_ROLE.OWNER;
-    const { members, invites, loading, removingMember, inviteMember, changeRole, removeMember, cancelInvite } = useProjectMembers(project, isOwner);
+    const {
+        members, invites, loading, removingMember, leavingProject,
+        inviteMember, changeRole, removeMember, leaveProject, cancelInvite,
+    } = useProjectMembers(project, isOwner);
 
     if (loading) {
         return (
@@ -38,14 +44,23 @@ function ProjectMembers({ project }) {
                         <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Manage who can access and collaborate in this project.</p>
                     </div>
 
-                    {isOwner && (
-                        <button type="button" onClick={() => setIsInviteOpen(true)}
-                            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-green-500 px-3.5 font-semibold text-white shadow-[0_5px_15px_rgba(34,197,94,0.16)] transition hover:bg-green-600"
+                    <div className="flex flex-col gap-2 min-[360px]:flex-row">
+                        <button type="button" onClick={() => setIsLeaveOpen(true)}
+                            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50/60 px-3.5 font-semibold text-red-500 transition hover:border-red-300 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/40"
                             style={{ fontSize: "12px", lineHeight: "1" }}>
-                            <Plus size={14} />
-                            Invite Member
+                            <LogOut size={13} />
+                            Leave Project
                         </button>
-                    )}
+
+                        {isOwner && (
+                            <button type="button" onClick={() => setIsInviteOpen(true)}
+                                className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-green-500 px-3.5 font-semibold text-white shadow-[0_5px_15px_rgba(34,197,94,0.16)] transition hover:bg-green-600"
+                                style={{ fontSize: "12px", lineHeight: "1" }}>
+                                <Plus size={14} />
+                                Invite Member
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="mt-4 grid items-start gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(260px,0.8fr)]">
@@ -179,9 +194,24 @@ function ProjectMembers({ project }) {
                 onConfirm={() => handleRemoveMember(memberToRemove, removeMember, () => setMemberToRemove(null))}
                 onCancel={() => { if (!removingMember) setMemberToRemove(null); }}
             />
+
+            <ConfirmDialog
+                isOpen={isLeaveOpen}
+                title="Leave project?"
+                message={`Leave "${project.project_name}"? You will lose access to this project and its tasks.`}
+                confirmText="Leave Project"
+                loading={leavingProject}
+                loadingText="Leaving..."
+                onConfirm={async () => {
+                    if (await leaveProject()) {
+                        setIsLeaveOpen(false);
+                        navigate("/projects", { replace: true });
+                    }
+                }}
+                onCancel={() => { if (!leavingProject) setIsLeaveOpen(false); }}
+            />
         </>
     );
 }
 
 export default ProjectMembers;
-

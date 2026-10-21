@@ -11,6 +11,7 @@ export function useProjectMembers(project, isOwner) {
     const [invites, setInvites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [removingMember, setRemovingMember] = useState(false);
+    const [leavingProject, setLeavingProject] = useState(false);
 
     const loadMembers = useCallback(async () => {
         try {
@@ -78,6 +79,23 @@ export function useProjectMembers(project, isOwner) {
         }
     };
 
+    const leaveProject = async () => {
+        if (leavingProject) return false;
+
+        try {
+            setLeavingProject(true);
+            await projectService.leaveProject(project.id);
+            toast.success("You left the project.");
+            return true;
+        } catch (error) {
+            console.error("Error leaving project:", error);
+            toast.error(error.response?.data?.error || "Unable to leave project.");
+            return false;
+        } finally {
+            setLeavingProject(false);
+        }
+    };
+
     const cancelInvite = async (inviteId) => {
         try {
             await inviteService.cancelInvite(project.id, inviteId);
@@ -89,5 +107,16 @@ export function useProjectMembers(project, isOwner) {
         }
     };
 
-    return { members, invites, loading, removingMember, inviteMember, changeRole, removeMember, cancelInvite };
+    return {
+        members,
+        invites,
+        loading,
+        removingMember,
+        leavingProject,
+        inviteMember,
+        changeRole,
+        removeMember,
+        leaveProject,
+        cancelInvite,
+    };
 }
