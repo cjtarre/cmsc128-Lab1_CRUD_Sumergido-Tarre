@@ -1,7 +1,7 @@
 import { CalendarDays, UserRound, X, Pencil, Trash2 } from "lucide-react";
 import { useEffect } from "react";
 
-import taskStyles from "../../styles/taskStyles";
+import taskStyles, { getTagInlineStyle } from "../../styles/taskStyles";
 import { STATUS, PRIORITY, priorityLabels, statusLabels } from "../../constants/taskOptions";
 import { formatDueDate } from "../../../../shared/utils/dateUtils";
 
@@ -12,21 +12,24 @@ function TaskDetails({ task, onClose, onEdit, onDelete, collaborative = false })
         const originalOverflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
 
-        return () => {
-            document.body.style.overflow = originalOverflow;
-        };
+        return () => { document.body.style.overflow = originalOverflow; };
     }, [task]);
 
     if (!task) return null;
 
     const isCompleted = task.status === STATUS.COMPLETED;
     const assigneeName = task.assignee?.display_name || task.assignee?.username || "Unassigned";
-    const getTagStyle = (tagId) => taskStyles.tag[Number(tagId)] || "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400";
 
     const tags = task.tags?.length > 0 ? (
         <div className="mt-1.5 flex flex-wrap gap-1">
             {task.tags.map((tag) => (
-                <span key={tag.tag_id} className={`inline-flex rounded-full px-2 py-1 text-[10px] font-medium ${isCompleted ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500" : getTagStyle(tag.tag_id)}`}>
+                <span
+                    key={tag.tag_id}
+                    className={`inline-flex rounded-full border border-transparent px-2 py-1 text-[10px] font-medium ${
+                        isCompleted ? "border-slate-200 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500" : ""
+                    }`}
+                    style={isCompleted ? undefined : getTagInlineStyle(tag, true)}
+                >
                     {tag.tag_name}
                 </span>
             ))}
@@ -36,7 +39,9 @@ function TaskDetails({ task, onClose, onEdit, onDelete, collaborative = false })
     );
 
     const priority = task.priority && task.priority !== PRIORITY.NONE ? (
-        <span className={`mt-1.5 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${isCompleted ? "bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500" : taskStyles.priority[task.priority]}`}>
+        <span className={`mt-1.5 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+            isCompleted ? "bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500" : taskStyles.priority[task.priority]
+        }`}>
             {priorityLabels[task.priority]}
         </span>
     ) : (
@@ -50,11 +55,14 @@ function TaskDetails({ task, onClose, onEdit, onDelete, collaborative = false })
                 {/* Header */}
                 <div className="flex items-start justify-between border-b border-white/60 bg-white/25 px-5 py-3.5 dark:border-white/10 dark:bg-white/[0.02]">
                     <div className="min-w-0 pr-4">
-                        <h2 id="task-details-title" className={`break-words text-lg font-semibold ${isCompleted ? "text-slate-400 line-through dark:text-slate-500" : "text-slate-800 dark:text-slate-100"}`}>{task.title}</h2>
+                        <h2 id="task-details-title" className={`break-words text-lg font-semibold ${isCompleted ? "text-slate-400 line-through dark:text-slate-500" : "text-slate-800 dark:text-slate-100"}`}>
+                            {task.title}
+                        </h2>
                         <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{collaborative ? "Project Task Details" : "Task Details"}</p>
                     </div>
 
-                    <button type="button" onClick={onClose} aria-label="Close task details" className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-white/70 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-200/60 dark:text-slate-500 dark:hover:bg-white/[0.06] dark:hover:text-slate-300">
+                    <button type="button" onClick={onClose} aria-label="Close task details"
+                        className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-white/70 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-200/60 dark:text-slate-500 dark:hover:bg-white/[0.06] dark:hover:text-slate-300">
                         <X size={18} />
                     </button>
                 </div>
@@ -134,19 +142,22 @@ function TaskDetails({ task, onClose, onEdit, onDelete, collaborative = false })
                 {/* Actions */}
                 <div className="flex flex-col-reverse gap-2 border-t border-white/60 bg-white/30 px-5 py-3 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.025] sm:flex-row sm:items-center sm:justify-between">
                     {onDelete ? (
-                        <button type="button" onClick={() => onDelete(task)} className="w-full rounded-xl px-3 py-2 text-sm font-medium text-red-500 transition hover:bg-red-50/80 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 sm:w-auto">
+                        <button type="button" onClick={() => onDelete(task)}
+                            className="w-full rounded-xl px-3 py-2 text-sm font-medium text-red-500 transition hover:bg-red-50/80 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 sm:w-auto">
                             <span className="inline-flex items-center justify-center gap-2"><Trash2 size={15} />Delete</span>
                         </button>
                     ) : <span />}
 
                     <div className="flex w-full gap-2 sm:w-auto">
                         {onEdit && (
-                            <button type="button" onClick={() => onEdit(task)} className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/80 bg-white/45 px-3 py-2 text-sm font-medium text-green-600 transition hover:bg-green-50/80 hover:text-green-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-green-400 dark:hover:bg-green-500/10 dark:hover:text-green-300 sm:flex-none">
+                            <button type="button" onClick={() => onEdit(task)}
+                                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/80 bg-white/45 px-3 py-2 text-sm font-medium text-green-600 transition hover:bg-green-50/80 hover:text-green-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-green-400 dark:hover:bg-green-500/10 dark:hover:text-green-300 sm:flex-none">
                                 <Pencil size={15} />Edit
                             </button>
                         )}
 
-                        <button type="button" onClick={onClose} className="flex flex-1 items-center justify-center rounded-xl bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(34,197,94,0.18)] transition hover:bg-green-600 hover:shadow-[0_8px_22px_rgba(34,197,94,0.24)] focus:outline-none focus:ring-2 focus:ring-green-300/60 dark:hover:bg-green-400 sm:flex-none">
+                        <button type="button" onClick={onClose}
+                            className="flex flex-1 items-center justify-center rounded-xl bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(34,197,94,0.18)] transition hover:bg-green-600 hover:shadow-[0_8px_22px_rgba(34,197,94,0.24)] focus:outline-none focus:ring-2 focus:ring-green-300/60 dark:hover:bg-green-400 sm:flex-none">
                             Close
                         </button>
                     </div>

@@ -1,5 +1,7 @@
 import { PRIORITY, STATUS } from "../constants/taskOptions";
 
+export const DEFAULT_TAG_COLOR = "#64748b";
+
 const taskStyles = {
     priority: {
         [PRIORITY.NONE]: "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500",
@@ -20,11 +22,25 @@ const taskStyles = {
         [STATUS.COMPLETED]: "bg-green-500",
     },
 
+    // Legacy preset styles remain as a fallback while tag colors move to database values.
     tag: {
         1: "bg-blue-50/50 text-blue-500 dark:bg-blue-950/20 dark:text-blue-400",
         2: "bg-purple-50/50 text-purple-500 dark:bg-purple-950/20 dark:text-purple-400",
         3: "bg-slate-50 text-slate-500 dark:bg-slate-800/60 dark:text-slate-400",
     },
+};
+
+// Custom tag colors are stored as six-digit hex values in the database.
+export const getTagColor = (tag) => tag?.color || DEFAULT_TAG_COLOR;
+
+export const getTagInlineStyle = (tag, selected = false) => {
+    const color = getTagColor(tag);
+
+    return {
+        borderColor: selected ? `${color}40` : "transparent",
+        backgroundColor: selected ? `${color}20` : `${color}0D`,
+        color,
+    };
 };
 
 export default taskStyles;

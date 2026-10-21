@@ -76,7 +76,7 @@ export function TaskProvider({ children }) {
 
             const [fetchedTasks, fetchedTags] = await Promise.all([
                 taskService.getTasks(null, "default"),
-                tagService.getTags(),
+                tagService.getTags({ defaultProject: true }),
             ]);
 
             const convertedTasks = fetchedTasks.map(convertTask);
@@ -106,6 +106,7 @@ export function TaskProvider({ children }) {
                 setSearchTerm,
 
                 availableTags,
+                setAvailableTags,
 
                 loading,
                 error,

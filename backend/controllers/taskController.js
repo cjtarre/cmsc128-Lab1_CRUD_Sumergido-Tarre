@@ -8,7 +8,7 @@ const {
     validateTagIdsForProject,
 } = require("../utils/projectAccess");
 const { notify } = require("../utils/notifications");
-
+const MAX_TASK_TAGS = 3;
 const TASK_SELECT = `
     *,
     assignee:profiles!tasks_assignee_id_fkey (
@@ -24,7 +24,7 @@ const TASK_SELECT = `
         is_default
     ),
     task_tag (
-        tags ( tag_id, tag_name, tag_info )
+        tags ( tag_id, tag_name, tag_info, color )
     )
 `;
 
@@ -120,33 +120,33 @@ const getAllTasks = async (req, res) => {
             if (projectId === null) {
                 return res.status(400).json({ error: "Invalid project_id" });
             }
-        
+
             const role = await getRole(projectId, req.user.id);
             if (!role) {
                 return res.status(404).json({ error: "Project not found" });
             }
-        
+
             query = query.eq("project_id", projectId);
         } else if (req.query.scope === "default") {
             const projectId = await getDefaultProjectId(req.user.id);
-        
+
             if (projectId === null) {
                 return res.status(200).json([]);
             }
-        
+
             query = query.eq("project_id", projectId);
         } else if (req.query.scope === "assigned") {
             const projectIds = await getMemberProjectIds(req.user.id);
             const defaultProjectId = await getDefaultProjectId(req.user.id);
-        
+
             if (projectIds.length === 0) {
                 return res.status(200).json([]);
             }
-        
+
             query = query
                 .in("project_id", projectIds)
                 .eq("assignee_id", req.user.id);
-        
+
             if (defaultProjectId !== null) {
                 query = query.neq("project_id", defaultProjectId);
             }
@@ -155,7 +155,7 @@ const getAllTasks = async (req, res) => {
             if (projectIds.length === 0) {
                 return res.status(200).json([]);
             }
-        
+
             query = query.in("project_id", projectIds);
         }
 
@@ -221,6 +221,11 @@ const createTask = async (req, res) => {
 
         let tagIdList = [];
         if (tag_ids != null) {
+
+            if (tag_ids.length > MAX_TASK_TAGS) {
+                return res.status(400).json({ error: `A task can have up to ${MAX_TASK_TAGS} tags` });
+            }
+
             const tagError = await validateTagIdsForProject(tag_ids, projectId);
 
             if (tagError) {

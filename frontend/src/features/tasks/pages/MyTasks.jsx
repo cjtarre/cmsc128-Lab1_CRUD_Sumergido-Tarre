@@ -91,8 +91,7 @@ function MyTasks() {
                 </button>
             </header>
 
-            <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(260px,3fr)]">
-                <div className="min-w-0 rounded-2xl border border-white/70 bg-white/45 p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/45 dark:shadow-black/20">
+            <div className="grid min-w-0 items-start gap-4 md:grid-cols-[minmax(0,7fr)_minmax(260px,3fr)]">                <div className="min-w-0 rounded-2xl border border-white/70 bg-white/45 p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/45 dark:shadow-black/20">
                     <TaskFilter value={filter} onChange={setFilter} />
                 </div>
 
