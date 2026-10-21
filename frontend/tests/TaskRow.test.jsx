@@ -3,7 +3,7 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import TaskRow from "../src/features/tasks/components/TaskRow";
+import TaskRow from "../src/features/tasks/components/table/TaskRow";
 import { STATUS, PRIORITY } from "../src/features/tasks/constants/taskOptions";
 
 describe("TaskRow notification highlight", () => {

@@ -4,10 +4,10 @@ import { ChevronLeft, ChevronRight, FolderKanban } from "lucide-react";
 import { formatDueTime } from "../../../shared/utils/dateUtils";
 import { STATUS } from "../../tasks/constants/taskOptions";
 import taskStyles from "../../tasks/styles/taskStyles";
-import TaskDetails from "../../tasks/components/TaskDetails";
-import EditTask from "../../tasks/components/EditTask";
-import DeleteTask from "../../tasks/components/DeleteTask";
-import AddTask from "../../tasks/components/AddTask";
+import TaskDetails from "../../tasks/components/table/TaskDetails";
+import EditTask from "../../tasks/components/forms/EditTask";
+import DeleteTask from "../../tasks/components/forms/DeleteTask";
+import AddTask from "../../tasks/components/forms/AddTask";
 import SelectedDayPanel from "./SelectedDayPanel";
 
 function CalendarView({

@@ -68,3 +68,19 @@ export function validateSignup({ displayName, username, email, password, confirm
 
     return errors;
 }
+
+// Return the shared password requirements and their current validation state.
+export function getPasswordRequirements(password = "") {
+    return [
+        { key: "length", label: `At least ${PASSWORD_MIN_LENGTH} characters`, met: password.length >= PASSWORD_MIN_LENGTH },
+        { key: "uppercase", label: "One uppercase letter", met: /[A-Z]/.test(password) },
+        { key: "lowercase", label: "One lowercase letter", met: /[a-z]/.test(password) },
+        { key: "number", label: "One number", met: /\d/.test(password) },
+        { key: "special", label: "One special character", met: /[^A-Za-z0-9]/.test(password) },
+    ];
+}
+
+// Check whether a password satisfies every shared password requirement.
+export function isPasswordValid(password = "") {
+    return getPasswordRequirements(password).every(({ met }) => met);
+}

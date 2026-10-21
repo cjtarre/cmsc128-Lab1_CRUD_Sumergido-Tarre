@@ -12,14 +12,14 @@ import { sortTasksByTaskColumn, sortTasksByDueDateColumn, DUEDATE_SORT_MODES, TA
 import Pagination from "../../../shared/components/common/Pagination";
 import EmptyState from "../../../shared/components/common/EmptyState";
 import EncouragementCard from "../../../shared/components/common/EncouragementCard";
-import TaskFilter from "../components/TaskFilter";
-import TaskFilterPanel from "../components/TaskFilterPanel";
-import TaskTable from "../components/TaskTable";
-import TaskDetails from "../components/TaskDetails";
+import TaskFilter from "../components/filters/TaskFilter";
+import TaskFilterPanel from "../components/filters/TaskFilterPanel";
+import TaskTable from "../components/table/TaskTable";
+import TaskDetails from "../components/table/TaskDetails";
 import CalendarWidget from "../../calendar/components/CalendarWidget";
-import AddTask from "../components/AddTask";
-import EditTask from "../components/EditTask";
-import DeleteTask from "../components/DeleteTask";
+import AddTask from "../components/forms/AddTask";
+import EditTask from "../components/forms/EditTask";
+import DeleteTask from "../components/forms/DeleteTask";
 
 function MyTasks() {
     const { tasks, setTasks, searchTerm, loading } = useTaskData();

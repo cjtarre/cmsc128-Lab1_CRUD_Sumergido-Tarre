@@ -1,10 +1,10 @@
-import { useState } from "react";
 import { ChevronLeft, Eye, EyeOff, GraduationCap, Lock, UserRound, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 
 import HoverText from "../../../shared/components/effects/HoverText";
+import { handleLogin } from "../handlers/authHandlers";
 import { useAuth } from "../hooks/useAuth";
+import { useLoginForm } from "../hooks/useLoginForm";
 import { getAuthFormStyles } from "../styles/authStyles";
 
 function Login({ embedded = false, initialEmail = "", onEmailChange, onSwitchToSignup }) {
@@ -12,52 +12,46 @@ function Login({ embedded = false, initialEmail = "", onEmailChange, onSwitchToS
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Login form state; retain identifier passed from related auth pages
-    const [identifier, setIdentifier] = useState(initialEmail || location.state?.email || "");
-    const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+    const {
+        identifier, setIdentifier,
+        password, setPassword,
+        showPassword, setShowPassword,
+        error, setError,
+        loading, setLoading,
+    } = useLoginForm(initialEmail || location.state?.email || "");
 
-    // Authenticate the user and redirect to My Tasks on success
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError("");
-        setLoading(true);
+    const { inputClass, labelClass, iconClass, eyeClass } = getAuthFormStyles(embedded);
 
-        try {
-            await login(identifier.trim(), password);
-            toast.success("Welcome back! You’re signed in.");
-            navigate("/my-tasks", { replace: true });
-        } catch (err) {
-            const message = err.response?.data?.error || "";
-            setError(
-                message.toLowerCase().includes("email not confirmed")
-                    ? "Please verify your email before signing in."
-                    : message || "Invalid username/email or password."
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+    const submitLogin = (event) =>
+        handleLogin({
+            event, identifier, password,
+            login, navigate, setError, setLoading,
+        });
 
-    // Shared form styles adapt to standalone and embedded auth layouts
-    const {inputClass, labelClass, iconClass, eyeClass} = getAuthFormStyles(embedded);
-
-    // Displayed after a newly created account is redirected to login
+    // Displayed after a newly created account is redirected to login.
     const verificationNotice = location.state?.accountCreated && (
-        <div className={`mb-5 rounded-lg border px-4 py-3 text-sm ${embedded ? "border-green-300/20 bg-green-400/10 text-green-100 dark:border-green-700/20 dark:bg-green-600/10 dark:text-green-800" : "border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950/40 dark:text-green-300"}`}>
-            <span className="font-semibold">Account created!</span> Check your email and verify your account before signing in.
+        <div className={`mb-5 rounded-lg border px-4 py-3 text-sm ${
+            embedded
+                ? "border-green-300/20 bg-green-400/10 text-green-100 dark:border-green-700/20 dark:bg-green-600/10 dark:text-green-800"
+                : "border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950/40 dark:text-green-300"
+        }`}>
+            <span className="font-semibold">Account created!</span>{" "}
+            Check your email and verify your account before signing in.
         </div>
     );
 
-    // Reused by both the embedded landing panel and standalone login page
+    // Reused by both embedded and standalone login layouts.
     const form = (
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={submitLogin} className="space-y-5">
+            {/* Username or email. */}
             <div>
-                <label htmlFor="login-identifier" className={`text-sm font-medium ${labelClass}`}>Username or email</label>
+                <label htmlFor="login-identifier" className={`text-sm font-medium ${labelClass}`}>
+                    Username or email
+                </label>
+
                 <div className="relative mt-2">
                     <UserRound size={17} className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconClass}`} />
+
                     <input
                         id="login-identifier"
                         type="text"
@@ -74,46 +68,96 @@ function Login({ embedded = false, initialEmail = "", onEmailChange, onSwitchToS
                     />
 
                     {identifier && (
-                        <button type="button" onClick={() => { setIdentifier(""); onEmailChange?.(""); }} aria-label="Clear username or email" className={`absolute right-3 top-1/2 -translate-y-1/2 transition ${embedded ? "text-white/45 hover:text-white dark:text-slate-500 dark:hover:text-slate-700" : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"}`}>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIdentifier("");
+                                onEmailChange?.("");
+                            }}
+                            aria-label="Clear username or email"
+                            className={`absolute right-3 top-1/2 -translate-y-1/2 transition ${
+                                embedded
+                                    ? "text-white/45 hover:text-white dark:text-slate-500 dark:hover:text-slate-700"
+                                    : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+                            }`}
+                        >
                             <X size={16} />
                         </button>
                     )}
                 </div>
             </div>
 
+            {/* Password. */}
             <div>
-                <label htmlFor="login-password" className={`text-sm font-medium ${labelClass}`}>Password</label>
+                <label htmlFor="login-password" className={`text-sm font-medium ${labelClass}`}>
+                    Password
+                </label>
+
                 <div className="relative mt-2">
                     <Lock size={17} className={`absolute left-3 top-1/2 -translate-y-1/2 ${iconClass}`} />
-                    <input id="login-password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" placeholder="Enter your password" className={inputClass} />
 
-                    <button type="button" onClick={() => setShowPassword((show) => !show)} aria-label={showPassword ? "Hide password" : "Show password"} className={`absolute right-3 top-1/2 -translate-y-1/2 transition ${eyeClass}`}>
+                    <input
+                        id="login-password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        autoComplete="current-password"
+                        placeholder="Enter your password"
+                        className={inputClass}
+                    />
+
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword((show) => !show)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        className={`absolute right-3 top-1/2 -translate-y-1/2 transition ${eyeClass}`}
+                    >
                         {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                     </button>
                 </div>
             </div>
 
+            {/* Authentication error. */}
             {error && (
-                <p className={`text-sm ${embedded ? "text-red-200 dark:text-red-600" : "text-red-500 dark:text-red-400"}`}>
+                <p className={`text-sm ${
+                    embedded
+                        ? "text-red-200 dark:text-red-600"
+                        : "text-red-500 dark:text-red-400"
+                }`}>
                     {error}
                 </p>
             )}
 
             <div className="flex justify-end">
-                <Link to="/forgot-password" state={{ from: embedded ? "auth-panel" : "login", email: identifier.includes("@") ? identifier : "", loginEmail: identifier}} className={`text-xs font-medium transition ${
-                        embedded ? "text-green-300 hover:text-green-200 dark:text-green-700 dark:hover:text-green-800" : "text-green-700 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200" }`}
+                <Link
+                    to="/forgot-password"
+                    state={{
+                        from: embedded ? "auth-panel" : "login",
+                        email: identifier.includes("@") ? identifier : "",
+                        loginEmail: identifier,
+                    }}
+                    className={`text-xs font-medium transition ${
+                        embedded
+                            ? "text-green-300 hover:text-green-200 dark:text-green-700 dark:hover:text-green-800"
+                            : "text-green-700 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200"
+                    }`}
                 >
                     Forgot password?
                 </Link>
             </div>
 
-            <button type="submit" disabled={loading} className="w-full rounded-lg bg-green-500 py-2.5 text-sm font-medium text-white transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-60">
+            <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-lg bg-green-500 py-2.5 text-sm font-medium text-white transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
                 {loading ? "Signing in..." : "Sign in"}
             </button>
         </form>
     );
 
-    // Embedded version displayed inside the animated landing-page auth panel
+    // Embedded version displayed inside the landing-page auth panel.
     if (embedded) {
         return (
             <div className="flex min-h-full items-start px-6 pb-12 pt-24 sm:px-10 sm:pt-28">
@@ -138,7 +182,11 @@ function Login({ embedded = false, initialEmail = "", onEmailChange, onSwitchToS
 
                     <p className="mt-8 text-center text-sm text-white/60 dark:text-slate-500">
                         Don't have an account?{" "}
-                        <button type="button" onClick={onSwitchToSignup} className="font-semibold text-green-300 transition hover:text-green-200 dark:text-green-700 dark:hover:text-green-800">
+                        <button
+                            type="button"
+                            onClick={onSwitchToSignup}
+                            className="font-semibold text-green-300 transition hover:text-green-200 dark:text-green-700 dark:hover:text-green-800"
+                        >
                             Create one
                         </button>
                     </p>
@@ -147,11 +195,15 @@ function Login({ embedded = false, initialEmail = "", onEmailChange, onSwitchToS
         );
     }
 
-    // Standalone login page used when visiting /login directly
+    // Standalone login page.
     return (
         <div className="min-h-screen bg-[#f5faf7] px-6 py-6 dark:bg-slate-950">
             <div className="mx-auto max-w-md">
-                <Link to="/" aria-label="Back to home" className="group flex h-10 w-10 translate-y-25 items-center overflow-hidden rounded-full border border-slate-200 bg-white px-3 text-slate-500 shadow-sm transition-all duration-300 hover:w-32 hover:border-green-200 hover:text-green-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-green-800 dark:hover:text-green-400">
+                <Link
+                    to="/"
+                    aria-label="Back to home"
+                    className="group flex h-10 w-10 translate-y-25 items-center overflow-hidden rounded-full border border-slate-200 bg-white px-3 text-slate-500 shadow-sm transition-all duration-300 hover:w-32 hover:border-green-200 hover:text-green-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-green-800 dark:hover:text-green-400"
+                >
                     <ChevronLeft size={18} className="shrink-0 transition-transform duration-300 group-hover:-translate-x-0.5" />
                     <span className="ml-1 max-w-0 whitespace-nowrap text-sm font-medium opacity-0 transition-all duration-300 group-hover:max-w-24 group-hover:opacity-100">
                         Back to home
@@ -180,7 +232,15 @@ function Login({ embedded = false, initialEmail = "", onEmailChange, onSwitchToS
 
                         <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
                             Don't have an account?{" "}
-                            <Link to="/signup" state={{ loginEmail: identifier.includes("@") ? identifier : "" }} className="font-semibold text-green-600 dark:text-green-400">
+                            <Link
+                                to="/signup"
+                                state={{
+                                    loginEmail: identifier.includes("@")
+                                        ? identifier
+                                        : "",
+                                }}
+                                className="font-semibold text-green-600 dark:text-green-400"
+                            >
                                 Create one
                             </Link>
                         </p>

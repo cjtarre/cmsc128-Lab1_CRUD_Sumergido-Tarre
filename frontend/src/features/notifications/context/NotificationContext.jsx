@@ -11,6 +11,7 @@ export function NotificationProvider({ children }) {
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
+    // Sync notifications with the server.
     const refreshNotifications = useCallback(async () => {
         if (!user?.id) {
             setNotifications([]);
@@ -36,74 +37,67 @@ export function NotificationProvider({ children }) {
         refreshNotifications();
     }, [refreshNotifications]);
 
+    // Mark one notification as read immediately, then sync with the server.
     const markRead = async (notificationId) => {
         const notification = notifications.find((item) => item.id === notificationId);
         if (!notification || notification.read_at) return;
 
+        const readAt = new Date().toISOString();
+        setNotifications((current) => current.map((item) => item.id === notificationId ? { ...item, read_at: readAt } : item));
+        setUnreadCount((current) => Math.max(0, current - 1));
+
         try {
             await notificationService.markRead(notificationId);
-            setNotifications((current) =>
-                current.map((item) =>
-                    item.id === notificationId ? { ...item, read_at: new Date().toISOString() } : item
-                )
-            );
-            setUnreadCount((current) => Math.max(0, current - 1));
         } catch (error) {
             console.error("Error marking notification as read:", error);
+            refreshNotifications();
         }
     };
 
+    // Mark all notifications as read immediately, then sync with the server.
     const markAllRead = async () => {
-        if (unreadCount === 0) return;
+        if (!unreadCount) return;
+
+        const readAt = new Date().toISOString();
+        setNotifications((current) => current.map((item) => ({ ...item, read_at: item.read_at || readAt })));
+        setUnreadCount(0);
 
         try {
             await notificationService.markAllRead();
-            const readAt = new Date().toISOString();
-            setNotifications((current) => current.map((item) => ({ ...item, read_at: item.read_at || readAt })));
-            setUnreadCount(0);
         } catch (error) {
             console.error("Error marking notifications as read:", error);
+            refreshNotifications();
         }
     };
 
+    // Remove a notification immediately, then sync the deletion with the server.
     const removeNotification = async (notificationId) => {
+        const notification = notifications.find((item) => item.id === notificationId);
+        if (!notification) return;
+
+        setNotifications((current) => current.filter((item) => item.id !== notificationId));
+        if (!notification.read_at) setUnreadCount((current) => Math.max(0, current - 1));
+
         try {
             await notificationService.deleteNotification(notificationId);
-            setNotifications((current) => {
-                const removed = current.find((item) => item.id === notificationId);
-                if (removed && !removed.read_at) setUnreadCount((count) => Math.max(0, count - 1));
-                return current.filter((item) => item.id !== notificationId);
-            });
         } catch (error) {
             console.error("Error deleting notification:", error);
+            await refreshNotifications();
             throw error;
         }
     };
 
-    return (
-        <NotificationContext.Provider
-            value={{
-                notifications,
-                unreadCount,
-                loading,
-                refreshNotifications,
-                markRead,
-                markAllRead,
-                removeNotification,
-            }}
-        >
-            {children}
-        </NotificationContext.Provider>
-    );
+    const value = {
+        notifications, unreadCount, loading,
+        refreshNotifications, markRead, markAllRead, removeNotification,
+    };
+
+    return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useNotifications() {
     const context = useContext(NotificationContext);
-
-    if (!context) {
-        throw new Error("useNotifications must be used within a NotificationProvider");
-    }
-
+    if (!context) throw new Error("useNotifications must be used within a NotificationProvider");
     return context;
 }
