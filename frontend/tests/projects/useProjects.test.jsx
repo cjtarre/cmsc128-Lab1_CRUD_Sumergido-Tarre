@@ -40,6 +40,21 @@ const mockLoad = () => {
     inviteService.getMyInvites.mockResolvedValue([{ id: 3 }]);
 };
 
+const clearLoadMocks = () => {
+    projectService.getProjects.mockClear();
+    projectService.getDeletedProjects.mockClear();
+    inviteService.getMyInvites.mockClear();
+};
+
+const waitForReload = async (result) => {
+    await waitFor(() => {
+        expect(projectService.getProjects).toHaveBeenCalled();
+        expect(projectService.getDeletedProjects).toHaveBeenCalled();
+        expect(inviteService.getMyInvites).toHaveBeenCalled();
+        expect(result.current.loading).toBe(false);
+    });
+};
+
 describe("useProjects", () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -85,16 +100,17 @@ describe("useProjects", () => {
         const { result } = renderHook(() => useProjects());
         await waitFor(() => expect(result.current.loading).toBe(false));
 
-        projectService.getProjects.mockClear();
+        clearLoadMocks();
 
         let success;
         await act(async () => {
             success = await result.current.createProject("New Project");
         });
 
+        await waitForReload(result);
+
         expect(success).toBe(true);
         expect(projectService.createProject).toHaveBeenCalledWith("New Project");
-        expect(projectService.getProjects).toHaveBeenCalled();
     });
 
     it("returns false when project creation fails", async () => {
@@ -132,16 +148,17 @@ describe("useProjects", () => {
         const { result } = renderHook(() => useProjects());
         await waitFor(() => expect(result.current.loading).toBe(false));
 
-        projectService.getProjects.mockClear();
+        clearLoadMocks();
 
         let success;
         await act(async () => {
             success = await result.current.deleteProject({ id: 1 });
         });
 
+        await waitForReload(result);
+
         expect(success).toBe(true);
         expect(projectService.deleteProject).toHaveBeenCalledWith(1);
-        expect(projectService.getProjects).toHaveBeenCalled();
         expect(result.current.deletingProject).toBe(false);
     });
 
@@ -151,10 +168,17 @@ describe("useProjects", () => {
         const { result } = renderHook(() => useProjects());
         await waitFor(() => expect(result.current.loading).toBe(false));
 
+        clearLoadMocks();
+
         let success;
         await act(async () => {
-            success = await result.current.restoreProject({ id: 2, project_name: "Deleted" });
+            success = await result.current.restoreProject({
+                id: 2,
+                project_name: "Deleted",
+            });
         });
+
+        await waitForReload(result);
 
         expect(success).toBe(true);
         expect(projectService.restoreProject).toHaveBeenCalledWith(2);
@@ -197,12 +221,12 @@ describe("useProjects", () => {
         const { result } = renderHook(() => useProjects());
         await waitFor(() => expect(result.current.loading).toBe(false));
 
-        projectService.getProjects.mockClear();
+        clearLoadMocks();
 
-        act(() => {
+        await act(async () => {
             window.dispatchEvent(new Event("takda:invites-changed"));
         });
 
-        await waitFor(() => expect(projectService.getProjects).toHaveBeenCalled());
+        await waitForReload(result);
     });
 });
