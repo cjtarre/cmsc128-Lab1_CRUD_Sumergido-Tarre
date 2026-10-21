@@ -8,6 +8,8 @@ function ConfirmDialog({
     message = "This action cannot be undone.",
     confirmText = "Confirm",
     cancelText = "Cancel",
+    loading = false,
+    loadingText = "Please wait...",
     onConfirm,
     onCancel,
 }) {
@@ -21,8 +23,8 @@ function ConfirmDialog({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/30 px-4 backdrop-blur-md dark:bg-black/50"
-            onClick={onCancel}
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-900/25 px-4 py-4 backdrop-blur-sm dark:bg-black/55 sm:py-0"
+            onClick={() => !loading && onCancel?.()}
         >
             <div
                 ref={dialogRef}
@@ -31,18 +33,19 @@ function ConfirmDialog({
                 aria-modal="true"
                 aria-labelledby="confirm-dialog-title"
                 aria-describedby="confirm-dialog-message"
-                className="relative w-full max-w-md rounded-2xl border border-white/60 bg-white/95 p-6 shadow-xl outline-none dark:border-slate-700 dark:bg-slate-900"
                 onClick={(event) => event.stopPropagation()}
+                className="relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/70 bg-white/90 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.18)] backdrop-blur-xl outline-none dark:border-white/10 dark:bg-slate-900/90 dark:shadow-black/40 sm:max-h-none sm:overflow-visible sm:p-6"
             >
-                <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-500 dark:bg-red-950/50 dark:text-red-400">
-                            <AlertTriangle size={22} strokeWidth={2.2} />
+                <div className="flex items-start justify-between gap-3 sm:gap-4">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-red-100/80 bg-red-50/80 text-red-500 shadow-sm dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-400 sm:h-11 sm:w-11">
+                            <AlertTriangle size={20} strokeWidth={2.1} />
                         </div>
 
                         <h2
                             id="confirm-dialog-title"
-                            className="text-lg font-semibold text-slate-800 dark:text-slate-100"
+                            className="min-w-0 break-words font-semibold text-slate-800 dark:text-slate-100 sm:text-lg"
+                            style={{ fontSize: "16px" }}
                         >
                             {title}
                         </h2>
@@ -50,9 +53,10 @@ function ConfirmDialog({
 
                     <button
                         type="button"
+                        disabled={loading}
                         onClick={onCancel}
                         aria-label="Close dialog"
-                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 dark:focus:ring-slate-700"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/70 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-200/70 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-500 dark:hover:bg-white/[0.06] dark:hover:text-slate-300 dark:focus:ring-slate-700"
                     >
                         <X size={18} />
                     </button>
@@ -60,26 +64,31 @@ function ConfirmDialog({
 
                 <p
                     id="confirm-dialog-message"
-                    className="mt-4 text-sm leading-6 text-slate-500 dark:text-slate-400"
+                    className="mt-4 break-words leading-5 text-slate-500 dark:text-slate-400 sm:leading-6"
+                    style={{ fontSize: "13px" }}
                 >
                     {message}
                 </p>
 
-                <div className="mt-6 flex justify-end gap-3">
+                <div className="mt-5 flex flex-col-reverse gap-2.5 min-[360px]:flex-row min-[360px]:justify-end sm:mt-6">
                     <button
                         type="button"
+                        disabled={loading}
                         onClick={onCancel}
-                        className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:focus:ring-slate-700"
+                        className="rounded-xl border border-slate-200/80 bg-white/50 px-4 py-2 font-medium text-slate-600 transition hover:bg-white hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-200/70 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.07] dark:hover:text-slate-100 dark:focus:ring-slate-700"
+                        style={{ fontSize: "14px" }}
                     >
                         {cancelText}
                     </button>
 
                     <button
                         type="button"
+                        disabled={loading}
                         onClick={onConfirm}
-                        className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-200 dark:bg-red-600 dark:hover:bg-red-500 dark:focus:ring-red-900"
+                        className="rounded-xl bg-red-500 px-4 py-2 font-semibold text-white shadow-[0_6px_18px_rgba(239,68,68,0.18)] transition hover:bg-red-600 hover:shadow-[0_8px_22px_rgba(239,68,68,0.24)] focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-600 dark:hover:bg-red-500 dark:focus:ring-red-900"
+                        style={{ fontSize: "14px" }}
                     >
-                        {confirmText}
+                        {loading ? loadingText : confirmText}
                     </button>
                 </div>
             </div>

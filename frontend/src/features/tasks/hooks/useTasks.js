@@ -1,21 +1,23 @@
-import { STATUS } from "../constants/taskOptions";
+import { STATUS, PRIORITY } from "../constants/taskOptions";
 import { taskService } from "../services/taskService";
 
-const toApiTask = (task, includeTags = true) => {
+const toApiTask = (task, includeTags = true, projectId = null) => {
     const [day, month, year] = (task.dueDate || "").split("/");
     const dueDate = day && month && year ? `${year}-${month}-${day}T${task.dueTime || "00:00"}` : null;
 
     return {
         task_name: task.title?.trim() || "",
         task_info: task.description?.trim() || "",
-        priority_level: task.priority ?? 0,
+        priority_level: task.priority ?? PRIORITY.NONE,
         status: task.status ?? STATUS.NOT_STARTED,
         due_date: dueDate,
+        ...(projectId && { project_id: Number(projectId) }),
+        ...(Object.prototype.hasOwnProperty.call(task, "assigneeId") && { assignee_id: task.assigneeId || null }),
         ...(includeTags && { tag_ids: (task.tags || []).map((tag) => typeof tag === "object" ? tag.tag_id : tag) }),
     };
 };
 
-const convertApiTask = (task) => {
+export const convertApiTask = (task) => {
     const due = task.due_date ? new Date(task.due_date) : null;
     const tags = task.task_tag?.map((item) => item.tags).filter(Boolean) || [];
 
@@ -29,14 +31,19 @@ const convertApiTask = (task) => {
         dueTime: due ? due.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
         tags,
         createdAt: task.created_at ?? null,
+        projectId: task.project_id ?? null,
+        creatorId: task.user_id ?? null,
+        assigneeId: task.assignee_id ?? null,
+        assignee: task.assignee ?? null,
+        project: task.project ?? null,
     };
 };
 
-function useTasks(tasks, setTasks) {
+function useTasks(tasks, setTasks, projectId = null) {
     const getTask = (id) => tasks.find((task) => task.id === id);
 
     const addTask = async (task) => {
-        const created = await taskService.createTask(toApiTask(task));
+        const created = await taskService.createTask(toApiTask(task, true, projectId));
         setTasks((prev) => [...prev, convertApiTask(created)]);
         return created;
     };

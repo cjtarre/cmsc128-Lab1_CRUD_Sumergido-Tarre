@@ -1,48 +1,68 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createRequire } from "node:module";
+import path from "node:path";
 
-const supabase = (await import("../../config/supabaseAdmin.js")).default;
-const { getAllTasks, createTask, updateTask, deleteTask, restoreTask } =
-    await import("../../controllers/taskController.js");
+const require = createRequire(import.meta.url);
+const mock = require("mock-require");
 
-const mockUser = { id: "test-user-id" };
+const mockUser = { id: "test-user-id" }, PROJECT_ID = 7;
 const mockQuery = {
     select: vi.fn(), insert: vi.fn(), update: vi.fn(), delete: vi.fn(),
-    eq: vi.fn(), is: vi.fn(), order: vi.fn(), single: vi.fn(),
+    eq: vi.fn(), is: vi.fn(), in: vi.fn(), order: vi.fn(),
+    single: vi.fn(), maybeSingle: vi.fn(),
 };
+const supabase = { from: vi.fn() };
+const projectAccess = {
+    ROLE_RANK: { viewer: 1, editor: 2, owner: 3 },
+    getRole: vi.fn(), getMemberProjectIds: vi.fn(),
+    getDefaultProjectId: vi.fn(), validateTagIdsForProject: vi.fn(),
+};
+
+mock(path.resolve("config/supabaseAdmin.js"), supabase);
+mock(path.resolve("utils/projectAccess.js"), projectAccess);
+
+const { getAllTasks, createTask, updateTask, deleteTask, restoreTask } =
+    require("../../controllers/taskController.js");
+
 const createResponse = () => ({ status: vi.fn().mockReturnThis(), json: vi.fn() });
+const baseTask = {
+    task_id: 1, task_name: "Test Task", project_id: PROJECT_ID,
+    status: "not_started", assignee_id: null, deleted_at: null,
+};
 
 beforeEach(() => {
     vi.clearAllMocks();
-    supabase.from = vi.fn(() => mockQuery);
-    mockQuery.select.mockReturnValue(mockQuery);
-    mockQuery.insert.mockReturnValue(mockQuery);
-    mockQuery.update.mockReturnValue(mockQuery);
-    mockQuery.delete.mockReturnValue(mockQuery);
-    mockQuery.eq.mockReturnValue(mockQuery);
-    mockQuery.is.mockReturnValue(mockQuery);
-    mockQuery.order.mockReturnValue(mockQuery);
-    mockQuery.single.mockReturnValue(mockQuery);
+    supabase.from.mockReturnValue(mockQuery);
+
+    ["select", "insert", "update", "delete", "eq", "is", "in", "order", "single", "maybeSingle"]
+        .forEach(key => mockQuery[key].mockReturnValue(mockQuery));
+
+    projectAccess.getRole.mockResolvedValue("owner");
+    projectAccess.getMemberProjectIds.mockResolvedValue([PROJECT_ID]);
+    projectAccess.getDefaultProjectId.mockResolvedValue(PROJECT_ID);
+    projectAccess.validateTagIdsForProject.mockResolvedValue(null);
 });
 
 describe("getAllTasks", () => {
-    it("should return all active tasks belonging to the authenticated user", async () => {
-        const req = { user: mockUser }, res = createResponse();
-        mockQuery.order.mockResolvedValue({ data: [{ task_id: 1, task_name: "Test Task" }], error: null });
+    it("returns active tasks from the user's projects", async () => {
+        const req = { user: mockUser, query: {} }, res = createResponse();
+        const tasks = [{ task_id: 1, task_name: "Test Task", project_id: PROJECT_ID }];
+        mockQuery.in.mockResolvedValue({ data: tasks, error: null });
 
         await getAllTasks(req, res);
 
         expect(supabase.from).toHaveBeenCalledWith("tasks");
-        expect(mockQuery.select).toHaveBeenCalled();
         expect(mockQuery.is).toHaveBeenCalledWith("deleted_at", null);
-        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
         expect(mockQuery.order).toHaveBeenCalledWith("created_at", { ascending: false });
+        expect(projectAccess.getMemberProjectIds).toHaveBeenCalledWith(mockUser.id);
+        expect(mockQuery.in).toHaveBeenCalledWith("project_id", [PROJECT_ID]);
         expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith([{ task_id: 1, task_name: "Test Task" }]);
+        expect(res.json).toHaveBeenCalledWith(tasks);
     });
 
-    it("should return 500 when fetching tasks fails", async () => {
-        const req = { user: mockUser }, res = createResponse();
-        mockQuery.order.mockResolvedValue({ data: null, error: new Error("Database error") });
+    it("returns 500 when fetching fails", async () => {
+        const req = { user: mockUser, query: {} }, res = createResponse();
+        mockQuery.in.mockResolvedValue({ data: null, error: new Error("Database error") });
 
         await getAllTasks(req, res);
 
@@ -52,74 +72,101 @@ describe("getAllTasks", () => {
 });
 
 describe("createTask", () => {
-    it("should create a task for the authenticated user without tags", async () => {
+    it("creates a task in the default project without tags", async () => {
         const req = {
             user: mockUser,
             body: {
-                task_name: "New Task", task_info: "Task information", priority_level: "High",
-                status: "Pending", due_date: "2026-10-05",
+                task_name: "New Task", task_info: "Task information",
+                priority_level: "high", status: "not_started", due_date: "2026-10-05",
             },
+        }, res = createResponse();
+
+        const newTask = {
+            task_id: 1, task_name: "New Task",
+            project_id: PROJECT_ID, assignee_id: null,
         };
-        const res = createResponse();
+        const taskWithTags = { ...newTask, task_tag: [] };
 
         mockQuery.single
-            .mockResolvedValueOnce({ data: { task_id: 1, task_name: "New Task" }, error: null })
-            .mockResolvedValueOnce({ data: { task_id: 1, task_name: "New Task", task_tag: [] }, error: null });
+            .mockResolvedValueOnce({ data: newTask, error: null })
+            .mockResolvedValueOnce({ data: taskWithTags, error: null });
 
         await createTask(req, res);
 
-        expect(supabase.from).toHaveBeenCalledWith("tasks");
+        expect(projectAccess.getDefaultProjectId).toHaveBeenCalledWith(mockUser.id);
+        expect(projectAccess.getRole).toHaveBeenCalledWith(PROJECT_ID, mockUser.id);
         expect(mockQuery.insert).toHaveBeenCalledWith([{
-            task_name: "New Task", task_info: "Task information", priority_level: "High",
-            status: "Pending", due_date: "2026-10-05", user_id: mockUser.id,
+            task_name: "New Task", task_info: "Task information",
+            priority_level: "high", status: "not_started", due_date: "2026-10-05",
+            project_id: PROJECT_ID, assignee_id: null, user_id: mockUser.id,
         }]);
         expect(res.status).toHaveBeenCalledWith(201);
-        expect(res.json).toHaveBeenCalledWith({ task_id: 1, task_name: "New Task", task_tag: [] });
+        expect(res.json).toHaveBeenCalledWith(taskWithTags);
     });
 
-    it("should create a task with tags", async () => {
+    it("creates a task with tags", async () => {
         const req = {
             user: mockUser,
             body: {
-                task_name: "Tagged Task", task_info: "Task information", priority_level: "Medium",
-                status: "Pending", due_date: "2026-10-06", tag_ids: [1, 2],
+                task_name: "Tagged Task", task_info: "Task information",
+                priority_level: "medium", status: "not_started",
+                due_date: "2026-10-06", tag_ids: [1, 2],
             },
+        }, res = createResponse();
+
+        const newTask = {
+            task_id: 1, task_name: "Tagged Task",
+            project_id: PROJECT_ID, assignee_id: null,
         };
-        const res = createResponse();
+        const taskWithTags = {
+            ...newTask,
+            task_tag: [
+                { tags: { tag_id: 1, tag_name: "School" } },
+                { tags: { tag_id: 2, tag_name: "Personal" } },
+            ],
+        };
 
         mockQuery.single
-            .mockResolvedValueOnce({ data: { task_id: 1, task_name: "Tagged Task" }, error: null })
-            .mockResolvedValueOnce({
-                data: {
-                    task_id: 1, task_name: "Tagged Task",
-                    task_tag: [{ tags: { tag_id: 1, tag_name: "School", tag_info: "School-related" } }],
-                },
-                error: null,
-            });
+            .mockResolvedValueOnce({ data: newTask, error: null })
+            .mockResolvedValueOnce({ data: taskWithTags, error: null });
 
         await createTask(req, res);
 
-        expect(mockQuery.insert).toHaveBeenCalledWith([{
-            task_name: "Tagged Task", task_info: "Task information", priority_level: "Medium",
-            status: "Pending", due_date: "2026-10-06", user_id: mockUser.id,
-        }]);
-        expect(supabase.from).toHaveBeenCalledWith("task_tag");
+        expect(projectAccess.validateTagIdsForProject).toHaveBeenCalledWith([1, 2], PROJECT_ID);
         expect(mockQuery.insert).toHaveBeenCalledWith([
-            { task_id: 1, tag_id: 1 },
-            { task_id: 1, tag_id: 2 },
+            { task_id: 1, tag_id: 1 }, { task_id: 1, tag_id: 2 },
         ]);
         expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.json).toHaveBeenCalledWith(taskWithTags);
     });
 
-    it("should return 500 when creating a task fails", async () => {
+    it("returns 400 for invalid priority or status", async () => {
+        const res = createResponse(), res2 = createResponse();
+
+        await createTask({
+            user: mockUser,
+            body: { task_name: "Bad", priority_level: "urgent", status: "not_started" },
+        }, res);
+
+        await createTask({
+            user: mockUser,
+            body: { task_name: "Bad", priority_level: "high", status: "Pending" },
+        }, res2);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res2.status).toHaveBeenCalledWith(400);
+        expect(mockQuery.insert).not.toHaveBeenCalled();
+    });
+
+    it("returns 500 when creation fails", async () => {
         const req = {
             user: mockUser,
             body: {
-                task_name: "Failed Task", task_info: "Task information", priority_level: "Low",
-                status: "Pending", due_date: "2026-10-07",
+                task_name: "Failed Task", task_info: "Task information",
+                priority_level: "low", status: "not_started", due_date: "2026-10-07",
             },
-        };
-        const res = createResponse();
+        }, res = createResponse();
+
         mockQuery.single.mockResolvedValueOnce({ data: null, error: new Error("Create failed") });
 
         await createTask(req, res);
@@ -130,207 +177,223 @@ describe("createTask", () => {
 });
 
 describe("updateTask", () => {
-    it("should update a task belonging to the authenticated user without changing tags", async () => {
+    it("returns 400 for invalid status", async () => {
+        const res = createResponse();
+
+        await updateTask({
+            user: mockUser, params: { task_id: 1 }, body: { status: "Completed" },
+        }, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(mockQuery.update).not.toHaveBeenCalled();
+    });
+
+    it("updates a task without changing tags", async () => {
         const req = {
             user: mockUser, params: { task_id: "1" },
             body: {
-                task_name: "Updated Task", task_info: "Updated information", priority_level: "High",
-                status: "Completed", due_date: "2026-10-10",
+                task_name: "Updated Task", task_info: "Updated information",
+                priority_level: "high", status: "completed", due_date: "2026-10-10",
             },
+        }, res = createResponse();
+
+        const updatedTask = {
+            task_id: 1, task_name: "Updated Task", task_info: "Updated information",
+            project_id: PROJECT_ID, priority_level: "high",
+            status: "completed", due_date: "2026-10-10",
         };
-        const res = createResponse();
 
+        mockQuery.maybeSingle.mockResolvedValueOnce({ data: baseTask, error: null });
         mockQuery.select
-            .mockResolvedValueOnce({ data: [{ task_id: 1, task_name: "Updated Task" }], error: null })
+            .mockReturnValueOnce(mockQuery)
+            .mockResolvedValueOnce({ data: [updatedTask], error: null })
             .mockReturnValueOnce(mockQuery);
-
-        mockQuery.single.mockResolvedValueOnce({
-            data: {
-                task_id: 1, task_name: "Updated Task", task_info: "Updated information",
-                priority_level: "High", status: "Completed", due_date: "2026-10-10",
-            },
-            error: null,
-        });
+        mockQuery.single.mockResolvedValueOnce({ data: updatedTask, error: null });
 
         await updateTask(req, res);
 
+        expect(projectAccess.getRole).toHaveBeenCalledWith(PROJECT_ID, mockUser.id);
         expect(mockQuery.update).toHaveBeenCalledWith({
-            task_name: "Updated Task", task_info: "Updated information", priority_level: "High",
-            status: "Completed", due_date: "2026-10-10",
+            task_name: "Updated Task", task_info: "Updated information",
+            priority_level: "high", status: "completed", due_date: "2026-10-10",
         });
-        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
-        expect(mockQuery.eq).toHaveBeenCalledWith("task_id", "1");
+        expect(mockQuery.eq).toHaveBeenCalledWith("task_id", 1);
         expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-            task_id: 1, task_name: "Updated Task", task_info: "Updated information",
-            priority_level: "High", status: "Completed", due_date: "2026-10-10",
-        });
+        expect(res.json).toHaveBeenCalledWith(updatedTask);
     });
 
-    it("should update a task and replace its tags", async () => {
+    it("updates a task and replaces its tags", async () => {
         const req = {
             user: mockUser, params: { task_id: "1" },
             body: {
                 task_name: "Updated Tagged Task", task_info: "Updated information",
-                priority_level: "Medium", status: "Pending", due_date: "2026-10-11", tag_ids: [2, 3],
+                priority_level: "medium", status: "not_started",
+                due_date: "2026-10-11", tag_ids: [2, 3],
             },
+        }, res = createResponse();
+
+        const updatedTask = {
+            task_id: 1, task_name: "Updated Tagged Task",
+            project_id: PROJECT_ID, status: "not_started",
         };
-        const res = createResponse();
 
+        mockQuery.maybeSingle.mockResolvedValueOnce({ data: baseTask, error: null });
         mockQuery.select
-            .mockResolvedValueOnce({ data: [{ task_id: 1 }], error: null })
+            .mockReturnValueOnce(mockQuery)
+            .mockResolvedValueOnce({ data: [updatedTask], error: null })
             .mockReturnValueOnce(mockQuery);
-
-        mockQuery.single.mockResolvedValueOnce({
-            data: {
-                task_id: 1, task_name: "Updated Tagged Task",
-                task_tag: [
-                    { tags: { tag_id: 2, tag_name: "School" } },
-                    { tags: { tag_id: 3, tag_name: "Urgent" } },
-                ],
-            },
-            error: null,
-        });
+        mockQuery.eq
+            .mockReturnValueOnce(mockQuery)
+            .mockReturnValueOnce(mockQuery)
+            .mockResolvedValueOnce({ error: null });
+        mockQuery.single.mockResolvedValueOnce({ data: updatedTask, error: null });
 
         await updateTask(req, res);
 
-        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
+        expect(projectAccess.validateTagIdsForProject).toHaveBeenCalledWith([2, 3], PROJECT_ID);
         expect(mockQuery.delete).toHaveBeenCalled();
         expect(mockQuery.insert).toHaveBeenCalledWith([
-            { task_id: "1", tag_id: 2 },
-            { task_id: "1", tag_id: 3 },
+            { task_id: 1, tag_id: 2 }, { task_id: 1, tag_id: 3 },
         ]);
         expect(res.status).toHaveBeenCalledWith(200);
     });
 
-    it("should update a task and remove all tags when tag_ids is empty", async () => {
+    it("updates a task and removes all tags", async () => {
         const req = {
             user: mockUser, params: { task_id: "1" },
             body: {
-                task_name: "No Tags", task_info: "Updated information", priority_level: "Low",
-                status: "Pending", due_date: "2026-10-12", tag_ids: [],
+                task_name: "No Tags", task_info: "Updated information",
+                priority_level: "low", status: "not_started",
+                due_date: "2026-10-12", tag_ids: [],
             },
+        }, res = createResponse();
+
+        const updatedTask = {
+            task_id: 1, task_name: "No Tags",
+            project_id: PROJECT_ID, status: "not_started", task_tag: [],
         };
-        const res = createResponse();
 
+        mockQuery.maybeSingle.mockResolvedValueOnce({ data: baseTask, error: null });
         mockQuery.select
-            .mockResolvedValueOnce({ data: [{ task_id: 1 }], error: null })
+            .mockReturnValueOnce(mockQuery)
+            .mockResolvedValueOnce({ data: [updatedTask], error: null })
             .mockReturnValueOnce(mockQuery);
-
-        mockQuery.single.mockResolvedValueOnce({
-            data: { task_id: 1, task_name: "No Tags", task_tag: [] },
-            error: null,
-        });
+        mockQuery.eq
+            .mockReturnValueOnce(mockQuery)
+            .mockReturnValueOnce(mockQuery)
+            .mockResolvedValueOnce({ error: null });
+        mockQuery.single.mockResolvedValueOnce({ data: updatedTask, error: null });
 
         await updateTask(req, res);
 
-        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
+        expect(projectAccess.validateTagIdsForProject).toHaveBeenCalledWith([], PROJECT_ID);
         expect(mockQuery.delete).toHaveBeenCalled();
-        expect(mockQuery.insert).not.toHaveBeenCalledWith(
-            expect.arrayContaining([expect.objectContaining({ task_id: "1" })])
-        );
         expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({ task_id: 1, task_name: "No Tags", task_tag: [] });
+        expect(res.json).toHaveBeenCalledWith(updatedTask);
     });
 
-    it("should return 404 and not modify tags when the task does not belong to the authenticated user", async () => {
+    it("returns 404 when the task does not exist", async () => {
         const req = {
             user: mockUser, params: { task_id: "99" },
             body: {
                 task_name: "Unauthorized Update", task_info: "Should not be updated",
-                priority_level: "High", status: "Pending", due_date: "2026-10-15", tag_ids: [1, 2],
+                priority_level: "high", status: "not_started",
+                due_date: "2026-10-15", tag_ids: [1, 2],
             },
-        };
-        const res = createResponse();
-        mockQuery.select.mockResolvedValueOnce({ data: [], error: null });
+        }, res = createResponse();
+
+        mockQuery.maybeSingle.mockResolvedValueOnce({ data: null, error: null });
 
         await updateTask(req, res);
 
-        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
-        expect(mockQuery.eq).toHaveBeenCalledWith("task_id", "99");
+        expect(mockQuery.eq).toHaveBeenCalledWith("task_id", 99);
         expect(res.status).toHaveBeenCalledWith(404);
         expect(res.json).toHaveBeenCalledWith({ error: "Task not found" });
         expect(mockQuery.delete).not.toHaveBeenCalled();
-        expect(mockQuery.insert).not.toHaveBeenCalled();
-        expect(mockQuery.single).not.toHaveBeenCalled();
     });
 
-    it("should return 400 when updating a task fails", async () => {
+    it("returns 500 when updating fails", async () => {
         const req = {
             user: mockUser, params: { task_id: "1" },
             body: {
                 task_name: "Failed Update", task_info: "Updated information",
-                priority_level: "High", status: "Pending", due_date: "2026-10-05",
+                priority_level: "high", status: "not_started", due_date: "2026-10-05",
             },
-        };
-        const res = createResponse();
-        mockQuery.select.mockResolvedValueOnce({ data: null, error: new Error("Update failed") });
+        }, res = createResponse();
+
+        mockQuery.maybeSingle.mockResolvedValueOnce({
+            data: null, error: new Error("Update failed"),
+        });
 
         await updateTask(req, res);
 
-        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ error: "Update failed" });
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
     });
 });
 
 describe("deleteTask", () => {
-    it("should soft delete a task belonging to the authenticated user", async () => {
+    it("soft deletes an editable project task", async () => {
         const req = { user: mockUser, params: { task_id: "1" } }, res = createResponse();
-        const data = [{ task_id: 1, deleted_at: "2026-09-20T10:00:00.000Z" }];
-        mockQuery.select.mockResolvedValueOnce({ data, error: null });
+        const data = [{ task_id: 1, deleted_at: "2026-10-19T10:00:00.000Z" }];
+
+        mockQuery.maybeSingle.mockResolvedValueOnce({ data: baseTask, error: null });
+        mockQuery.select
+            .mockReturnValueOnce(mockQuery)
+            .mockResolvedValueOnce({ data, error: null });
 
         await deleteTask(req, res);
 
         expect(mockQuery.update).toHaveBeenCalledWith({ deleted_at: expect.any(String) });
-        expect(mockQuery.eq).toHaveBeenCalledWith("task_id", "1");
-        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
+        expect(mockQuery.eq).toHaveBeenCalledWith("task_id", 1);
         expect(mockQuery.is).toHaveBeenCalledWith("deleted_at", null);
         expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({ message: "Task with ID 1 deleted successfully", data });
+        expect(res.json).toHaveBeenCalledWith({
+            message: "Task with ID 1 deleted successfully", data,
+        });
     });
 
-    it("should return 400 when deleting a task fails", async () => {
+    it("returns 500 when deletion fails", async () => {
         const req = { user: mockUser, params: { task_id: "1" } }, res = createResponse();
-        mockQuery.select.mockResolvedValueOnce({ data: null, error: new Error("Delete failed") });
+
+        mockQuery.maybeSingle.mockResolvedValueOnce({ data: baseTask, error: null });
+        mockQuery.select
+            .mockReturnValueOnce(mockQuery)
+            .mockResolvedValueOnce({ data: null, error: new Error("Delete failed") });
 
         await deleteTask(req, res);
 
-        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ error: "Delete failed" });
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
     });
 });
 
 describe("restoreTask", () => {
-    it("should restore a deleted task belonging to the authenticated user", async () => {
+    it("restores an editable project task", async () => {
         const req = { user: mockUser, params: { task_id: "1" } }, res = createResponse();
+        const deletedTask = { ...baseTask, deleted_at: "2026-10-19T10:00:00.000Z" };
+        const restoredTask = { ...baseTask, task_name: "Restored Task", deleted_at: null };
 
+        mockQuery.maybeSingle.mockResolvedValueOnce({ data: deletedTask, error: null });
         mockQuery.eq
             .mockReturnValueOnce(mockQuery)
             .mockResolvedValueOnce({ error: null })
-            .mockReturnValueOnce(mockQuery)
             .mockReturnValueOnce(mockQuery);
-
-        mockQuery.single.mockResolvedValueOnce({
-            data: { task_id: 1, task_name: "Restored Task", deleted_at: null },
-            error: null,
-        });
+        mockQuery.single.mockResolvedValueOnce({ data: restoredTask, error: null });
 
         await restoreTask(req, res);
 
         expect(mockQuery.update).toHaveBeenCalledWith({ deleted_at: null });
-        expect(mockQuery.eq).toHaveBeenCalledWith("task_id", "1");
-        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
+        expect(mockQuery.eq).toHaveBeenCalledWith("task_id", 1);
         expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-            task_id: 1, task_name: "Restored Task", deleted_at: null,
-        });
+        expect(res.json).toHaveBeenCalledWith(restoredTask);
     });
 
-    it("should return 400 when restoring a task belonging to the authenticated user fails", async () => {
+    it("returns 500 when restoration fails", async () => {
         const req = { user: mockUser, params: { task_id: "1" } }, res = createResponse();
+        const deletedTask = { ...baseTask, deleted_at: "2026-10-19T10:00:00.000Z" };
 
+        mockQuery.maybeSingle.mockResolvedValueOnce({ data: deletedTask, error: null });
         mockQuery.eq
             .mockReturnValueOnce(mockQuery)
             .mockResolvedValueOnce({ error: new Error("Restore failed") });
@@ -338,9 +401,7 @@ describe("restoreTask", () => {
         await restoreTask(req, res);
 
         expect(mockQuery.update).toHaveBeenCalledWith({ deleted_at: null });
-        expect(mockQuery.eq).toHaveBeenCalledWith("task_id", "1");
-        expect(mockQuery.eq).toHaveBeenCalledWith("user_id", mockUser.id);
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ error: "Restore failed" });
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
     });
 });

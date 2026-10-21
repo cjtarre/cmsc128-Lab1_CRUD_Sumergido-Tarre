@@ -1,24 +1,25 @@
 # Takda
 
-Takda is a web-based task management application developed for **CMSC 128 – Software Engineering**. It helps students organize schoolwork, deadlines, and everyday tasks through task management, filtering, sorting, calendar views, and user accounts.
+Takda is a web-based task and project management application developed for **CMSC 128 – Software Engineering** at the University of the Philippines Visayas. It helps students organize schoolwork, deadlines, and everyday tasks through task management, filtering, sorting, calendar views, user accounts, and collaborative projects.
 
-The application uses a React frontend, an Express backend, and Supabase PostgreSQL for persistent data storage.
+The application integrates the CRUD task-management functionality from Laboratory Activity 1 with the authentication and account-management functionality from Laboratory Activity 2, then extends the merged system with **User-Based Access Control (UBAC)** and collaborative project features for Laboratory Activity 3.
+
+Takda uses a **React + Vite** frontend, a **Node.js + Express** backend, and **Supabase PostgreSQL + Supabase Authentication** for persistent application data and user sessions.
 
 ---
 
 ## Features
 
 ### Task Management
-- Create tasks with a title, description, due date and time, priority, and tags
+- Create tasks with a title, description, due date and time, priority, status, and tags
 - View and edit existing tasks
-- Delete tasks with confirmation and undo recently deleted tasks
+- Soft-delete tasks with confirmation and restore recently deleted tasks
 - Mark tasks as completed and update task status
 - Search tasks
 - Filter tasks by category, status, priority, and tag
 - Sort tasks by title, priority, due date, and date added
-- View tasks through a calendar
 - Paginate task lists
-- Persist task data across sessions
+- View tasks through list and calendar interfaces, with a board view for collaborative project workspaces
 - Keep completed tasks visible with visual distinction
 
 ### Authentication & Account Management
@@ -26,6 +27,7 @@ The application uses a React frontend, an Express backend, and Supabase PostgreS
 - Log in using either a username or email address
 - Show or hide passwords through password visibility controls
 - Maintain authenticated sessions across page refreshes
+- Refresh expired access tokens using stored refresh tokens
 - Protect application routes from unauthenticated access
 - Log out with confirmation
 - View account information through the Profile page
@@ -35,15 +37,65 @@ The application uses a React frontend, an Express backend, and Supabase PostgreS
 - Recover forgotten passwords through email
 - Access the Privacy Policy
 
+### Personal & Collaborative Projects
+- Maintain a default personal project for each user
+- Create additional collaborative projects
+- View only projects in which the authenticated user is a member
+- Invite users by username or email
+- Accept or decline project invitations
+- Assign **Owner**, **Editor**, and **Viewer** project roles
+- Change member roles and remove members
+- Leave a collaborative project
+- Soft-delete and restore owned collaborative projects
+- View project overview, list, board, calendar, members, and activity views
+- Track recent project activity
+
 ### Notifications
-- View task-related notifications
-- Display task activity and relevant reminders through the Notifications page
+- View task-related notifications and reminders
+- Receive project invitation notifications
+- Receive notifications for relevant project activity, including project deletion and restoration
+- View the unread notification count
+- Mark individual or all notifications as read
+- Dismiss notifications
+- Accept or decline pending project invitations through notification actions
+
 
 ### Appearance & Navigation
 - Switch between light and dark themes
 - Persist the selected theme
 - Use responsive layouts across desktop, tablet, and mobile devices
 - Navigate through a desktop sidebar or mobile bottom navigation
+
+---
+
+## Activity 3 Integration
+
+### Merge Strategy
+Activity 3 uses the same repository as Activities 1 and 2. The integration branch is:
+
+```text
+act3-ubac
+```
+
+The Activity 1 CRUD implementation and Activity 2 authentication and account-management implementation were brought together through Git branching and merge/pull-request workflows instead of rebuilding the application.
+
+Subsequent Activity 3 collaboration work is developed on identifiable feature branches such as:
+
+```text
+feature/project-collaboration
+```
+
+and is intended to be merged back into `act3-ubac` through a pull request so individual contributions remain visible in Git history.
+
+### Conflict Resolution Approach
+Where the CRUD and authentication features affected the same application flow, the integrated implementation reconciled their requirements by:
+
+1. preserving the Activity 1 task CRUD behavior;
+2. preserving the Activity 2 authentication and session behavior;
+3. using the authenticated backend identity (`req.user.id`) for protected operations;
+4. associating tasks with users and projects;
+5. enforcing authorization checks on the backend rather than relying only on frontend visibility; and
+6. extending the integrated data model with collaborative projects, membership roles, invitations, activity, and notifications.
 
 ---
 
@@ -82,6 +134,7 @@ The application uses a React frontend, an Express backend, and Supabase PostgreS
 | | Axios | Sends HTTP requests to the backend API |
 | | Lucide React | Provides interface icons |
 | | Sonner | Provides toast notifications and user feedback |
+| | Motion | Provides interface transitions and animations |
 | **Backend** | Node.js | Runs the server-side JavaScript application |
 | | Express.js | Handles API routes and HTTP requests |
 | | `@supabase/supabase-js` | Provides the JavaScript client for communicating with Supabase |
@@ -97,58 +150,85 @@ The application uses a React frontend, an Express backend, and Supabase PostgreS
 ---
 
 ## Project Architecture
-Takda follows a client-server architecture. The React frontend communicates with the Express backend through a REST API, while the backend uses Supabase for PostgreSQL data storage and user authentication.
+Takda follows a client-server architecture. The React frontend communicates with the Express backend through a REST API, while the backend uses Supabase for PostgreSQL data storage and user authentication. The frontend is organized by feature, while authentication and authorization are enforced by the backend before protected resources are accessed.
 
 ```mermaid
 flowchart TD
-    A[User] --> B[React Frontend]
+    U[User] --> F[React Frontend]
 
-    %% Task flow
-    B --> C[Pages / Components]
-    C --> D[Task Handlers]
-    D --> E[Task Context]
-    E --> F[Task Services]
+    %% Frontend feature flows
+    F --> TC[Task Components / Pages]
+    TC --> TH[Task Handlers / Hooks]
+    TH --> TCTX[Task Context]
+    TCTX --> TS[Task Services]
 
-    %% Authentication flow
-    B --> G[Auth Context]
-    G --> H[Auth Service]
+    F --> PC[Project Components / Pages]
+    PC --> PH[Project Handlers / Hooks]
+    PH --> PS[Project Services]
+
+    F --> AC[Auth Context]
+    AC --> AS[Auth Service]
+
+    F --> NC[Notification Components]
+    NC --> NS[Notification Service]
+
+    %% Shared API communication
+    TS --> API[Axios API Client]
+    PS --> API
+    AS --> API
+    NS --> API
 
     %% Backend
-    F -->|HTTP Requests| I[Express Backend]
-    H -->|HTTP Requests| I
+    API --> E[Express Backend]
+    E --> R[Routes]
+    R --> AUTHZ[Authentication / Authorization]
+    AUTHZ --> C[Controllers]
 
-    I --> J[Routes]
-    J --> K[Controllers]
+    %% Supabase clients
+    C --> SA[Supabase Admin Client]
+    C --> SC[Supabase Auth Client]
 
-    %% Supabase services
-    K --> L[Supabase]
-
-    L --> M[(PostgreSQL Database)]
-    L --> N[Supabase Authentication]
+    SA --> DB[(PostgreSQL Database)]
+    SC --> AUTH[Supabase Authentication]
 
     %% Application data
-    M --> O[tasks]
-    M --> P[tags]
-    M --> Q[task_tag]
-    M --> R[profiles]
+    DB --> PROFILES[profiles]
+    DB --> PROJECTS[projects]
+    DB --> MEMBERS[project_user]
+    DB --> TASKS[tasks]
+    DB --> TAGS[tags]
+    DB --> TASKTAG[task_tag]
+    DB --> INVITES[project_invite]
+    DB --> NOTIFS[notifications]
+    DB --> ACTIVITY[project_activity]
 
-    %% Auth identity
-    N --> S[auth.users]
-    S --> R
+    %% Authentication identity
+    AUTH --> USERS[auth.users]
+    USERS --> PROFILES
 ```
 
 ### Data Flow
 
-**Task CRUD:** `User → React Components → Task Handlers → Task Context → Task Service → Express Routes → Controllers → Supabase → PostgreSQL`
+**Task CRUD:**  
+`User → React Components → Task Handlers / Hooks → Task Context → Task Service → Axios → Express Routes → Access Checks → Task Controller → Supabase → PostgreSQL`
 
-**Authentication:** `User → Login / Signup → Auth Context → Auth Service → Express Auth Routes → Controllers → Supabase Authentication → Authenticated Session`
+**Authentication:**  
+`User → Login / Signup → Auth Context → Auth Service → Axios → Express Auth Routes → Auth Controller → Supabase Authentication → Session`
+
+**Collaborative Projects:**  
+`User → Project Components → Project Handlers / Hooks → Project Service → Axios → Express Project Routes → Project Role Check → Project / Member / Invite Controller → Supabase → PostgreSQL`
+
+**Notifications:**  
+`User → Notification Components → Notification Service → Axios → Express Notification Routes → Authentication → Notification Controller → Supabase → PostgreSQL`
 
 ### Supabase Clients
-The backend uses two Supabase clients depending on the operation:
 
-- **Anon-key client** (`config/supabaseClient.js`) — Used for operations performed as a specific user, such as login, session refresh, logout, and email or password changes. These operations respect Supabase Row Level Security (RLS).
+The backend uses two Supabase clients depending on the type of operation:
 
-- **Service-role client** (`config/supabaseAdmin.js`) — Used for authorized task and tag operations and profile updates. The `requireAuth` middleware first verifies the user's identity, while controllers enforce ownership using the authenticated user's ID (`req.user.id`).
+- **Anon-key client** (`config/supabaseClient.js`) — Uses `SUPABASE_ANON_KEY`, with `SUPABASE_KEY` supported as a fallback. It handles user-scoped Supabase Authentication operations such as login, session refresh, logout, password recovery, and email or password changes.
+
+- **Service-role client** (`config/supabaseAdmin.js`) — Handles authorized server-side database operations involving tasks, projects, memberships, invitations, notifications, tags, profiles, and related records. Because the service-role key has elevated privileges, it is kept exclusively on the backend.
+
 ---
 
 ## Project Structure
@@ -157,24 +237,13 @@ The backend uses two Supabase clients depending on the operation:
 cmsc128-Lab1_CRUD_Sumergido-Tarre/
 │
 ├── backend/
-│   ├── config/
-│   │   ├── supabaseClient.js
-│   │   └── supabaseAdmin.js
-│   ├── controllers/
-│   │   ├── authController.js
-│   │   ├── taskController.js
-│   │   ├── tagController.js
-│   │   └── userController.js
-│   ├── routes/
-│   │   ├── authRoutes.js
-│   │   ├── taskRoutes.js
-│   │   ├── tagRoutes.js
-│   │   └── userRoutes.js
-│   ├── utils/
-│   │   └── validation.js
-│   ├── app.js
-│   ├── package.json
-│   └── .env                  # local only; not committed
+│   ├── config/          # Supabase clients
+│   ├── controllers/     # API request handlers
+│   ├── middleware/      # Authentication and rate limiting
+│   ├── routes/          # Express API routes
+│   ├── tests/           # Backend tests
+│   ├── utils/           # Validation, access control, notifications
+│   └── app.js
 │
 ├── frontend/
 │   ├── src/
@@ -183,24 +252,15 @@ cmsc128-Lab1_CRUD_Sumergido-Tarre/
 │   │   │   ├── calendar/
 │   │   │   ├── notifications/
 │   │   │   ├── profile/
+│   │   │   ├── projects/
 │   │   │   └── tasks/
+│   │   ├── shared/
 │   │   ├── layouts/
 │   │   ├── pages/
-│   │   ├── routes/
-│   │   ├── shared/
-│   │   │   ├── components/
-│   │   │   ├── constants/
-│   │   │   ├── context/
-│   │   │   ├── services/
-│   │   │   └── utils/
-│   │   ├── App.jsx
-│   │   ├── App.css
-│   │   ├── index.css
-│   │   └── main.jsx
-│   ├── vite.config.js
-│   └── package.json
+│   │   └── routes/
+│   ├── tests/
+│   └── vite.config.js
 │
-├── .gitignore
 ├── README.md
 └── package.json
 ```
@@ -222,9 +282,10 @@ SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-- `SUPABASE_ANON_KEY` — used for user-scoped Supabase operations such as authentication.
-- `SUPABASE_SERVICE_ROLE_KEY` — used for authorized backend operations that require elevated access. **Never expose this key to the frontend or commit it to version control.**
-- `FRONTEND_URL` — used for authentication redirects such as password reset and email verification.
+- `SUPABASE_URL` — URL of the configured Supabase project.
+- `SUPABASE_ANON_KEY` — preferred environment variable for the Supabase anon/public key used for user-scoped authentication operations. The current backend also accepts `SUPABASE_KEY` as a fallback.
+- `SUPABASE_SERVICE_ROLE_KEY` — used only by the backend for authorized server-side database operations that require elevated access. **Never expose this key to the frontend or commit it to version control.**
+- `FRONTEND_URL` — frontend origin used for CORS and authentication redirects such as password reset and email verification.
 
 Do not commit the actual `.env` file or expose your credentials.
 
@@ -232,12 +293,11 @@ Do not commit the actual `.env` file or expose your credentials.
 
 Configure the following settings in the Supabase Dashboard:
 
-- **Authentication → URL Configuration → Redirect URLs** — add `<FRONTEND_URL>/reset-password` and `<FRONTEND_URL>/verify-email`.
+- **Authentication → URL Configuration → Redirect URLs** — add `<FRONTEND_URL>/reset-password` and `<FRONTEND_URL>/verify-email`
 - **Authentication → Providers → Email → Secure email change** — configure the required confirmation behavior for email changes.
 
 
 ### 1. Install Dependencies
-
 Install the backend dependencies:
 
 ```bash
@@ -253,7 +313,6 @@ npm install
 ```
 
 ### 2. Start the Backend Server
-
 From the `/backend` directory:
 
 ```bash
@@ -271,7 +330,6 @@ The backend runs at `http://localhost:5000`.
 > The backend does not use `nodemon`, so restart the server manually after code or `.env` changes.
 
 ### 3. Start the Frontend
-
 From the `/frontend` directory:
 
 ```bash
@@ -285,7 +343,6 @@ Open the frontend URL in a browser to use Takda.
 ---
 
 ## Testing
-
 From the project root, run all automated tests:
 
 ```bash
@@ -311,61 +368,108 @@ Verify the frontend production build:
 npm run build
 ```
 
-The automated test suite covers backend controllers and frontend authentication, routing, services, task handling, validation, and utility behavior.
+The automated tests cover authentication, task CRUD, project collaboration, membership and role access control, invitations, notifications, services, hooks, handlers, validation, utilities, and shared frontend functionality.
 
 ---
 
 ## API Endpoints
 
+All protected endpoints require a valid authenticated session. Project-specific operations may additionally require **Member**, **Editor**, or **Owner** access.
+
 ### Auth (`/api/auth`)
 
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
-| `POST` | `/api/auth/signup` | Not required | Register a new account (`email`, `password`, `username`, `display_name`) |
-| `POST` | `/api/auth/login` | Not required | Log in using a username or email and receive a session |
-| `POST` | `/api/auth/logout` | Session token | Invalidate the current session |
+| `POST` | `/api/auth/signup` | Not required | Register a new account |
+| `POST` | `/api/auth/login` | Not required | Log in with username or email |
+| `POST` | `/api/auth/logout` | Session token | End the current session |
 | `POST` | `/api/auth/refresh` | Refresh token | Refresh an expired access token |
-| `GET` | `/api/auth/me` | Required | Retrieve the current authenticated user and profile |
-| `POST` | `/api/auth/forgot-password` | Not required | Send a password reset email |
-| `POST` | `/api/auth/reset-password` | Recovery tokens | Reset the password using tokens from the recovery link |
+| `GET` | `/api/auth/me` | Required | Get the authenticated user and profile |
+| `POST` | `/api/auth/forgot-password` | Not required | Send a password-reset email |
+| `POST` | `/api/auth/reset-password` | Recovery tokens | Reset the user's password |
 
 ### Tasks (`/api/tasks`)
 
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
-| `GET` | `/api/tasks` | Required | Retrieve all tasks for the current user |
+| `GET` | `/api/tasks` | Required | Retrieve accessible tasks |
 | `POST` | `/api/tasks` | Required | Create a task |
-| `PUT` | `/api/tasks/:task_id` | Required | Update a task |
-| `DELETE` | `/api/tasks/:task_id` | Required | Soft-delete a task |
+| `PUT` | `/api/tasks/:task_id` | Required | Update an authorized task |
+| `DELETE` | `/api/tasks/:task_id` | Required | Soft-delete an authorized task |
 | `PATCH` | `/api/tasks/:task_id/restore` | Required | Restore a soft-deleted task |
 
 ### Tags (`/api/tags`)
 
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
-| `GET` | `/api/tags` | Required | Retrieve tags for the current user |
+| `GET` | `/api/tags` | Required | Retrieve available task tags |
 
 ### Users (`/api/users`)
 
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
-| `PATCH` | `/api/users/me` | Required | Update display name and/or username |
-| `PATCH` | `/api/users/me/email` | Required | Change email address and send confirmation |
-| `PATCH` | `/api/users/me/password` | Required | Change password |
+| `PATCH` | `/api/users/me` | Required | Update profile information |
+| `PATCH` | `/api/users/me/email` | Required | Change the user's email |
+| `PATCH` | `/api/users/me/password` | Required | Change the user's password |
+
+### Projects (`/api/projects`)
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/projects` | Required | Retrieve accessible active projects |
+| `GET` | `/api/projects?deleted=true` | Owner | Retrieve owned deleted projects |
+| `POST` | `/api/projects` | Required | Create a collaborative project |
+| `PUT` | `/api/projects/:project_id` | Owner | Update project information |
+| `DELETE` | `/api/projects/:project_id` | Owner | Soft-delete a project |
+| `PATCH` | `/api/projects/:project_id/restore` | Owner | Restore a deleted project |
+| `GET` | `/api/projects/:project_id/activities` | Member | Retrieve recent project activity |
+| `GET` | `/api/projects/:project_id/members` | Member | Retrieve project members |
+| `PATCH` | `/api/projects/:project_id/members/:user_id` | Owner | Change a member's role |
+| `DELETE` | `/api/projects/:project_id/members/:user_id` | Owner | Remove a project member |
+| `POST` | `/api/projects/:project_id/leave` | Member | Leave a collaborative project |
+
+Project roles follow the hierarchy:
+
+`viewer < editor < owner`
+
+### Project Invitations
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/projects/:project_id/invites` | Owner | Retrieve pending project invitations |
+| `POST` | `/api/projects/:project_id/invites` | Owner | Invite a user by username or email |
+| `DELETE` | `/api/projects/:project_id/invites/:invite_id` | Owner | Cancel a pending invitation |
+| `GET` | `/api/invites` | Required | Retrieve the user's pending invitations |
+| `POST` | `/api/invites/:invite_id/accept` | Invitee | Accept an invitation |
+| `POST` | `/api/invites/:invite_id/decline` | Invitee | Decline an invitation |
+
+### Notifications (`/api/notifications`)
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/notifications` | Required | Retrieve the user's notifications |
+| `PATCH` | `/api/notifications/:notification_id/read` | Required | Mark one notification as read |
+| `PATCH` | `/api/notifications/read-all` | Required | Mark all notifications as read |
+| `DELETE` | `/api/notifications/:notification_id` | Required | Dismiss a notification |
 
 ---
 
 ## Database Schema / ERD
-The database is hosted in Supabase and consists of four main tables:
+Takda uses Supabase PostgreSQL for persistent application data and Supabase Authentication for account identities. The main application tables are:
 
-- **`tasks`** – stores task information for each user
-- **`tags`** – stores user-specific tags
-- **`task_tag`** – connects tasks and tags
-- **`profiles`** – stores each user's username and display name
+- **`profiles`** — stores usernames and display names
+- **`projects`** — stores personal/default and collaborative projects
+- **`project_user`** — associates users with projects and stores membership roles
+- **`tasks`** — stores task information and associates tasks with users and projects
+- **`tags`** — stores global or project-scoped task tags
+- **`task_tag`** — manages the many-to-many relationship between tasks and tags
+- **`project_invite`** — stores collaborative project invitations
+- **`project_activity`** — stores recent project activity
+- **`notifications`** — stores user notifications
 
-The `task_tag` table manages the **many-to-many relationship** between tasks and tags. The `tasks`, `tags`, and `profiles` tables are associated with authenticated users through their user IDs.
+Supabase Authentication stores account identities separately in `auth.users`, while application-specific profile information is stored in `profiles`.
 
-![Relational schema for Takda showing user profiles, tasks, tags, and the many-to-many relationship between tasks and tags.](database_erd.png)
+![Relational schema for Takda.](screenshots/database_erd_act3.png)
 
 ### Main Task Fields
 
@@ -375,86 +479,78 @@ The `task_tag` table manages the **many-to-many relationship** between tasks and
 | `task_name` | Task title |
 | `task_info` | Task description |
 | `priority_level` | Task priority |
-| `user_id` | UUID of the user who owns the task |
+| `user_id` | User associated with the task |
+| `project_id` | Project containing the task |
+| `assignee_id` | Optional assigned project member |
 | `status` | Current task status |
 | `due_date` | Task due date and time |
 | `created_at` | Task creation timestamp |
-| `deleted_at` | Soft-delete timestamp; `null` when the task is active |
-
----
-
-## CRUD Operations
-
-| Operation | Description |
-| --- | --- |
-| **Create** | Creates a new task |
-| **Read** | Retrieves and displays the authenticated user's tasks |
-| **Update** | Modifies task details or status |
-| **Delete** | Soft-deletes a task after confirmation, with the option to restore it |
-
-CRUD operations are handled through the Express backend and persisted in the Supabase database.
+| `deleted_at` | Soft-delete timestamp; `null` when active |
 
 ---
 ## Authentication
-Takda provides account authentication and account management through the backend and Supabase Authentication.
+Takda uses **Supabase Authentication** together with backend authorization to manage user accounts, sessions, and protected resources.
 
 ### Registration
-Users can create an account using a display name, username, email address, and password. The registration form validates required fields, email format, password confirmation, password strength, and duplicate account information before account creation.
+Users can create an account using a display name, username, email address, and password. Registration validates required fields, email format, password confirmation, password strength, and duplicate account information.
 
-Passwords must contain at least 8 characters, including an uppercase letter, lowercase letter, number, and special character. Password validation is enforced by both the frontend for immediate feedback and the backend for server-side protection.
+Passwords must contain at least 8 characters, including an uppercase letter, lowercase letter, number, and special character. Passwords are handled by Supabase Authentication and are not stored as plaintext in Takda's application database.
 
-Account authentication and password storage are handled through Supabase Authentication. Takda does not store plaintext passwords in the application database.
+### Login & Session Persistence
+Users can log in using either their username or email address. Successful authentication creates a Supabase session and redirects the user to **My Tasks**.
 
-### Login
-Users can log in using either their username or email address together with their password. Successful authentication creates a session and redirects the user to the Profile page.
-
-### Session Persistence
-Takda uses token-based authentication backed by Supabase sessions. After a successful login, the authentication session is restored when the application loads so that authenticated users remain logged in across page refreshes and normal browser navigation.
-
-The frontend restores the authenticated user state using the stored session tokens and verifies the current user through the backend. Invalid or expired authentication data is cleared so that protected content can no longer be accessed.
+The frontend stores the access and refresh tokens and restores the authenticated user state across page refreshes. Expired access tokens can be refreshed automatically; invalid session data is cleared when authentication can no longer be restored.
 
 ### Protected Routes
-Authenticated application pages are protected through `ProtectedRoute`. Users without an authenticated session are redirected to the login page.
+Authenticated application pages are protected through `ProtectedRoute`. Users without a valid authenticated session are redirected to the login page.
 
-Protected pages include:
-- Dashboard
-- Calendar
-- Notifications
-- Profile
-- Settings
+### Account Management & Recovery
+Authenticated users can update their display name, username, email address, and password. Email and password changes are processed through Supabase Authentication and follow the application's validation requirements.
 
-### Logout
-Users can log out through the desktop navigation, profile menu, or Profile page. Each logout action uses a confirmation dialog before invalidating the session and returning the user to the public landing page.
+Users who forget their password can request a recovery email. The recovery link redirects to Takda's password-reset flow, where temporary Supabase recovery tokens are used to establish a recovery session and securely update the password.
 
-### Profile Management
-Users can update their display name and username from the Profile page. Changes are stored in the user's application profile and persisted in the database.
+### Project Access Control
+Collaborative project access is represented through the `project_user` table. Each membership has one of three roles:
 
-### Email and Password Changes
-Users can change their email address and password from account settings. Email updates are validated before being submitted to Supabase, and confirmation behavior follows the project's Supabase email configuration.
+- **Owner** — full project control
+- **Editor** — can manage project work
+- **Viewer** — read-only access
 
-New passwords are subject to the same password-strength requirements used during registration and password recovery. Password validation is enforced by the backend before the update is sent to Supabase.
+The backend verifies project membership and role before allowing protected project operations. 
 
-### Password Recovery
-Users who cannot log in can request a password-reset email using their registered email address. Supabase sends a recovery link that verifies the reset request and redirects the user to Takda's reset-password page with temporary recovery tokens.
+### IDOR Prevention
+Takda reduces Insecure Direct Object Reference (IDOR) risk by enforcing authorization on the backend:
 
-The frontend reads the recovery access and refresh tokens from the redirect URL and sends them with the new password to the backend. The backend establishes the recovery session through Supabase and updates the user's password after validating it against the application's password policy. After a successful reset, the user can sign in using the new password and the previous password is no longer valid.
+- Non-members cannot retrieve project data simply by changing a project ID.
+- Inaccessible project resources return `404 Project not found`.
+- Users with insufficient project roles receive `403 Insufficient permissions`.
+- Task update, delete, and restore operations validate access to the task's project before modification.
+- Invitation responses are scoped to the intended authenticated user.
+
+Returning `404` for inaccessible projects also helps reduce resource enumeration.
+
+### Notification Access
+Notifications are tied to the authenticated user and are retrieved and modified using the user's verified backend identity. Users can view, mark as read, or dismiss only their own notifications.
 
 ---
 ## Expanded Features
 
 ### Lab 1 - Task Organization
-Tasks can be searched, filtered by category, status, priority, and tag, and sorted by title, priority, due date, or date added. The Calendar View organizes tasks by due date, while the Undo option allows recently deleted tasks to be restored.
+Tasks can be searched, filtered by category, status, priority, and tag, and sorted by title, priority, due date, or date added. The Calendar View organizes tasks by due date, while recently deleted tasks can be restored.
 
 ### Lab 2 - User Accounts and Authentication
 Takda extends the original task-management application with persistent user accounts through Supabase Authentication. Users can register, log in using either their username or email address, maintain authenticated sessions, manage their profile and account credentials, log out, and recover forgotten passwords through email.
 
-Protected application routes prevent unauthenticated users from accessing account-restricted features.
+### Lab 3 - UBAC and Collaborative Projects
+Takda extends the merged Activity 1 and Activity 2 system with **User-Based Access Control (UBAC)** and the collaborative-list functionality required for Activity 3. The collaborative-list requirement is implemented through personal/default projects and collaborative projects, allowing users to manage their own tasks while also accessing projects to which they have been added.
+
+Users can create collaborative projects, invite other registered users by username or email, and access only the collaborative projects in which they are members. Project membership is stored separately from user and task data, while **Owner**, **Editor**, and **Viewer** roles provide additional control over what members can do within a project.
+
+Ownership and membership checks are enforced on the backend rather than relying only on frontend visibility. Task and project operations use the authenticated user's identity and project membership to prevent unauthorized access and IDOR attempts, while the existing Supabase Authentication and session flow from Activity 2 is reused for account authentication.
 
 ---
 ## Data Persistence
-Task data is stored in the Supabase PostgreSQL database rather than only in the browser, allowing tasks to remain available after page refreshes and backend restarts.
-
-User accounts are managed through Supabase Authentication, while application-specific profile information is stored in the `profiles` table. Account and profile data persist across browser refreshes and backend restarts.
+Takda stores persistent application data in Supabase PostgreSQL, including tasks, projects, memberships, invitations, notifications, and profile information. User accounts and sessions are managed through Supabase Authentication, allowing application data and authenticated state to persist across normal page refreshes and backend restarts.
 
 ---
 ## HCI Considerations
@@ -463,16 +559,12 @@ Takda applies HCI principles through:
 - Clear labels for task fields, account forms, and actions
 - Consistent navigation and layout across application pages
 - Visual distinction between task statuses and priorities
-- Toast notifications for success and error feedback
+- Toast notifications and clear feedback for successful or failed actions
 - Confirmation dialogs before destructive or session-ending actions
-- Search, filtering, sorting, and pagination for efficient task navigation
-- Calendar-based task organization
-- Password visibility controls for password fields
-- Form validation with clear and understandable error messages
-- Loading and disabled states during form submissions
-- Clear indication of the user's authenticated state
-- Immediate feedback after profile and account changes
-- Responsive layouts for different screen sizes
+- Search, filtering, sorting, pagination, and calendar views for efficient task navigation
+- Password visibility controls and understandable form-validation messages
+- Loading and disabled states during asynchronous actions
+- Responsive layouts across desktop, tablet, and mobile devices
 - Persistent light and dark theme preferences
 
 ---

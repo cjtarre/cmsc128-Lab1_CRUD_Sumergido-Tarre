@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useAuth } from "../../auth/hooks/useAuth";
 import ConfirmDialog from "../../../shared/components/common/ConfirmDialog";
 import { getDisplayName, getInitials } from "../../../shared/utils/userUtils";
-import { DISPLAY_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, validateDisplayName, validatePassword, validateUsername} from "../../../shared/utils/validation";
+import { DISPLAY_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, validateDisplayName, validatePassword, validateUsername } from "../../../shared/utils/validation";
 
 function Profile() {
     const { user, authLoading, logout, updateProfile, updateEmail, updatePassword } = useAuth();
@@ -122,18 +122,22 @@ function Profile() {
 
     return (
         <div className="mx-auto w-full max-w-2xl space-y-5 pb-8">
+            {/* Header */}
             <div>
                 <h1 className="text-xl font-semibold text-slate-800 dark:text-white sm:text-2xl">Profile</h1>
                 <p className="mt-1 text-xs text-slate-400 dark:text-slate-500 sm:text-sm">Manage your account information and security.</p>
             </div>
 
-            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div className="flex items-center gap-5 bg-gradient-to-r from-green-50/80 to-white px-5 py-6 dark:from-green-950/20 dark:to-slate-900 sm:px-6">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-green-100 text-lg font-semibold tracking-wide text-green-700 ring-4 ring-white shadow-sm dark:bg-green-950 dark:text-green-300 dark:ring-slate-800">
+            {/* Profile summary */}
+            <section className="overflow-hidden rounded-2xl border border-white/70 bg-white/80 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/20">
+                <div className="relative flex items-center gap-5 overflow-hidden bg-gradient-to-r from-green-50/90 via-white/70 to-emerald-50/70 px-5 py-6 dark:from-green-950/30 dark:via-slate-900/70 dark:to-emerald-950/20 sm:px-6">
+                    <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-14 h-40 w-40 rounded-full bg-green-200/25 blur-3xl dark:bg-green-500/[0.06]" />
+
+                    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-green-100 text-lg font-semibold tracking-wide text-green-700 ring-4 ring-white shadow-sm dark:bg-green-950 dark:text-green-300 dark:ring-slate-800">
                         {initials}
                     </div>
 
-                    <div className="min-w-0">
+                    <div className="relative min-w-0">
                         <h2 className="truncate text-lg font-semibold text-slate-800 dark:text-slate-100">{currentDisplayName}</h2>
                         <p className="mt-1 truncate text-sm text-slate-500 dark:text-slate-400">@{savedUsername}</p>
                         <p className="mt-1 truncate text-sm text-slate-500 dark:text-slate-400">{currentEmail}</p>
@@ -142,9 +146,10 @@ function Profile() {
                 </div>
             </section>
 
-            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            {/* Account information */}
+            <section className="overflow-hidden rounded-2xl border border-white/70 bg-white/85 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85 dark:shadow-black/20">
                 <form onSubmit={handleProfileSubmit}>
-                    <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-800 sm:px-6">
+                    <div className="border-b border-slate-100/80 px-5 py-4 dark:border-white/[0.07] sm:px-6">
                         <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Account Information</h3>
                         <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Update how your account information appears in Takda.</p>
                     </div>
@@ -152,42 +157,88 @@ function Profile() {
                     <div className="space-y-5 p-5 sm:p-6">
                         <div className="space-y-1.5">
                             <label htmlFor="displayName" className="text-xs font-medium text-slate-600 dark:text-slate-300">Display name</label>
+
                             <div className="relative">
-                                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input id="displayName" type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} autoComplete="name" maxLength={DISPLAY_NAME_MAX_LENGTH} placeholder="Enter your display name" className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-green-600 dark:focus:ring-green-950" />
+                                <User size={16} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+
+                                <input
+                                    id="displayName"
+                                    type="text"
+                                    value={displayName}
+                                    onChange={(e) => setDisplayName(e.target.value)}
+                                    autoComplete="name"
+                                    maxLength={DISPLAY_NAME_MAX_LENGTH}
+                                    placeholder="Enter your display name"
+                                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition placeholder:text-slate-300 hover:border-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-600 dark:hover:border-slate-600 dark:focus:border-green-600 dark:focus:ring-green-950"
+                                />
                             </div>
                         </div>
 
                         <div className="space-y-1.5">
                             <label htmlFor="username" className="text-xs font-medium text-slate-600 dark:text-slate-300">Username</label>
+
                             <div className="relative">
-                                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoComplete="username" maxLength={USERNAME_MAX_LENGTH} placeholder="Enter your username" className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-green-600 dark:focus:ring-green-950" />
+                                <User size={16} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+
+                                <input
+                                    id="username"
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                                    autoComplete="username"
+                                    maxLength={USERNAME_MAX_LENGTH}
+                                    placeholder="Enter your username"
+                                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition placeholder:text-slate-300 hover:border-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-600 dark:hover:border-slate-600 dark:focus:border-green-600 dark:focus:ring-green-950"
+                                />
                             </div>
-                            <p className="text-[11px] text-slate-400 dark:text-slate-500">Use {USERNAME_MIN_LENGTH}–{USERNAME_MAX_LENGTH} lowercase letters, numbers, periods, or underscores.</p>
+
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                                Use {USERNAME_MIN_LENGTH}–{USERNAME_MAX_LENGTH} lowercase letters, numbers, periods, or underscores.
+                            </p>
                         </div>
 
                         <div className="space-y-1.5">
                             <label htmlFor="email" className="text-xs font-medium text-slate-600 dark:text-slate-300">Email address</label>
+
                             <div className="relative">
-                                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-green-600 dark:focus:ring-green-950" />
+                                <Mail size={16} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+
+                                <input
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    autoComplete="email"
+                                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-slate-600 dark:focus:border-green-600 dark:focus:ring-green-950"
+                                />
                             </div>
-                            <p className="text-[11px] text-slate-400 dark:text-slate-500">Changing your email may require confirmation from your new email address.</p>
+
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                                Changing your email may require confirmation from your new email address.
+                            </p>
                         </div>
 
-                        <div className="flex justify-end border-t border-slate-100 pt-5 dark:border-slate-800">
-                            <button type="submit" disabled={savingProfile} className="inline-flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-60">
-                                <Save size={16} /> {savingProfile ? "Saving..." : "Save changes"}
+                        <div className="flex justify-end border-t border-slate-100/80 pt-5 dark:border-white/[0.07]">
+                            <button type="submit" disabled={savingProfile} className="inline-flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-60">
+                                <Save size={16} />
+                                {savingProfile ? "Saving..." : "Save changes"}
                             </button>
                         </div>
                     </div>
                 </form>
             </section>
 
-            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <button type="button" onClick={() => setSecurityOpen((open) => !open)} aria-expanded={securityOpen} className="flex w-full items-center gap-3 p-5 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800/50 sm:px-6">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400"><LockKeyhole size={17} /></div>
+            {/* Security */}
+            <section className="overflow-hidden rounded-2xl border border-white/70 bg-white/85 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85 dark:shadow-black/20">
+                <button
+                    type="button"
+                    onClick={() => setSecurityOpen((open) => !open)}
+                    aria-expanded={securityOpen}
+                    className="flex w-full items-center gap-3 p-5 text-left transition hover:bg-slate-50/80 dark:hover:bg-slate-800/50 sm:px-6"
+                >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        <LockKeyhole size={17} />
+                    </div>
 
                     <div className="min-w-0 flex-1">
                         <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Security</h3>
@@ -198,12 +249,22 @@ function Profile() {
                 </button>
 
                 {securityOpen && (
-                    <form onSubmit={handlePasswordSubmit} className="space-y-5 border-t border-slate-100 p-5 dark:border-slate-800 sm:p-6">
+                    <form onSubmit={handlePasswordSubmit} className="space-y-5 border-t border-slate-100/80 p-5 dark:border-white/[0.07] sm:p-6">
                         <div className="space-y-1.5">
                             <label htmlFor="newPassword" className="text-xs font-medium text-slate-600 dark:text-slate-300">New password</label>
+
                             <div className="relative">
-                                <input id="newPassword" type={showNewPassword ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" placeholder="Enter new password" className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-3 pr-10 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-green-600 dark:focus:ring-green-950" />
-                                <button type="button" onClick={() => setShowNewPassword((show) => !show)} aria-label={showNewPassword ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                <input
+                                    id="newPassword"
+                                    type={showNewPassword ? "text" : "password"}
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    autoComplete="new-password"
+                                    placeholder="Enter new password"
+                                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-3 pr-10 text-sm text-slate-700 shadow-sm outline-none transition placeholder:text-slate-300 hover:border-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-600 dark:hover:border-slate-600 dark:focus:border-green-600 dark:focus:ring-green-950"
+                                />
+
+                                <button type="button" onClick={() => setShowNewPassword((show) => !show)} aria-label={showNewPassword ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-green-600 dark:text-slate-400 dark:hover:text-green-400">
                                     {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
@@ -211,38 +272,61 @@ function Profile() {
 
                         <div className="space-y-1.5">
                             <label htmlFor="confirmPassword" className="text-xs font-medium text-slate-600 dark:text-slate-300">Confirm new password</label>
+
                             <div className="relative">
-                                <input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" placeholder="Confirm new password" className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-3 pr-10 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-green-600 dark:focus:ring-green-950" />
-                                <button type="button" onClick={() => setShowConfirmPassword((show) => !show)} aria-label={showConfirmPassword ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                <input
+                                    id="confirmPassword"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    autoComplete="new-password"
+                                    placeholder="Confirm new password"
+                                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-3 pr-10 text-sm text-slate-700 shadow-sm outline-none transition placeholder:text-slate-300 hover:border-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-600 dark:hover:border-slate-600 dark:focus:border-green-600 dark:focus:ring-green-950"
+                                />
+
+                                <button type="button" onClick={() => setShowConfirmPassword((show) => !show)} aria-label={showConfirmPassword ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-green-600 dark:text-slate-400 dark:hover:text-green-400">
                                     {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-5 dark:border-slate-800">
-                            <p className="text-[11px] text-slate-400 dark:text-slate-500">Use at least {PASSWORD_MIN_LENGTH} characters with uppercase, lowercase, number, and special character.</p>
-                            <button type="submit" disabled={savingPassword} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-700">
-                                <LockKeyhole size={16} /> {savingPassword ? "Updating..." : "Change password"}
+                        <div className="flex items-center justify-between gap-4 border-t border-slate-100/80 pt-5 dark:border-white/[0.07]">
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                                Use at least {PASSWORD_MIN_LENGTH} characters with uppercase, lowercase, number, and special character.
+                            </p>
+
+                            <button type="submit" disabled={savingPassword} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-700 dark:hover:bg-slate-600">
+                                <LockKeyhole size={16} />
+                                {savingPassword ? "Updating..." : "Change password"}
                             </button>
                         </div>
                     </form>
                 )}
             </section>
 
-            <section className="rounded-2xl border border-red-100 bg-white p-5 shadow-sm dark:border-red-900/40 dark:bg-slate-900 sm:px-6">
+            {/* Logout */}
+            <section className="rounded-2xl border border-red-100/80 bg-white/80 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] backdrop-blur-xl dark:border-red-900/40 dark:bg-slate-900/80 dark:shadow-black/20 sm:px-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Log out</h3>
                         <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">End your current Takda session on this device.</p>
                     </div>
 
-                    <button type="button" onClick={() => setShowLogoutDialog(true)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-medium text-red-500 transition hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30">
-                        <LogOut size={16} /> Log out
+                    <button type="button" onClick={() => setShowLogoutDialog(true)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-medium text-red-500 transition hover:bg-red-50 dark:border-red-900 dark:bg-slate-950 dark:text-red-400 dark:hover:bg-red-950/30">
+                        <LogOut size={16} />
+                        Log out
                     </button>
                 </div>
             </section>
 
-            <ConfirmDialog isOpen={showLogoutDialog} title="Log out?" message="Are you sure you want to log out of your account?" confirmText="Log out" onConfirm={handleConfirmLogout} onCancel={() => setShowLogoutDialog(false)} />
+            <ConfirmDialog
+                isOpen={showLogoutDialog}
+                title="Log out?"
+                message="Are you sure you want to log out of your account?"
+                confirmText="Log out"
+                onConfirm={handleConfirmLogout}
+                onCancel={() => setShowLogoutDialog(false)}
+            />
         </div>
     );
 }
