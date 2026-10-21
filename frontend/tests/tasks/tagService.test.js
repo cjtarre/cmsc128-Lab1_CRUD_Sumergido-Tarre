@@ -14,7 +14,7 @@ vi.mock("axios", () => ({
     default: { create: vi.fn(() => mocks.apiInstance) },
 }));
 
-import { tagService } from "../src/features/tasks/services/tagService";
+import { tagService } from "../../src/features/tasks/services/tagService";
 
 describe("tagService", () => {
     beforeEach(() => {

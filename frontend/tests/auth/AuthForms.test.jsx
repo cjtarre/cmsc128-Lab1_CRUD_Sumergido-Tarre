@@ -4,21 +4,21 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 
-import AuthPanel from "../src/features/auth/components/AuthPanel";
-import { useAuth } from "../src/features/auth/hooks/useAuth";
-import ForgotPassword from "../src/features/auth/pages/ForgotPassword";
-import Login from "../src/features/auth/pages/Login";
-import Signup from "../src/features/auth/pages/Signup";
+import AuthPanel from "../../src/features/auth/components/AuthPanel";
+import { useAuth } from "../../src/features/auth/hooks/useAuth";
+import ForgotPassword from "../../src/features/auth/pages/ForgotPassword";
+import Login from "../../src/features/auth/pages/Login";
+import Signup from "../../src/features/auth/pages/Signup";
 
-vi.mock("../src/features/auth/hooks/useAuth", () => ({
+vi.mock("../../src/features/auth/hooks/useAuth", () => ({
     useAuth: vi.fn(),
 }));
 
-vi.mock("../src/features/auth/services/authService", () => ({
+vi.mock("../../src/features/auth/services/authService", () => ({
     authService: { forgotPassword: vi.fn() },
 }));
 
-vi.mock("../src/shared/components/effects/HoverText", () => ({
+vi.mock("../../src/shared/components/effects/HoverText", () => ({
     default: ({ text }) => <span>{text}</span>,
 }));
 

@@ -16,12 +16,12 @@ vi.mock("axios", () => ({
     default: { create: vi.fn(() => mocks.apiInstance) },
 }));
 
-import { authService } from "../src/features/auth/services/authService";
+import { authService } from "../../src/features/auth/services/authService";
 
 describe("authService", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        globalThis.localStorage = { getItem: vi.fn() };
+        vi.spyOn(Storage.prototype, "getItem").mockReturnValue(null);
     });
 
     it("signs up a user", async () => {
@@ -179,3 +179,4 @@ describe("authService", () => {
         expect(result).toEqual(response);
     });
 });
+

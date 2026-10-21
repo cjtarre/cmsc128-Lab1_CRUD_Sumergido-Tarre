@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import useTasks from "../src/features/tasks/hooks/useTasks";
-import { taskService } from "../src/features/tasks/services/taskService";
-import { STATUS, PRIORITY } from "../src/features/tasks/constants/taskOptions";
+import useTasks from "../../src/features/tasks/hooks/useTasks";
+import { taskService } from "../../src/features/tasks/services/taskService";
+import { STATUS, PRIORITY } from "../../src/features/tasks/constants/taskOptions";
 
-vi.mock("../src/features/tasks/services/taskService", () => ({
+vi.mock("../../src/features/tasks/services/taskService", () => ({
     taskService: {
         createTask: vi.fn(),
         updateTask: vi.fn(),

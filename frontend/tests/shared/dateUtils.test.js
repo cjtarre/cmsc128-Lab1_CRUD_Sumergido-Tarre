@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
     convertToInputDate, convertToInputTime, formatDueDate,
     formatDueTime, getTaskCategory,
-} from "../src/shared/utils/dateUtils";
+} from "../../src/shared/utils/dateUtils";
 
 describe("dateUtils", () => {
     afterEach(() => {

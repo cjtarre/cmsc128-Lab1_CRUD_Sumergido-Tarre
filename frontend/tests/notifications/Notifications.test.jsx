@@ -4,15 +4,15 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
-import Notifications from "../src/features/notifications/pages/Notifications";
-import { useNotifications } from "../src/features/notifications/context/NotificationContext";
-import { useTaskData } from "../src/features/tasks/context/TaskContext";
+import Notifications from "../../src/features/notifications/pages/Notifications";
+import { useNotifications } from "../../src/features/notifications/context/NotificationContext";
+import { useTaskData } from "../../src/features/tasks/context/TaskContext";
 
-vi.mock("../src/features/notifications/context/NotificationContext", () => ({
+vi.mock("../../src/features/notifications/context/NotificationContext", () => ({
     useNotifications: vi.fn(),
 }));
 
-vi.mock("../src/features/tasks/context/TaskContext", () => ({
+vi.mock("../../src/features/tasks/context/TaskContext", () => ({
     useTaskData: vi.fn(),
 }));
 

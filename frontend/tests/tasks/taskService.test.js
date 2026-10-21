@@ -18,7 +18,7 @@ vi.mock("axios", () => ({
     default: { create: vi.fn(() => mocks.apiInstance) },
 }));
 
-import { taskService } from "../src/features/tasks/services/taskService";
+import { taskService } from "../../src/features/tasks/services/taskService";
 
 describe("taskService", () => {
     beforeEach(() => {

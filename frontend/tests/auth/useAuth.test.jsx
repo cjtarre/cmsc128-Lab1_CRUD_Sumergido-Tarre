@@ -3,8 +3,8 @@
 import { cleanup, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { AuthContext } from "../src/features/auth/context/AuthContext";
-import { useAuth } from "../src/features/auth/hooks/useAuth";
+import { AuthContext } from "../../src/features/auth/context/AuthContext";
+import { useAuth } from "../../src/features/auth/hooks/useAuth";
 
 afterEach(cleanup);
 

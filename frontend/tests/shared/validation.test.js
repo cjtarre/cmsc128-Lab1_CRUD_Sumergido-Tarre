@@ -4,7 +4,7 @@ import {
     DISPLAY_NAME_MAX_LENGTH, INFO_MAX_LENGTH, NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH,
     USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, validateDisplayName, validatePassword,
     validateSignup, validateTask, validateUsername,
-} from "../src/shared/utils/validation";
+} from "../../src/shared/utils/validation";
 
 describe("validateTask", () => {
     const validTask = {

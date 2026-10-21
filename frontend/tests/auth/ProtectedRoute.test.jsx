@@ -4,10 +4,10 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 
-import { useAuth } from "../src/features/auth/hooks/useAuth";
-import ProtectedRoute from "../src/routes/ProtectedRoute";
+import { useAuth } from "../../src/features/auth/hooks/useAuth";
+import ProtectedRoute from "../../src/routes/ProtectedRoute";
 
-vi.mock("../src/features/auth/hooks/useAuth", () => ({
+vi.mock("../../src/features/auth/hooks/useAuth", () => ({
     useAuth: vi.fn(),
 }));
 

@@ -4,10 +4,10 @@ import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useContext } from "react";
 
-import { AuthContext, AuthProvider } from "../src/features/auth/context/AuthContext";
-import { authService } from "../src/features/auth/services/authService";
+import { AuthContext, AuthProvider } from "../../src/features/auth/context/AuthContext";
+import { authService } from "../../src/features/auth/services/authService";
 
-vi.mock("../src/features/auth/services/authService", () => ({
+vi.mock("../../src/features/auth/services/authService", () => ({
     authService: {
         login: vi.fn(),
         signup: vi.fn(),
