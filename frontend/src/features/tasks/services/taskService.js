@@ -1,26 +1,31 @@
 import api from "../../../shared/services/api";
 
-const API_URL = '/api/tasks';
+const API_URL = "/api/tasks";
 
 export const taskService = {
-    getTasks: async () => {
-        const response = await api.get(API_URL);
+    getTasks: async (projectId = null, scope = null) => {
+        const params = projectId ? { project_id: projectId } : scope ? { scope } : {};
+        const response = await api.get(API_URL, { params });
         return response.data;
     },
-    createTask: async (taskData) => {
-        const response = await api.post(API_URL, taskData);
+
+    createTask: async (task) => {
+        const response = await api.post(API_URL, task);
         return response.data;
     },
-    updateTask: async (taskId, taskData) => {
-        const response = await api.put(`${API_URL}/${taskId}`, taskData);
+
+    updateTask: async (id, task) => {
+        const response = await api.put(`${API_URL}/${id}`, task);
         return response.data;
     },
-    deleteTask: async (taskId) => {
-        const response = await api.delete(`${API_URL}/${taskId}`);
+
+    deleteTask: async (id) => {
+        const response = await api.delete(`${API_URL}/${id}`);
         return response.data;
     },
-    restoreTask: async (taskId) => {
-        const response = await api.patch(`${API_URL}/${taskId}/restore`);
+
+    restoreTask: async (id) => {
+        const response = await api.patch(`${API_URL}/${id}/restore`);
         return response.data;
     },
 };

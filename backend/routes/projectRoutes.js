@@ -8,7 +8,8 @@ const {
     createProject,
     updateProject,
     deleteProject,
-    restoreProject
+    restoreProject,
+    getProjectActivity
 } = require('../controllers/projectController');
 const {
     getMembers,
@@ -29,10 +30,10 @@ const {
 // CRUD route endpoints                                                                  // samples
 router.get('/', requireAuth, getAllProjects);                                               // GET      http://localhost:5000/api/projects  (?deleted=true for deleted projects)
 router.post('/', requireAuth, createProject);                                               // POST     http://localhost:5000/api/projects                { project_name }
-router.put('/:project_id', requireAuth, requireProjectRole('owner'), updateProject);              // PUT      http://localhost:5000/api/projects/123            { project_name }
-router.delete('/:project_id', requireAuth, requireProjectRole('owner'), deleteProject);           // DELETE   http://localhost:5000/api/projects/123
+router.put('/:project_id', requireAuth, requireProjectRole('owner'), updateProject);        // PUT      http://localhost:5000/api/projects/123            { project_name }
+router.delete('/:project_id', requireAuth, requireProjectRole('owner'), deleteProject);     // DELETE   http://localhost:5000/api/projects/123
 router.patch('/:project_id/restore', requireAuth,
-    requireProjectRole('owner', { includeDeleted: true }), restoreProject);                    // PATCH    http://localhost:5000/api/projects/123/restore
+    requireProjectRole('owner', { includeDeleted: true }), restoreProject);                 // PATCH    http://localhost:5000/api/projects/123/restore
 
 // Members                                                                               // samples
 router.get('/:project_id/members', requireAuth,
@@ -42,14 +43,18 @@ router.patch('/:project_id/members/:user_id', requireAuth,
 router.delete('/:project_id/members/:user_id', requireAuth,
     requireProjectRole('owner'), removeMember);                                             // DELETE   http://localhost:5000/api/projects/123/members/<uuid>
 router.post('/:project_id/leave', requireAuth,
-    requireProjectRole('viewer'), leaveProject);                                               // POST     http://localhost:5000/api/projects/123/leave
+    requireProjectRole('viewer'), leaveProject);                                            // POST     http://localhost:5000/api/projects/123/leave
 
 // Invites (owner side; the invitee answers via /api/invites)
 router.post('/:project_id/invites', requireAuth, inviteRateLimiter,
     requireProjectRole('owner'), createInvite);                                             // POST     http://localhost:5000/api/projects/123/invites          { identifier, role }
 router.get('/:project_id/invites', requireAuth,
-    requireProjectRole('owner'), getProjectInvites);                                           // GET      http://localhost:5000/api/projects/123/invites
+    requireProjectRole('owner'), getProjectInvites);                                        // GET      http://localhost:5000/api/projects/123/invites
 router.delete('/:project_id/invites/:invite_id', requireAuth,
     requireProjectRole('owner'), cancelInvite);                                             // DELETE   http://localhost:5000/api/projects/123/invites/45
+
+// Recent project activity (visible to every project member)
+router.get('/:project_id/activities', requireAuth,
+    requireProjectRole('viewer'), getProjectActivity);                                      // GET      http://localhost:5000/api/projects/123/activities        (?limit=20)
 
 module.exports = router;

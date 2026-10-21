@@ -75,7 +75,7 @@ export function TaskProvider({ children }) {
             setError(null);
 
             const [fetchedTasks, fetchedTags] = await Promise.all([
-                taskService.getTasks(),
+                taskService.getTasks(null, "default"),
                 tagService.getTags(),
             ]);
 

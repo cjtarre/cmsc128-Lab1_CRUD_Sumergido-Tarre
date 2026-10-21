@@ -40,3 +40,10 @@ export const EDIT_SELECT_FIELDS = [
     ["priority", "Priority", PRIORITY_OPTIONS],
     ["status", "Status", STATUS_OPTIONS],
 ];
+
+// Board columns follow the available task statuses.
+export const BOARD_COLUMNS = [
+    { id: STATUS.NOT_STARTED, label: "To Do" },
+    { id: STATUS.IN_PROGRESS, label: "In Progress" },
+    { id: STATUS.COMPLETED, label: "Done" },
+];
