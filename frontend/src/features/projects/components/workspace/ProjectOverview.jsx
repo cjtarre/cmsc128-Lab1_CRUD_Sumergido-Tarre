@@ -37,29 +37,46 @@ function ProjectOverview({ tasks, activities = [], loading, onOpenList, onRefres
                     const value = statValues[key], expanded = expandedStat === label;
 
                     return (
-                        <button key={key} type="button" onClick={() => setExpandedStat(expanded ? null : label)} aria-label={`${label}: ${value}`} aria-expanded={expanded}
-                            className={`flex h-9 min-w-0 items-center justify-center overflow-hidden rounded-xl border border-white/75 bg-white/55 px-2.5 shadow-sm backdrop-blur-md transition-all duration-300 dark:border-white/[0.08] dark:bg-white/[0.04] ${expanded ? "flex-1 justify-start" : "shrink-0"}`}>
+                        <button
+                            key={key}
+                            type="button"
+                            onClick={() => setExpandedStat(expanded ? null : label)}
+                            aria-label={`${label}: ${value}`}
+                            aria-expanded={expanded}
+                            className={`flex h-9 min-w-0 items-center justify-center overflow-hidden rounded-xl border border-white/75 bg-white/55 px-2.5 shadow-sm backdrop-blur-md transition-all duration-300 dark:border-white/[0.08] dark:bg-white/[0.04] ${
+                                expanded ? "flex-1 justify-start" : "shrink-0"
+                            }`}
+                        >
                             <Icon size={14} className="shrink-0 text-green-500 dark:text-green-400" />
                             <span className="ml-1.5 shrink-0 text-xs font-semibold text-slate-700 dark:text-slate-200">{value}</span>
-                            <span className={`overflow-hidden whitespace-nowrap text-[10px] font-medium text-slate-400 transition-all duration-300 dark:text-slate-500 ${expanded ? "ml-1.5 max-w-24 opacity-100" : "ml-0 max-w-0 opacity-0"}`}>{label}</span>
+                            <span className={`overflow-hidden whitespace-nowrap text-[10px] font-medium text-slate-400 transition-all duration-300 dark:text-slate-500 ${
+                                expanded ? "ml-1.5 max-w-24 opacity-100" : "ml-0 max-w-0 opacity-0"
+                            }`}>
+                                {label}
+                            </span>
                         </button>
                     );
                 })}
             </div>
 
-            {/* Desktop stats */}
+            {/* Tablet + desktop stats */}
             <div className="mt-4 hidden flex-wrap gap-2.5 sm:flex">
                 {PROJECT_STATS.map(({ key, label, icon: Icon }) => (
-                    <div key={key} className="flex h-11 min-w-0 items-center gap-2 rounded-xl border border-white/75 bg-white/55 px-3.5 shadow-sm backdrop-blur-md dark:border-white/[0.08] dark:bg-white/[0.04]">
+                    <div
+                        key={key}
+                        className="group flex h-11 items-center overflow-hidden rounded-xl border border-white/75 bg-white/55 px-3.5 shadow-sm backdrop-blur-md transition-all duration-300 dark:border-white/[0.08] dark:bg-white/[0.04]"
+                    >
                         <Icon size={14} className="shrink-0 text-green-500 dark:text-green-400" />
-                        <span className="shrink-0 text-sm font-semibold text-slate-700 dark:text-slate-200">{statValues[key]}</span>
-                        <span className="truncate text-[11px] font-medium text-slate-400 dark:text-slate-500">{label}</span>
+                        <span className="ml-2 shrink-0 text-sm font-semibold text-slate-700 dark:text-slate-200">{statValues[key]}</span>
+
+                        <span className="ml-0 max-w-0 overflow-hidden whitespace-nowrap text-[11px] font-medium text-slate-400 opacity-0 transition-all duration-300 group-hover:ml-2 group-hover:max-w-24 group-hover:opacity-100 dark:text-slate-500 xl:ml-2 xl:max-w-24 xl:opacity-100">
+                            {label}
+                        </span>
                     </div>
                 ))}
             </div>
 
-            <div className="mt-5 grid items-stretch gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(210px,0.8fr)_minmax(260px,1.15fr)]">
-                {/* Current Work */}
+            <div className="mt-5 grid items-stretch gap-3 md:grid-cols-[minmax(0,2fr)_minmax(210px,0.8fr)] xl:grid-cols-[minmax(0,2fr)_minmax(210px,0.8fr)_minmax(260px,1.15fr)]">                {/* Current Work */}
                 <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border border-white/80 bg-white/70 shadow-[0_6px_22px_rgba(15,23,42,0.035)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/55">
                     <div className="flex shrink-0 items-center justify-between border-b border-white/60 px-4 py-3 dark:border-white/[0.07]">
                         <div className="min-w-0">
@@ -137,8 +154,7 @@ function ProjectOverview({ tasks, activities = [], loading, onOpenList, onRefres
                 </aside>
 
                 {/* Recent Activity */}
-                <section className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/75 bg-white/50 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/40">
-                    <div className="flex items-center justify-between border-b border-white/60 px-4 py-3 dark:border-white/[0.07]">
+                <section className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/75 bg-white/50 backdrop-blur-xl md:col-span-2 dark:border-white/10 dark:bg-slate-900/40 xl:col-span-1">                    <div className="flex items-center justify-between border-b border-white/60 px-4 py-3 dark:border-white/[0.07]">
                         <div className="min-w-0">
                             <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-300">Recent Activity</h3>
                             <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">Latest project updates.</p>
