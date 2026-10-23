@@ -55,7 +55,7 @@ function Projects() {
                         {/* Search and primary action. */}
                         <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-[500px] sm:pt-3">
                             <div className="relative min-w-0 flex-1">
-                                <span className="pointer-events-none absolute left-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-lg bg-slate-100/80 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400">
+                                <span className="pointer-events-none absolute left-2.5 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-lg bg-slate-100/80 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400">
                                     <Search size={13} strokeWidth={2.2} />
                                 </span>
 

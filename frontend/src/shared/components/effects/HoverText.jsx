@@ -1,43 +1,41 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 function HoverText({ text, className = "" }) {
     const [active, setActive] = useState(-1);
-    const [cursor, setCursor] = useState({ x: 0, y: 0 });
+    const activeRef = useRef(-1);
+    const cursorRef = useRef(null);
 
     const handleMouseMove = (event) => {
-        const spans = event.currentTarget.querySelectorAll("span[data-letter]");
-        let hovered = -1;
+        const letter = event.target.closest("[data-letter]");
+        const hovered = letter
+            ? Number(letter.dataset.letterIndex)
+            : -1;
 
-        spans.forEach((span, index) => {
-            const rect = span.getBoundingClientRect();
+        if (activeRef.current !== hovered) {
+            activeRef.current = hovered;
+            setActive(hovered);
+        }
 
-            if (
-                event.clientX >= rect.left &&
-                event.clientX <= rect.right &&
-                event.clientY >= rect.top &&
-                event.clientY <= rect.bottom
-            ) {
-                hovered = index;
-            }
-        });
-
-        setActive(hovered);
-        setCursor({
-            x: event.clientX,
-            y: event.clientY,
-        });
+        if (cursorRef.current) {
+            cursorRef.current.style.left = `${event.clientX}px`;
+            cursorRef.current.style.top = `${event.clientY}px`;
+        }
     };
 
     return (
         <div
             className={`relative flex cursor-none justify-center ${className}`}
             onMouseMove={handleMouseMove}
-            onMouseLeave={() => setActive(-1)}
+            onMouseLeave={() => {
+                activeRef.current = -1;
+                setActive(-1);
+            }}
         >
             {text.split("").map((char, index) => (
                 <span
                     key={index}
                     data-letter
+                    data-letter-index={index}
                     className="inline-block transition-all duration-150 ease-out"
                     style={{
                         transform:
@@ -52,11 +50,8 @@ function HoverText({ text, className = "" }) {
 
             {active !== -1 && (
                 <span
+                    ref={cursorRef}
                     className="pointer-events-none fixed z-50 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-400 opacity-70"
-                    style={{
-                        left: cursor.x,
-                        top: cursor.y,
-                    }}
                 />
             )}
         </div>

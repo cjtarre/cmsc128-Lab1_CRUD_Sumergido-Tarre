@@ -23,7 +23,7 @@ function ConfirmDialog({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-900/25 px-4 py-4 backdrop-blur-sm dark:bg-black/55 sm:py-0"
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-900/40 px-4 py-4 dark:bg-black/65 sm:py-0"
             onClick={() => !loading && onCancel?.()}
         >
             <div
@@ -34,7 +34,7 @@ function ConfirmDialog({
                 aria-labelledby="confirm-dialog-title"
                 aria-describedby="confirm-dialog-message"
                 onClick={(event) => event.stopPropagation()}
-                className="relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/70 bg-white/90 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.18)] backdrop-blur-xl outline-none dark:border-white/10 dark:bg-slate-900/90 dark:shadow-black/40 sm:max-h-none sm:overflow-visible sm:p-6"
+                className="relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/70 bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.18)] outline-none dark:border-white/10 dark:bg-slate-900 dark:shadow-black/40 sm:max-h-none sm:overflow-visible sm:p-6"
             >
                 <div className="flex items-start justify-between gap-3 sm:gap-4">
                     <div className="flex min-w-0 items-center gap-3">

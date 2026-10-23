@@ -49,8 +49,8 @@ function TaskDetails({ task, onClose, onEdit, onDelete, collaborative = false })
     );
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/20 px-3 pb-4 pt-20 backdrop-blur-sm dark:bg-black/55 sm:px-4 sm:pb-5 sm:pt-20" role="dialog" aria-modal="true" aria-labelledby="task-details-title">
-            <div className="mx-auto w-full max-w-lg overflow-hidden rounded-2xl border border-white/70 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/40">
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/40 px-3 pb-4 pt-20 dark:bg-black/65 sm:px-4 sm:pb-5 sm:pt-20" role="dialog" aria-modal="true" aria-labelledby="task-details-title">
+            <div className="mx-auto w-full max-w-lg overflow-hidden rounded-2xl border border-white/70 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)] dark:border-white/10 dark:bg-slate-900 dark:shadow-black/40">
 
                 {/* Header */}
                 <div className="flex items-start justify-between border-b border-white/60 bg-white/25 px-5 py-3.5 dark:border-white/10 dark:bg-white/[0.02]">

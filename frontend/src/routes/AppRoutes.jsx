@@ -1,5 +1,4 @@
-import { AnimatePresence } from "motion/react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import { useAuth } from "../features/auth/hooks/useAuth";
 import ForgotPassword from "../features/auth/pages/ForgotPassword";
@@ -23,11 +22,9 @@ import LandingPage from "../pages/LandingPage";
 import NotFound from "../pages/NotFound";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 import Settings from "../pages/Settings";
-import PageTransition from "../shared/components/effects/PageTransition";
 import ProtectedRoute from "./ProtectedRoute";
 
 function AppRoutes() {
-    const location = useLocation();
     const { isAuthenticated, authLoading } = useAuth();
 
     if (authLoading) {
@@ -39,9 +36,7 @@ function AppRoutes() {
     }
 
     return (
-        <AnimatePresence mode="wait">
-            <PageTransition key={location.pathname}>
-                <Routes location={location}>
+        <Routes>
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -74,9 +69,7 @@ function AppRoutes() {
                     </Route>
 
                     <Route path="*" element={<NotFound />} />
-                </Routes>
-            </PageTransition>
-        </AnimatePresence>
+        </Routes>
     );
 }
 

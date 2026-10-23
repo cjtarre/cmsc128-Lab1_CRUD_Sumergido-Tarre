@@ -120,9 +120,9 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
     );
 
     return (
-        <div className="fixed inset-x-0 bottom-[68px] top-[60px] z-[9999] flex items-start justify-center overflow-hidden bg-slate-900/20 px-2 py-2 backdrop-blur-sm dark:bg-black/55 sm:inset-0 sm:overflow-y-auto sm:px-4 sm:pb-4 sm:pt-20"
+        <div className="fixed inset-x-0 bottom-[68px] top-[60px] z-[9999] flex items-start justify-center overflow-hidden bg-slate-900/40 px-2 py-2 dark:bg-black/65 sm:inset-0 sm:overflow-y-auto sm:px-4 sm:pb-4 sm:pt-20"
             role="dialog" aria-modal="true" aria-labelledby="edit-task-title">
-            <div className="mx-auto flex max-h-full w-full max-w-[560px] flex-col overflow-hidden rounded-2xl border border-white/70 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/40 sm:max-h-[calc(100dvh-6.5rem)]">
+            <div className="mx-auto flex max-h-full w-full max-w-[560px] flex-col overflow-hidden rounded-2xl border border-white/70 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)] dark:border-white/10 dark:bg-slate-900 dark:shadow-black/40 sm:max-h-[calc(100dvh-6.5rem)]">
 
                 <div className="flex shrink-0 items-center justify-between border-b border-white/60 bg-white/25 px-3.5 py-2 dark:border-white/10 dark:bg-white/[0.02] sm:items-start sm:px-5 sm:py-3">
                     <div className="min-w-0">

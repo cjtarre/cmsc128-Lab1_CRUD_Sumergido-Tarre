@@ -2,6 +2,7 @@ import AppRoutes from "./routes/AppRoutes";
 import AppToaster from "./shared/components/common/AppToaster";
 import { AuthProvider } from "./features/auth/context/AuthContext";
 import { ThemeProvider } from "./shared/context/ThemeContext";
+import "./App.css";
 
 function App() {
     return (
