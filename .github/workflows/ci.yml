@@ -6,6 +6,7 @@ on:
 
 jobs:
   frontend:
+    name: Frontend - Tests, Lint & Build
     runs-on: ubuntu-latest
 
     defaults:
@@ -36,6 +37,7 @@ jobs:
         run: npm run build
 
   backend:
+    name: Backend - Tests
     runs-on: ubuntu-latest
 
     defaults:
@@ -60,7 +62,7 @@ jobs:
         run: npm test
 
   docker-build:
-    name: Docker Build Validation
+    name: Docker - Build Validation
     runs-on: ubuntu-latest
 
     steps:
