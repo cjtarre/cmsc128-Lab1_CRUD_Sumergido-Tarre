@@ -53,7 +53,7 @@ export const getTagSwatchStyle = (hex) => {
     const brightness = luminance(rgb);
     return {
         backgroundColor: toHex(rgb),
-        color: brightness > 0.179 ? "#1e293b" : "#ffffff",
+        color: brightness > 0.179 ? "#000000" : "#ffffff",
         borderColor: brightness > 0.72 ? "#94a3b8" : "#64748b",
     };
 };
