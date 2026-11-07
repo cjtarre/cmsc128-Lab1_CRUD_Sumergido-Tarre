@@ -104,4 +104,55 @@ describe("useProjectWorkspace", () => {
         expect(result.current.tasks).toEqual([]);
         expect(result.current.activities).toEqual([]);
     });
+
+    it("ignores an outdated response after switching projects", async () => {
+        let resolveOldTasks;
+        taskService.getTasks.mockImplementation((id) => id === 5
+            ? new Promise((resolve) => { resolveOldTasks = resolve; })
+            : Promise.resolve([{ id: 20, task_name: "New project task" }]));
+        projectService.getProjects.mockResolvedValue([
+            { id: 5, project_name: "Old project", is_default: false },
+            { id: 6, project_name: "New project", is_default: false },
+        ]);
+
+        const { result, rerender } = renderHook(({ id }) => useProjectWorkspace(id), {
+            initialProps: { id: 5 },
+        });
+        await waitFor(() => expect(resolveOldTasks).toBeTypeOf("function"));
+        rerender({ id: 6 });
+        await waitFor(() => expect(result.current.project?.id).toBe(6));
+
+        await act(async () => {
+            resolveOldTasks([{ id: 10, task_name: "Stale task" }]);
+        });
+
+        expect(result.current.project.id).toBe(6);
+        expect(result.current.tasks).toEqual([{ id: 20, task_name: "New project task", converted: true }]);
+        expect(result.current.loading).toBe(false);
+    });
+
+    it("ignores stale activity refreshes after a project switch", async () => {
+        projectService.getProjects.mockResolvedValue([
+            { id: 5, project_name: "Old project", is_default: false },
+            { id: 6, project_name: "New project", is_default: false },
+        ]);
+        const { result, rerender } = renderHook(({ id }) => useProjectWorkspace(id), {
+            initialProps: { id: 5 },
+        });
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        let resolveOldActivity;
+        projectService.getActivities.mockImplementation((id) => id === 5
+            ? new Promise((resolve) => { resolveOldActivity = resolve; })
+            : Promise.resolve([{ id: 60 }]));
+
+        act(() => { void result.current.loadActivities(); });
+        await waitFor(() => expect(resolveOldActivity).toBeTypeOf("function"));
+        rerender({ id: 6 });
+        await waitFor(() => expect(result.current.project?.id).toBe(6));
+
+        await act(async () => { resolveOldActivity([{ id: 50 }]); });
+        expect(result.current.activities).toEqual([{ id: 60 }]);
+        expect(result.current.refreshingActivity).toBe(false);
+    });
 });

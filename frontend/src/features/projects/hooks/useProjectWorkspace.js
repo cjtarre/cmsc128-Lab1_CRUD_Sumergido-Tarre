@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { convertApiTask } from "../../tasks/hooks/useTasks";
 import { taskService } from "../../tasks/services/taskService";
@@ -14,25 +14,39 @@ export function useProjectWorkspace(projectId) {
     const [error, setError] = useState("");
     const [projectUnavailable, setProjectUnavailable] = useState(false);
     const [accessDenied, setAccessDenied] = useState(false);
+    const activityRequestId = useRef(0);
 
     // Refresh only the activity feed.
     const loadActivities = useCallback(async () => {
+        const requestId = ++activityRequestId.current;
         try {
             setRefreshingActivity(true);
             const data = await projectService.getActivities(projectId);
-            setActivities(Array.isArray(data) ? data : []);
+            if (requestId === activityRequestId.current) {
+                setActivities(Array.isArray(data) ? data : []);
+            }
         } catch (err) {
-            if (err.response?.status !== 404 && err.response?.status !== 403) console.error("Error refreshing project activity:", err);
+            if (requestId === activityRequestId.current && err.response?.status !== 404 && err.response?.status !== 403) {
+                console.error("Error refreshing project activity:", err);
+            }
         } finally {
-            setRefreshingActivity(false);
+            if (requestId === activityRequestId.current) setRefreshingActivity(false);
         }
     }, [projectId]);
 
     // Load the project, tasks, and activity together.
     useEffect(() => {
+        let active = true;
+        // Invalidate activity refreshes started for the previous workspace.
+        activityRequestId.current += 1;
+
         const loadWorkspace = async () => {
             try {
                 setLoading(true);
+                setProject(null);
+                setTasks([]);
+                setActivities([]);
+                setRefreshingActivity(false);
                 setError("");
                 setProjectUnavailable(false);
                 setAccessDenied(false);
@@ -42,6 +56,8 @@ export function useProjectWorkspace(projectId) {
                     taskService.getTasks(projectId),
                     projectService.getActivities(projectId),
                 ]);
+
+                if (!active) return;
 
                 const projects = Array.isArray(projectsData) ? projectsData : [];
                 const matchedProject = projects.find((item) => String(item.id) === String(projectId) && !item.is_default);
@@ -55,6 +71,8 @@ export function useProjectWorkspace(projectId) {
                 setTasks((Array.isArray(tasksData) ? tasksData : []).map(convertApiTask));
                 setActivities(Array.isArray(activitiesData) ? activitiesData : []);
             } catch (err) {
+                if (!active) return;
+
                 if (err.response?.status === 404) {
                     setProjectUnavailable(true);
                     return;
@@ -68,11 +86,16 @@ export function useProjectWorkspace(projectId) {
                 console.error("Error loading project workspace:", err);
                 setError(err.response?.data?.error || "Unable to load this project.");
             } finally {
-                setLoading(false);
+                if (active) setLoading(false);
             }
         };
 
         loadWorkspace();
+
+        return () => {
+            active = false;
+            activityRequestId.current += 1;
+        };
     }, [projectId]);
 
     return {
