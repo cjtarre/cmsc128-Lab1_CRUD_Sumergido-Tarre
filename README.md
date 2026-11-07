@@ -267,6 +267,14 @@ cmsc128-Lab1_CRUD_Sumergido-Tarre/
 
 ---
 
+## Docker and CI
+
+Takda supports Docker Compose for local containerization and GitHub Actions for automated testing and build validation.
+
+See the [Docker and CI Guide](docs/docker-ci.md) for setup instructions, configuration, troubleshooting, and CI details.
+
+---
+
 ## Installation
 
 ### Preliminary
