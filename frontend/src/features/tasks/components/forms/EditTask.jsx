@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useBodyScrollLock } from "../../../../shared/hooks/useBodyScrollLock";
+import { useIsMobile } from "../../../../shared/hooks/useIsMobile";
 import { ChevronDown, X } from "lucide-react";
 
 import { convertToInputDate, convertToInputTime } from "../../../../shared/utils/dateUtils";
@@ -15,14 +17,8 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
     const [formData, setFormData] = useState(emptyFormData);
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
-    const [isMobile, setIsMobile] = useState(() => window.matchMedia("(max-width: 639px)").matches);
-
-    useEffect(() => {
-        const media = window.matchMedia("(max-width: 639px)");
-        const update = () => setIsMobile(media.matches);
-        media.addEventListener("change", update);
-        return () => media.removeEventListener("change", update);
-    }, []);
+    const isMobile = useIsMobile();
+    useBodyScrollLock(isOpen && Boolean(task));
 
     useEffect(() => {
         if (!task) return;
@@ -38,13 +34,6 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
         setSubmitting(false);
     }, [task]);
 
-    useEffect(() => {
-        if (!isOpen) return;
-
-        const overflow = document.body.style.overflow;
-        document.body.style.overflow = "hidden";
-        return () => { document.body.style.overflow = overflow; };
-    }, [isOpen]);
 
     if (!isOpen || !task) return null;
 
