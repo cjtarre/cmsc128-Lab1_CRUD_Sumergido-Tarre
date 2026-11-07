@@ -184,10 +184,6 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
                         </div>
 
                         <section aria-label="Task tags" className="rounded-xl border border-white/70 bg-white/35 p-3 dark:border-white/10 dark:bg-white/[0.035]">
-                            <div className="mb-2 flex items-center justify-between gap-2">
-                                <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 sm:text-xs">Tags</span>
-                                <span className="text-[10px] text-slate-400 dark:text-slate-500">{formData.tags.length}/3 selected</span>
-                            </div>
                             {tagButtons}
                         </section>
                     </div>
