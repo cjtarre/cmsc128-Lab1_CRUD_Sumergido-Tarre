@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Pencil, Plus, Settings2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import ConfirmDialog from "../../../../shared/components/common/ConfirmDialog";
@@ -16,6 +16,7 @@ function TagPicker({ selectedIds = [], onToggle, projectId = null, canManage = t
     const [tags, setTags] = useState(availableTags);
     const [showAll, setShowAll] = useState(false);
     const [manageOpen, setManageOpen] = useState(false);
+    const [showManageList, setShowManageList] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [tagName, setTagName] = useState("");
     const [color, setColor] = useState(DEFAULT_TAG_COLOR);
@@ -79,10 +80,16 @@ function TagPicker({ selectedIds = [], onToggle, projectId = null, canManage = t
             } else {
                 const created = await tagService.createTag({ tagName: name, color, projectId });
                 syncTags([...tags, created].sort((a, b) => a.tag_name.localeCompare(b.tag_name)));
-                toast.success("Tag created.");
+                if (selectedIds.length < MAX_SELECTED_TAGS) {
+                    onToggle(created.tag_id);
+                    toast.success("Tag created and selected.");
+                } else {
+                    toast.success("Tag created. Select it after removing another tag.");
+                }
             }
 
             resetEditor();
+            setManageOpen(false);
         } catch (error) {
             console.error("Error saving tag:", error);
             toast.error(error.response?.data?.error || "Unable to save tag.");
@@ -95,6 +102,7 @@ function TagPicker({ selectedIds = [], onToggle, projectId = null, canManage = t
         setEditingId(tag.tag_id);
         setTagName(tag.tag_name);
         setColor(getTagColor(tag));
+        setShowManageList(false);
         setManageOpen(true);
     };
 
@@ -155,52 +163,64 @@ function TagPicker({ selectedIds = [], onToggle, projectId = null, canManage = t
                     </button>
                 )}
 
-                {canManage && (
-                    <button type="button" onClick={() => setManageOpen((current) => !current)}
-                        className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300/80 px-2 py-1 text-[9px] font-medium text-slate-400 transition hover:border-green-300 hover:text-green-600 dark:border-slate-700 dark:text-slate-500 dark:hover:border-green-800 dark:hover:text-green-400 sm:px-2.5 sm:text-[11px]">
-                        <Plus size={10} />Tag
-                    </button>
-                )}
             </div>
 
-            {manageOpen && canManage && (
-                <div className="rounded-xl border border-white/80 bg-white/55 p-2.5 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/[0.035]">
-                    <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-300">{editingId ? "Edit tag" : "Create tag"}</p>
-
-                        <button type="button" onClick={() => { setManageOpen(false); resetEditor(); }} aria-label="Close tag manager"
-                            className="text-slate-400 transition hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
-                            <X size={13} />
+            {canManage && (
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/60 pt-2 dark:border-white/10">
+                    <button type="button" aria-expanded={manageOpen} onClick={() => {
+                        if (manageOpen) { setManageOpen(false); resetEditor(); }
+                        else { resetEditor(); setShowManageList(false); setManageOpen(true); }
+                    }}
+                        className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/50 px-2.5 py-1.5 text-[11px] font-medium text-slate-600 transition hover:border-green-300 hover:text-green-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:border-green-700 dark:hover:text-green-400">
+                        {manageOpen ? <X size={13} aria-hidden="true" /> : <Plus size={13} aria-hidden="true" />} {manageOpen ? (editingId ? "Cancel edit" : "Cancel") : "New tag"}
+                    </button>
+                    {tags.some((tag) => tag.project_id !== null) && (
+                        <button type="button" aria-expanded={showManageList} onClick={() => {
+                            setShowManageList((current) => !current);
+                            setManageOpen(false);
+                            resetEditor();
+                        }}
+                            className="inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-medium text-slate-500 transition hover:bg-white/60 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-slate-200">
+                            <Settings2 size={13} aria-hidden="true" />
+                            {showManageList ? "Done managing" : "Manage tags"}
+                            {showManageList ? <ChevronUp size={13} aria-hidden="true" /> : <ChevronDown size={13} aria-hidden="true" />}
                         </button>
+                    )}
+                </div>
+            )}
+
+            {manageOpen && canManage && (
+                <div className="space-y-3 rounded-xl border border-white/70 bg-white/45 p-3 dark:border-white/10 dark:bg-white/[0.035]">
+                    <div className="space-y-1.5">
+                        <label htmlFor="task-tag-name" className="block text-[10px] font-medium text-slate-500 dark:text-slate-400">{editingId ? "Edit tag name" : "New tag name"}</label>
+                        <div className="flex items-center gap-1.5">
+                            <input id="task-tag-name" type="text" value={tagName} onChange={(event) => setTagName(event.target.value)} maxLength={50}
+                            aria-label={editingId ? "Edit tag name" : "New tag name"} placeholder="New tag name"
+                            onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); handleSave(); } }}
+                            className="h-9 min-w-0 flex-1 rounded-lg border border-white/80 bg-white/70 px-2.5 text-xs text-slate-700 outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100/60 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-200" />
+                            <button type="button" disabled={!tagName.trim() || saving} onClick={handleSave}
+                            className="h-9 shrink-0 rounded-lg bg-green-500 px-3 text-xs font-semibold text-white disabled:opacity-50">
+                            {saving ? "Saving..." : editingId ? "Save" : "Create"}
+                        </button>
+                        </div>
                     </div>
-
-                    <input type="text" value={tagName} onChange={(event) => setTagName(event.target.value)} maxLength={50}
-                        placeholder="Tag name"
-                        className="mt-2 h-8 w-full rounded-lg border border-white/80 bg-white/70 px-2.5 text-[11px] text-slate-700 outline-none transition focus:border-green-300 focus:ring-2 focus:ring-green-100/60 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-200 dark:focus:border-green-800 dark:focus:ring-green-950/40" />
-
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                        {TAG_COLORS.map((value) => (
-                            <button key={value} type="button" onClick={() => setColor(value)} aria-label={`Select ${value}`}
-                                className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
-                                    color === value
-                                        ? "ring-2 ring-slate-400 ring-offset-2 dark:ring-slate-500 dark:ring-offset-slate-900"
-                                        : "hover:scale-110"
-                                }`}
+                    <div className="space-y-1.5">
+                        <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400" id="task-tag-color-label">Tag color</p>
+                        <div className="flex flex-wrap items-center gap-2" role="group" aria-labelledby="task-tag-color-label">
+                            {TAG_COLORS.map((value) => (
+                            <button key={value} type="button" onClick={() => setColor(value)}
+                                aria-label={`Select color ${value}`} aria-pressed={color === value}
+                                className={`flex h-6 w-6 items-center justify-center rounded-full ${color === value ? "ring-2 ring-slate-400 ring-offset-2 dark:ring-offset-slate-900" : "hover:scale-110"}`}
                                 style={{ backgroundColor: value }}>
                                 {color === value && <Check size={12} className="text-white" />}
                             </button>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-
-                    <div className="mt-2 flex justify-end">
-                        <button type="button" disabled={!tagName.trim() || saving} onClick={handleSave}
-                            className="rounded-lg bg-green-500 px-3 py-1.5 text-[10px] font-semibold text-white transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-green-400">
-                            {saving ? "Saving..." : editingId ? "Save" : "Create"}
-                        </button>
-                    </div>
-
-                    {tags.some((tag) => tag.project_id !== null) && (
-                        <div className="mt-2 border-t border-white/70 pt-2 dark:border-white/10">
+                </div>
+            )}
+            {canManage && showManageList && tags.some((tag) => tag.project_id !== null) && (
+                        <div className="rounded-xl border border-white/70 bg-white/35 p-2.5 dark:border-white/10 dark:bg-white/[0.025]">
                             <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Custom tags</p>
 
                             <div className="max-h-32 space-y-1 overflow-y-auto pr-1">
@@ -210,20 +230,18 @@ function TagPicker({ selectedIds = [], onToggle, projectId = null, canManage = t
                                         <span className="min-w-0 flex-1 truncate text-[10px] text-slate-600 dark:text-slate-300">{tag.tag_name}</span>
 
                                         <button type="button" onClick={() => handleEdit(tag)} aria-label={`Edit ${tag.tag_name}`}
-                                            className="text-slate-400 transition hover:text-green-600 dark:text-slate-500 dark:hover:text-green-400">
-                                            <Pencil size={11} />
+                                            className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-white/70 hover:text-green-600 dark:text-slate-500 dark:hover:bg-white/[0.07] dark:hover:text-green-400">
+                                            <Pencil size={13} />
                                         </button>
 
                                         <button type="button" onClick={() => handleDelete(tag)} aria-label={`Delete ${tag.tag_name}`}
-                                            className="text-slate-400 transition hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400">
-                                            <Trash2 size={11} />
+                                            className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-white/70 hover:text-red-500 dark:text-slate-500 dark:hover:bg-white/[0.07] dark:hover:text-red-400">
+                                            <Trash2 size={13} />
                                         </button>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                    )}
-                </div>
             )}
 
             <ConfirmDialog

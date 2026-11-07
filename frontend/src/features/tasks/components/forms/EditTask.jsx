@@ -60,7 +60,7 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
     const handleClose = () => { if (!submitting) onClose(); };
 
     const inputClass = (field) =>
-        `h-8 w-full rounded-lg border bg-white/65 px-2.5 text-slate-600 shadow-sm backdrop-blur-md placeholder:text-slate-400 outline-none transition sm:h-10 sm:rounded-xl sm:px-3 sm:text-sm dark:bg-white/[0.05] dark:text-slate-200 dark:placeholder:text-slate-500 ${
+        `${field === "description" ? "h-[88px]" : "h-8 sm:h-10"} w-full rounded-lg border bg-white/65 px-2.5 text-slate-600 shadow-sm backdrop-blur-md placeholder:text-slate-400 outline-none transition sm:rounded-xl sm:px-3 sm:text-sm dark:bg-white/[0.05] dark:text-slate-200 dark:placeholder:text-slate-500 ${
             errors[field]
                 ? "border-red-300/80 focus:border-red-400 focus:ring-2 focus:ring-red-100/70 dark:border-red-800 dark:focus:border-red-600 dark:focus:ring-red-950"
                 : "border-white/80 focus:border-green-400 focus:ring-2 focus:ring-green-100/70 dark:border-white/10 dark:focus:border-green-600 dark:focus:ring-green-950"
@@ -107,33 +107,23 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
                     </button>
                 </div>
 
-                <form ref={formRef} onSubmit={handleSubmit} className="flex min-h-0 flex-col">
-                    <div className="min-h-0 space-y-2 overflow-y-auto px-3.5 py-2.5 sm:space-y-3 sm:px-5 sm:py-4">
+                <form ref={formRef} onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3.5 py-2.5 sm:space-y-3 sm:px-5 sm:py-4">
                         <div>
-                            <label htmlFor="edit-task-title" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">
-                                Title <span className="text-red-400">*</span>
-                            </label>
-                            <input type="text" id="edit-task-title" name="title" aria-invalid={Boolean(errors.title)} value={formData.title} onChange={handleChange} disabled={submitting}
-                                placeholder="Enter task title" className={`${inputClass("title")} disabled:cursor-not-allowed disabled:opacity-60`} style={mobileControlStyle} />
-                            <div className="mt-0.5 flex justify-between">
-                                {errors.title ? <p className="text-[9px] text-red-500 dark:text-red-400 sm:text-[10px]">{errors.title}</p> : <span />}
-                                <span className="text-[8px] text-slate-400 dark:text-slate-500 sm:text-[9px]">{formData.title.length}/{NAME_MAX_LENGTH}</span>
+                            <div>
+                                <label htmlFor="edit-task-title" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">
+                                    Title <span className="text-red-400">*</span>
+                                </label>
+                                <input type="text" id="edit-task-title" name="title" aria-invalid={Boolean(errors.title)} value={formData.title} onChange={handleChange} disabled={submitting}
+                                    placeholder="Enter task title" className={`${inputClass("title")} disabled:cursor-not-allowed disabled:opacity-60`} style={mobileControlStyle} />
+                                <div className="mt-0.5 flex justify-between">
+                                    {errors.title ? <p className="text-[9px] text-red-500 dark:text-red-400 sm:text-[10px]">{errors.title}</p> : <span />}
+                                    <span className="text-[8px] text-slate-400 dark:text-slate-500 sm:text-[9px]">{formData.title.length}/{NAME_MAX_LENGTH}</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="edit-task-description" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">Description</label>
-                            <textarea id="edit-task-description" name="description" aria-invalid={Boolean(errors.description)} value={formData.description} onChange={handleChange} disabled={submitting}
-                                placeholder="Add a description..."
-                                className={`${inputClass("description")} h-10 resize-none py-2 disabled:cursor-not-allowed disabled:opacity-60 sm:h-[62px]`}
-                                style={mobileControlStyle} />
-                            <div className="mt-0.5 flex justify-between">
-                                {errors.description ? <p className="text-[9px] text-red-500 dark:text-red-400 sm:text-[10px]">{errors.description}</p> : <span />}
-                                <span className="text-[8px] text-slate-400 dark:text-slate-500 sm:text-[9px]">{formData.description.length}/{INFO_MAX_LENGTH}</span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                        <div className="grid grid-cols-2 items-start gap-2 sm:grid-cols-3 sm:gap-3">
                             {DATE_TIME_FIELDS.map(([field, label, type]) => (
                                 <div key={field} className="min-w-0">
                                     <label htmlFor={`edit-task-${field}`} className="mb-1 block truncate text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">
@@ -150,49 +140,56 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
                                     {errors[field] && <p className="mt-0.5 text-[9px] text-red-500 dark:text-red-400 sm:text-[10px]">{errors[field]}</p>}
                                 </div>
                             ))}
+                            <div className="col-span-2 min-w-0 sm:col-span-1">
+                                {selectField(EDIT_SELECT_FIELDS[0])}
+                            </div>
                         </div>
 
-                        {collaborative ? (
-                            <div className="grid grid-cols-2 items-start gap-2 sm:gap-3">
-                                <div className="min-w-0 space-y-2 sm:space-y-3">
-                                    <div>
-                                        <label htmlFor="edit-task-assigneeId" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">Assign to</label>
-                                        <div className="relative">
-                                            <select id="edit-task-assigneeId" name="assigneeId" value={formData.assigneeId} onChange={handleChange} disabled={submitting}
-                                                className={`${inputClass("assigneeId")} appearance-none pr-6 disabled:cursor-not-allowed disabled:opacity-60 sm:pr-8`}
-                                                style={mobileControlStyle}>
-                                                <option value="">Unassigned</option>
-                                                {members.map((member) => (
-                                                    <option key={member.user_id} value={member.user_id}>
-                                                        {member.display_name || member.username || "Project member"}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <ChevronDown size={isMobile ? 11 : 14}
-                                                className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 sm:right-2.5" />
-                                        </div>
-                                    </div>
 
-                                    {EDIT_SELECT_FIELDS.map(selectField)}
-                                </div>
-
-                                <div className="min-w-0">
-                                    <span className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">Tags</span>
-                                    {tagButtons}
-                                </div>
+                        <div>
+                            <label htmlFor="edit-task-description" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">Description</label>
+                            <textarea id="edit-task-description" name="description" aria-invalid={Boolean(errors.description)} value={formData.description} onChange={handleChange} disabled={submitting}
+                                placeholder="Add a description..."
+                                rows={3} maxLength={INFO_MAX_LENGTH}
+                                className={`${inputClass("description")} min-h-[82px] max-h-[240px] resize-y overflow-y-auto py-2 disabled:cursor-not-allowed disabled:opacity-60`}
+                                style={mobileControlStyle} />
+                            <div className="mt-0.5 flex justify-between">
+                                {errors.description ? <p className="text-[9px] text-red-500 dark:text-red-400 sm:text-[10px]">{errors.description}</p> : <span />}
+                                <span className="text-[8px] text-slate-400 dark:text-slate-500 sm:text-[9px]">{formData.description.length}/{INFO_MAX_LENGTH}</span>
                             </div>
-                        ) : (
-                            <>
-                                <div>
-                                    <span className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">Tags</span>
-                                    {tagButtons}
-                                </div>
+                        </div>
 
-                                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                                    {EDIT_SELECT_FIELDS.map(selectField)}
+
+                        <div className="grid grid-cols-2 items-start gap-2 sm:gap-3">
+                            {selectField(EDIT_SELECT_FIELDS[1])}
+                            {collaborative && (
+                                <div>
+                                    <label htmlFor="edit-task-assigneeId" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">Assign to</label>
+                                    <div className="relative">
+                                        <select id="edit-task-assigneeId" name="assigneeId" value={formData.assigneeId} onChange={handleChange} disabled={submitting}
+                                            className={`${inputClass("assigneeId")} appearance-none pr-6 disabled:cursor-not-allowed disabled:opacity-60 sm:pr-8`}
+                                            style={mobileControlStyle}>
+                                            <option value="">Unassigned</option>
+                                            {members.map((member) => (
+                                                <option key={member.user_id} value={member.user_id}>
+                                                    {member.display_name || member.username || "Project member"}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown size={isMobile ? 11 : 14}
+                                            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 sm:right-2.5" />
+                                    </div>
                                 </div>
-                            </>
-                        )}
+                            )}
+                        </div>
+
+                        <section aria-label="Task tags" className="rounded-xl border border-white/70 bg-white/35 p-3 dark:border-white/10 dark:bg-white/[0.035]">
+                            <div className="mb-2 flex items-center justify-between gap-2">
+                                <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 sm:text-xs">Tags</span>
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500">{formData.tags.length}/3 selected</span>
+                            </div>
+                            {tagButtons}
+                        </section>
                     </div>
 
                     <div className="flex shrink-0 justify-end gap-1.5 border-t border-white/60 bg-white/30 px-3.5 py-2 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.025] sm:gap-2 sm:px-5 sm:py-2.5">

@@ -59,7 +59,7 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
     };
 
     const inputClass = (field) =>
-        `h-8 w-full rounded-lg border bg-white/65 px-2.5 text-slate-700 shadow-sm backdrop-blur-md placeholder:text-slate-400 outline-none transition sm:h-auto sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm dark:bg-white/[0.05] dark:text-slate-200 dark:placeholder:text-slate-500 ${
+        `${field === "description" ? "h-[88px]" : "h-8 sm:h-auto"} w-full rounded-lg border bg-white/65 px-2.5 text-slate-700 shadow-sm backdrop-blur-md placeholder:text-slate-400 outline-none transition sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm dark:bg-white/[0.05] dark:text-slate-200 dark:placeholder:text-slate-500 ${
             errors[field]
                 ? "border-red-300/80 focus:border-red-400 focus:ring-2 focus:ring-red-100/70 dark:border-red-700 dark:focus:border-red-500 dark:focus:ring-red-950/50"
                 : "border-white/80 focus:border-green-400 focus:ring-2 focus:ring-green-100/70 dark:border-white/10 dark:focus:border-green-600 dark:focus:ring-green-950/50"
@@ -106,25 +106,54 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
                     </button>
                 </div>
 
-                <form ref={formRef} onSubmit={handleSubmit} className="flex min-h-0 flex-col">
-                    <div className="min-h-0 space-y-2 overflow-y-auto px-3.5 py-2.5 sm:space-y-3.5 sm:px-5 sm:py-4">
+                <form ref={formRef} onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3.5 py-2.5 sm:space-y-3.5 sm:px-5 sm:py-4">
                         <div>
-                            <label htmlFor="add-task-title" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">
-                                Title <span className="text-red-400">*</span>
-                            </label>
-                            <input type="text" id="add-task-title" name="title" aria-invalid={Boolean(errors.title)} value={formData.title} onChange={handleChange} disabled={submitting}
-                                placeholder="Enter task title" className={`${inputClass("title")} disabled:cursor-not-allowed disabled:opacity-60`} style={mobileControlStyle} />
-                            <div className="mt-0.5 flex justify-between">
-                                {errors.title ? <p className="text-[9px] text-red-500 dark:text-red-400 sm:text-xs">{errors.title}</p> : <span />}
-                                <span className="text-[8px] text-slate-400 dark:text-slate-500 sm:text-[10px]">{formData.title.length}/{NAME_MAX_LENGTH}</span>
+                            <div>
+                                <label htmlFor="add-task-title" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">
+                                    Title <span className="text-red-400">*</span>
+                                </label>
+                                <input type="text" id="add-task-title" name="title" aria-invalid={Boolean(errors.title)} value={formData.title} onChange={handleChange} disabled={submitting}
+                                    placeholder="Enter task title" className={`${inputClass("title")} disabled:cursor-not-allowed disabled:opacity-60`} style={mobileControlStyle} />
+                                <div className="mt-0.5 flex justify-between">
+                                    {errors.title ? <p className="text-[9px] text-red-500 dark:text-red-400 sm:text-xs">{errors.title}</p> : <span />}
+                                    <span className="text-[8px] text-slate-400 dark:text-slate-500 sm:text-[10px]">{formData.title.length}/{NAME_MAX_LENGTH}</span>
+                                </div>
                             </div>
                         </div>
+
+                        <div className="grid grid-cols-2 items-start gap-2 sm:grid-cols-3 sm:gap-3">
+                            {[
+                                ["dueDate", "Due Date", "date"],
+                                ["dueTime", "Due Time", "time"],
+                            ].map(([field, label, type]) => (
+                                <div key={field} className="min-w-0">
+                                    <label htmlFor={`add-task-${field}`} className="mb-1 block truncate text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">
+                                        {label}{" "}
+                                        {collaborative
+                                            ? <span className="font-normal text-slate-400 dark:text-slate-500">(Optional)</span>
+                                            : <span className="text-red-400">*</span>}
+                                    </label>
+                                    <input type={type} id={`add-task-${field}`} name={field} aria-invalid={Boolean(errors[field])} value={formData[field]} onChange={handleChange}
+                                        disabled={submitting || (collaborative && field === "dueTime" && !formData.dueDate)}
+                                        className={`${inputClass(field)} min-w-0 px-2 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3`}
+                                        style={mobileDateStyle} />
+                                    {errors[field] && <p className="mt-0.5 text-[9px] text-red-500 dark:text-red-400 sm:mt-1 sm:text-xs">{errors[field]}</p>}
+                                </div>
+                            ))}
+                            <div className="col-span-2 min-w-0 sm:col-span-1">
+                                <label htmlFor="add-task-priority" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Priority</label>
+                                {prioritySelect}
+                            </div>
+                        </div>
+
 
                         <div>
                             <label htmlFor="add-task-description" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Description</label>
                             <textarea id="add-task-description" name="description" aria-invalid={Boolean(errors.description)} value={formData.description} onChange={handleChange} disabled={submitting}
                                 placeholder="Add a description..."
-                                className={`${inputClass("description")} h-10 resize-none py-2 disabled:cursor-not-allowed disabled:opacity-60 sm:h-auto sm:min-h-[62px]`}
+                                rows={3} maxLength={INFO_MAX_LENGTH}
+                                className={`${inputClass("description")} min-h-[82px] max-h-[240px] resize-y overflow-y-auto py-2 disabled:cursor-not-allowed disabled:opacity-60`}
                                 style={mobileControlStyle} />
                             <div className="mt-0.5 flex justify-between">
                                 {errors.description ? <p className="text-[9px] text-red-500 dark:text-red-400 sm:text-xs">{errors.description}</p> : <span />}
@@ -132,13 +161,9 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
                             </div>
                         </div>
 
-                        {collaborative && (
-                            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                                <div className="min-w-0">
-                                    <label htmlFor="add-task-priority" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Priority</label>
-                                    {prioritySelect}
-                                </div>
 
+                        {collaborative && (
+                            <div>
                                 <div className="min-w-0">
                                     <label htmlFor="add-task-assigneeId" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Assign to</label>
                                     <div className="relative">
@@ -159,46 +184,13 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
                             </div>
                         )}
 
-                        {collaborative && (
-                            <div>
-                                <span className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Tags</span>
-                                {tagButtons}
+                        <section aria-label="Task tags" className="rounded-xl border border-white/70 bg-white/35 p-3 dark:border-white/10 dark:bg-white/[0.035]">
+                            <div className="mb-2 flex items-center justify-between gap-2">
+                                <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 sm:text-xs">Tags</span>
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500">{formData.tags.length}/3 selected</span>
                             </div>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                            {[
-                                ["dueDate", "Due Date", "date"],
-                                ["dueTime", "Due Time", "time"],
-                            ].map(([field, label, type]) => (
-                                <div key={field} className="min-w-0">
-                                    <label htmlFor={`add-task-${field}`} className="mb-1 block truncate text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">
-                                        {label}{" "}
-                                        {collaborative
-                                            ? <span className="font-normal text-slate-400 dark:text-slate-500">(Optional)</span>
-                                            : <span className="text-red-400">*</span>}
-                                    </label>
-                                    <input type={type} id={`add-task-${field}`} name={field} aria-invalid={Boolean(errors[field])} value={formData[field]} onChange={handleChange}
-                                        disabled={submitting || (collaborative && field === "dueTime" && !formData.dueDate)}
-                                        className={`${inputClass(field)} min-w-0 px-2 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3`}
-                                        style={mobileDateStyle} />
-                                    {errors[field] && <p className="mt-0.5 text-[9px] text-red-500 dark:text-red-400 sm:mt-1 sm:text-xs">{errors[field]}</p>}
-                                </div>
-                            ))}
-                        </div>
-
-                        {!collaborative && (
-                            <div className="grid grid-cols-[minmax(90px,0.8fr)_minmax(0,1.2fr)] gap-2 sm:grid-cols-[minmax(90px,1fr)_minmax(0,2fr)] sm:gap-3">
-                                <div className="min-w-0">
-                                    <label htmlFor="add-task-priority" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Priority</label>
-                                    {prioritySelect}
-                                </div>
-                                <div className="min-w-0">
-                                    <span className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Tags</span>
-                                    {tagButtons}
-                                </div>
-                            </div>
-                        )}
+                            {tagButtons}
+                        </section>
                     </div>
 
                     <div className="flex shrink-0 justify-end gap-1.5 border-t border-white/60 bg-white/30 px-3.5 py-2 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.025] sm:gap-2 sm:px-5 sm:py-3">
