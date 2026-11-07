@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useBodyScrollLock } from "../../../../shared/hooks/useBodyScrollLock";
 import { useIsMobile } from "../../../../shared/hooks/useIsMobile";
 import { ChevronDown, X } from "lucide-react";
 
-import { INFO_MAX_LENGTH, NAME_MAX_LENGTH, validateTask } from "../../../../shared/utils/validation";
+import { INFO_MAX_LENGTH, NAME_MAX_LENGTH } from "../../../../shared/utils/validation";
 import { PRIORITY, PRIORITY_OPTIONS } from "../../constants/taskOptions";
 import TagPicker from "./TagPicker";
+import { useTaskFormFields } from "../../hooks/useTaskFormFields";
 
 const initialFormData = {
     title: "", description: "", dueDate: "", dueTime: "",
@@ -13,9 +14,10 @@ const initialFormData = {
 };
 
 function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative = false, members = [], projectId = null }) {
-    const [formData, setFormData] = useState(initialFormData);
-    const [errors, setErrors] = useState({});
-    const [submitting, setSubmitting] = useState(false);
+    const {
+        formData, setFormData, errors, setErrors, submitting, setSubmitting,
+        formRef, handleChange, handleTagToggle, validateAndFocus,
+    } = useTaskFormFields(initialFormData, collaborative);
     const isMobile = useIsMobile();
     useBodyScrollLock(isOpen);
 
@@ -23,41 +25,19 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
         if (!isOpen) return;
 
         // Reset the form whenever the modal opens.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFormData({ ...initialFormData, dueDate: initialDueDate });
         setErrors({});
         setSubmitting(false);
 
-    }, [isOpen, initialDueDate]);
+    }, [isOpen, initialDueDate, setFormData, setErrors, setSubmitting]);
 
     if (!isOpen) return null;
-
-    const handleChange = ({ target: { name, value } }) => {
-        setFormData((prev) => ({
-            ...prev, [name]: value,
-            ...(collaborative && name === "dueDate" && !value ? { dueTime: "" } : {}),
-        }));
-        if (value.trim?.()) setErrors((prev) => ({ ...prev, [name]: "" }));
-    };
-
-    const handleTagToggle = (tagId) => {
-        setFormData((prev) => ({
-            ...prev,
-            tags: prev.tags.includes(tagId) ? prev.tags.filter((id) => id !== tagId) : [...prev.tags, tagId],
-        }));
-    };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         if (submitting) return;
 
-        const validationErrors = validateTask(formData, { deadlineRequired: !collaborative });
-
-        if (Object.keys(validationErrors).length) {
-            setErrors(validationErrors);
-            document.querySelector(`[name="${Object.keys(validationErrors)[0]}"]`)?.focus();
-            return;
-        }
+        if (!validateAndFocus()) return;
 
         try {
             setSubmitting(true);
@@ -98,7 +78,7 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
 
     const prioritySelect = (
         <div className="relative">
-            <select name="priority" value={formData.priority} onChange={handleChange} disabled={submitting}
+            <select id="add-task-priority" name="priority" value={formData.priority} onChange={handleChange} disabled={submitting}
                 className={`${inputClass("priority")} appearance-none pr-6 disabled:cursor-not-allowed disabled:opacity-60 sm:pr-8`}
                 style={mobileControlStyle}>
                 {PRIORITY_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
@@ -109,11 +89,12 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
     );
 
     return (
-        <div className="fixed inset-x-0 bottom-[68px] top-[60px] z-[9999] flex items-start justify-center overflow-hidden bg-slate-900/20 px-2 py-2 backdrop-blur-sm dark:bg-black/55 sm:inset-0 sm:overflow-y-auto sm:px-4 sm:pb-5 sm:pt-20">
+        <div className="fixed inset-x-0 bottom-[68px] top-[60px] z-[9999] flex items-start justify-center overflow-hidden bg-slate-900/20 px-2 py-2 backdrop-blur-sm dark:bg-black/55 sm:inset-0 sm:overflow-y-auto sm:px-4 sm:pb-5 sm:pt-20"
+            role="dialog" aria-modal="true" aria-labelledby="add-task-heading">
             <div className="mx-auto flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/70 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/40 sm:max-h-[calc(100dvh-6.25rem)]">
                 <div className="flex shrink-0 items-center justify-between border-b border-white/60 bg-white/25 px-3.5 py-2 dark:border-white/10 dark:bg-white/[0.02] sm:items-start sm:px-5 sm:py-3.5">
                     <div className="min-w-0">
-                        <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100 sm:text-lg">Add Task</h2>
+                        <h2 id="add-task-heading" className="text-sm font-semibold text-slate-800 dark:text-slate-100 sm:text-lg">Add Task</h2>
                         <p className="mt-0.5 text-[9px] text-slate-400 dark:text-slate-500 sm:text-[10px]">
                             {collaborative ? "Create a task for this project." : "Create a new task."}
                         </p>
@@ -125,13 +106,13 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex min-h-0 flex-col">
+                <form ref={formRef} onSubmit={handleSubmit} className="flex min-h-0 flex-col">
                     <div className="min-h-0 space-y-2 overflow-y-auto px-3.5 py-2.5 sm:space-y-3.5 sm:px-5 sm:py-4">
                         <div>
-                            <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">
+                            <label htmlFor="add-task-title" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">
                                 Title <span className="text-red-400">*</span>
                             </label>
-                            <input type="text" name="title" value={formData.title} onChange={handleChange} disabled={submitting}
+                            <input type="text" id="add-task-title" name="title" aria-invalid={Boolean(errors.title)} value={formData.title} onChange={handleChange} disabled={submitting}
                                 placeholder="Enter task title" className={`${inputClass("title")} disabled:cursor-not-allowed disabled:opacity-60`} style={mobileControlStyle} />
                             <div className="mt-0.5 flex justify-between">
                                 {errors.title ? <p className="text-[9px] text-red-500 dark:text-red-400 sm:text-xs">{errors.title}</p> : <span />}
@@ -140,8 +121,8 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
                         </div>
 
                         <div>
-                            <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Description</label>
-                            <textarea name="description" value={formData.description} onChange={handleChange} disabled={submitting}
+                            <label htmlFor="add-task-description" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Description</label>
+                            <textarea id="add-task-description" name="description" aria-invalid={Boolean(errors.description)} value={formData.description} onChange={handleChange} disabled={submitting}
                                 placeholder="Add a description..."
                                 className={`${inputClass("description")} h-10 resize-none py-2 disabled:cursor-not-allowed disabled:opacity-60 sm:h-auto sm:min-h-[62px]`}
                                 style={mobileControlStyle} />
@@ -154,14 +135,14 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
                         {collaborative && (
                             <div className="grid grid-cols-2 gap-2 sm:gap-3">
                                 <div className="min-w-0">
-                                    <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Priority</label>
+                                    <label htmlFor="add-task-priority" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Priority</label>
                                     {prioritySelect}
                                 </div>
 
                                 <div className="min-w-0">
-                                    <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Assign to</label>
+                                    <label htmlFor="add-task-assigneeId" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Assign to</label>
                                     <div className="relative">
-                                        <select name="assigneeId" value={formData.assigneeId} onChange={handleChange} disabled={submitting}
+                                        <select id="add-task-assigneeId" name="assigneeId" value={formData.assigneeId} onChange={handleChange} disabled={submitting}
                                             className={`${inputClass("assigneeId")} appearance-none pr-6 disabled:cursor-not-allowed disabled:opacity-60 sm:pr-8`}
                                             style={mobileControlStyle}>
                                             <option value="">Unassigned</option>
@@ -180,7 +161,7 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
 
                         {collaborative && (
                             <div>
-                                <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Tags</label>
+                                <span className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Tags</span>
                                 {tagButtons}
                             </div>
                         )}
@@ -191,13 +172,13 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
                                 ["dueTime", "Due Time", "time"],
                             ].map(([field, label, type]) => (
                                 <div key={field} className="min-w-0">
-                                    <label className="mb-1 block truncate text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">
+                                    <label htmlFor={`add-task-${field}`} className="mb-1 block truncate text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">
                                         {label}{" "}
                                         {collaborative
                                             ? <span className="font-normal text-slate-400 dark:text-slate-500">(Optional)</span>
                                             : <span className="text-red-400">*</span>}
                                     </label>
-                                    <input type={type} name={field} value={formData[field]} onChange={handleChange}
+                                    <input type={type} id={`add-task-${field}`} name={field} aria-invalid={Boolean(errors[field])} value={formData[field]} onChange={handleChange}
                                         disabled={submitting || (collaborative && field === "dueTime" && !formData.dueDate)}
                                         className={`${inputClass(field)} min-w-0 px-2 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3`}
                                         style={mobileDateStyle} />
@@ -209,11 +190,11 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
                         {!collaborative && (
                             <div className="grid grid-cols-[minmax(90px,0.8fr)_minmax(0,1.2fr)] gap-2 sm:grid-cols-[minmax(90px,1fr)_minmax(0,2fr)] sm:gap-3">
                                 <div className="min-w-0">
-                                    <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Priority</label>
+                                    <label htmlFor="add-task-priority" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Priority</label>
                                     {prioritySelect}
                                 </div>
                                 <div className="min-w-0">
-                                    <label className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Tags</label>
+                                    <span className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Tags</span>
                                     {tagButtons}
                                 </div>
                             </div>
