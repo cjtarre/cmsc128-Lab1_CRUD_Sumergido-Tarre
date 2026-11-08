@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus, SearchX } from "lucide-react";
 import emptyTasksIllustration from "../../../assets/illustrations/empty-task-illustration.png";
 
 function EmptyState({
@@ -6,7 +6,33 @@ function EmptyState({
     description = "You don't have any tasks here yet.",
     actionLabel = "Add Task",
     onAction,
+    compact = false,
 }) {
+    if (compact) {
+        return (
+            <div role="status" className="relative flex min-h-[164px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-white/70 bg-white/35 px-5 py-6 text-center shadow-[0_8px_28px_rgba(15,23,42,0.025)] backdrop-blur-md dark:border-white/10 dark:bg-white/[0.025] sm:min-h-[184px]">
+                <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/60 text-slate-400 dark:bg-white/[0.05] dark:text-slate-400">
+                    <SearchX size={18} strokeWidth={1.8} />
+                </span>
+                <h2 className="mt-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 sm:text-sm">
+                    {title}
+                </h2>
+                <p className="mt-1 max-w-md text-[11px] leading-5 text-slate-500 dark:text-slate-400 sm:text-xs">
+                    {description}
+                </p>
+                {onAction && (
+                    <button
+                        type="button"
+                        onClick={onAction}
+                        className="mt-3 inline-flex min-h-8 items-center justify-center rounded-lg px-3 text-xs font-semibold text-green-600 transition hover:bg-green-50/60 hover:text-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 dark:text-green-400 dark:hover:bg-green-950/30"
+                    >
+                        {actionLabel}
+                    </button>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className="relative flex min-h-[300px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-white/80 bg-white/85 px-4 py-6 text-center shadow-[0_10px_35px_rgba(15,23,42,0.04)] backdrop-blur-md dark:border-white/10 dark:bg-slate-900/85 dark:shadow-black/20 sm:min-h-[430px] sm:px-6">
             <div aria-hidden="true" className="absolute -right-20 top-4 h-48 w-48 rounded-full bg-emerald-100/40 blur-3xl dark:bg-emerald-500/[0.06]" />

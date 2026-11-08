@@ -5,7 +5,9 @@ import { ChevronDown, X } from "lucide-react";
 
 import { INFO_MAX_LENGTH, NAME_MAX_LENGTH } from "../../../../shared/utils/validation";
 import { PRIORITY, PRIORITY_OPTIONS } from "../../constants/taskOptions";
+import CompactSelect from "../../../../shared/components/common/CompactSelect";
 import TagPicker from "./TagPicker";
+import TaskDateTimePicker from "./TaskDateTimePicker";
 import { useTaskFormFields } from "../../hooks/useTaskFormFields";
 
 const initialFormData = {
@@ -66,7 +68,8 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
         }`;
 
     const mobileControlStyle = isMobile ? { fontSize: "11px", lineHeight: "1" } : undefined;
-    const mobileDateStyle = isMobile ? { fontSize: "10px", lineHeight: "1" } : undefined;
+    const taskSelectStyle = { appearance: "none", WebkitAppearance: "none", fontFamily: "inherit", fontSize: "11px", lineHeight: "1.2" };
+    const taskDateStyle = { fontFamily: "inherit", fontSize: "11px", lineHeight: "1.2" };
 
     const tagButtons = (
         <TagPicker
@@ -78,11 +81,11 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
 
     const prioritySelect = (
         <div className="relative">
-            <select id="add-task-priority" name="priority" value={formData.priority} onChange={handleChange} disabled={submitting}
+            <CompactSelect id="add-task-priority" name="priority" ariaLabel="Priority" value={formData.priority} onChange={handleChange} disabled={submitting}
                 className={`${inputClass("priority")} appearance-none pr-6 disabled:cursor-not-allowed disabled:opacity-60 sm:pr-8`}
-                style={mobileControlStyle}>
+                style={taskSelectStyle}>
                 {PRIORITY_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </select>
+            </CompactSelect>
             <ChevronDown size={isMobile ? 11 : 14}
                 className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 sm:right-2.5" />
         </div>
@@ -134,10 +137,10 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
                                             ? <span className="font-normal text-slate-400 dark:text-slate-500">(Optional)</span>
                                             : <span className="text-red-400">*</span>}
                                     </label>
-                                    <input type={type} id={`add-task-${field}`} name={field} aria-invalid={Boolean(errors[field])} value={formData[field]} onChange={handleChange}
+                                    <TaskDateTimePicker type={type} id={`add-task-${field}`} name={field} aria-invalid={Boolean(errors[field])} ariaLabel={label} value={formData[field]} onChange={handleChange}
                                         disabled={submitting || (collaborative && field === "dueTime" && !formData.dueDate)}
                                         className={`${inputClass(field)} min-w-0 px-2 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3`}
-                                        style={mobileDateStyle} />
+                                        style={taskDateStyle} />
                                     {errors[field] && <p className="mt-0.5 text-[9px] text-red-500 dark:text-red-400 sm:mt-1 sm:text-xs">{errors[field]}</p>}
                                 </div>
                             ))}
@@ -167,16 +170,16 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
                                 <div className="min-w-0">
                                     <label htmlFor="add-task-assigneeId" className="mb-1 block text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:mb-1.5 sm:text-xs">Assign to</label>
                                     <div className="relative">
-                                        <select id="add-task-assigneeId" name="assigneeId" value={formData.assigneeId} onChange={handleChange} disabled={submitting}
+                                            <CompactSelect id="add-task-assigneeId" name="assigneeId" ariaLabel="Assign to" value={formData.assigneeId} onChange={handleChange} disabled={submitting}
                                             className={`${inputClass("assigneeId")} appearance-none pr-6 disabled:cursor-not-allowed disabled:opacity-60 sm:pr-8`}
-                                            style={mobileControlStyle}>
+                                            style={taskSelectStyle}>
                                             <option value="">Unassigned</option>
                                             {members.map((member) => (
                                                 <option key={member.user_id} value={member.user_id}>
                                                     {member.display_name || member.username || "Project member"}
                                                 </option>
                                             ))}
-                                        </select>
+                                            </CompactSelect>
                                         <ChevronDown size={isMobile ? 11 : 14}
                                             className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 sm:right-2.5" />
                                     </div>
