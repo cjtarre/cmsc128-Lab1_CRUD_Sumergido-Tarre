@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { PROJECT_ROLE } from "../../src/features/projects/constants/projectOptions";
-import { canEditProject, filterCollaborativeProjects, formatDeletedProjectDate, isProjectOwner } from "../../src/features/projects/utils/projectUtils";
+import { canEditProject, filterAndSortCollaborativeProjects, filterCollaborativeProjects, formatDeletedProjectDate, isProjectOwner } from "../../src/features/projects/utils/projectUtils";
 
 describe("projectUtils", () => {
     it("allows owners and editors to edit projects", () => {
@@ -44,6 +44,37 @@ describe("projectUtils", () => {
             { id: 1, is_default: false },
             { id: 2, project_name: "Takda", is_default: false },
         ], "takda")).toEqual([{ id: 2, project_name: "Takda", is_default: false }]);
+    });
+
+    it("filters owned and shared projects without changing the source list", () => {
+        const projects = [
+            { id: 1, project_name: "Personal", is_default: true, role: "owner" },
+            { id: 2, project_name: "Zebra", role: "owner", task_count: 2 },
+            { id: 3, project_name: "Alpha", role: "editor", task_count: 5 },
+            { id: 4, project_name: "Beta", role: "viewer", task_count: 1 },
+        ];
+        expect(filterAndSortCollaborativeProjects(projects, { membership: "owned" }).map((p) => p.id)).toEqual([2]);
+        expect(filterAndSortCollaborativeProjects(projects, { membership: "shared" }).map((p) => p.id)).toEqual([3, 4]);
+        expect(projects.map((p) => p.id)).toEqual([1, 2, 3, 4]);
+    });
+
+    it("sorts filtered projects by name and task count", () => {
+        const projects = [
+            { id: 2, project_name: "Zebra", role: "owner", task_count: 2 },
+            { id: 3, project_name: "Alpha", role: "editor", task_count: 5 },
+            { id: 4, project_name: "Beta", role: "viewer", task_count: 1 },
+        ];
+        expect(filterAndSortCollaborativeProjects(projects, { sortBy: "name-asc" }).map((p) => p.id)).toEqual([3, 4, 2]);
+        expect(filterAndSortCollaborativeProjects(projects, { sortBy: "name-desc" }).map((p) => p.id)).toEqual([2, 4, 3]);
+        expect(filterAndSortCollaborativeProjects(projects, { sortBy: "tasks-desc", searchTerm: "a" }).map((p) => p.id)).toEqual([3, 2, 4]);
+    });
+
+    it("returns original project order for the default sort", () => {
+        const projects = [
+            { id: 1, project_name: "Zebra" },
+            { id: 2, project_name: "Alpha" },
+        ];
+        expect(filterAndSortCollaborativeProjects(projects)).toEqual(projects);
     });
 
     it("returns a fallback when deletion time is missing", () => {

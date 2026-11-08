@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { UserPlus, X } from "lucide-react";
+import { ChevronDown, UserPlus, X } from "lucide-react";
+
+import CompactSelect from "../../../../shared/components/common/CompactSelect";
 
 import { PROJECT_INVITE_ROLES, PROJECT_ROLE } from "../../constants/projectOptions";
 import { handleInviteMember } from "../../handlers/projectMemberHandlers";
@@ -38,10 +40,13 @@ function InviteMember({ isOpen, onClose, onSubmit }) {
 
                     <div>
                         <label className="mb-1.5 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">Access Role</label>
-                        <select value={role} onChange={(event) => setRole(event.target.value)}
-                            className="h-10 w-full rounded-xl border border-slate-200/80 bg-white/60 px-3 text-xs text-slate-700 outline-none transition focus:border-green-300 focus:ring-2 focus:ring-green-100/60 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-green-800 dark:focus:ring-green-950/50">
-                            {PROJECT_INVITE_ROLES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                        </select>
+                        <div className="relative">
+                            <CompactSelect value={role} onChange={(event) => setRole(event.target.value)} ariaLabel="Access role"
+                                className="h-10 w-full rounded-xl border border-slate-200/80 bg-white/60 px-3 pr-9 text-slate-700 outline-none transition focus:border-green-300 focus:ring-2 focus:ring-green-100/60 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-green-800 dark:focus:ring-green-950/50">
+                                {PROJECT_INVITE_ROLES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                            </CompactSelect>
+                            <ChevronDown aria-hidden="true" size={13} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                        </div>
                     </div>
 
                     <div className="flex justify-end gap-2 pt-2">

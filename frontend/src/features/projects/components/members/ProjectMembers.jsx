@@ -7,7 +7,7 @@ import { getDisplayName, getInitials } from "../../../../shared/utils/userUtils"
 import { PROJECT_ACCESS_ROLES, PROJECT_ROLE } from "../../constants/projectOptions";
 import { useProjectMembers } from "../../hooks/useProjectMembers";
 import InviteMember from "../forms/InviteMember";
-import RoleDropdown from "./RoleDropdown";
+import MemberRoleToggle from "./MemberRoleToggle";
 import { handleRemoveMember } from "../../handlers/projectMemberHandlers";
 
 function ProjectMembers({ project }) {
@@ -46,17 +46,17 @@ function ProjectMembers({ project }) {
 
                     <div className="flex flex-col gap-2 min-[360px]:flex-row">
                         <button type="button" onClick={() => setIsLeaveOpen(true)}
-                            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50/60 px-3.5 font-semibold text-red-500 transition hover:border-red-300 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/40"
-                            style={{ fontSize: "12px", lineHeight: "1" }}>
-                            <LogOut size={13} />
+                            className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50/60 px-3 font-semibold text-red-500 transition hover:border-red-300 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/40"
+                            style={{ appearance: "none", fontFamily: "inherit", fontSize: "10px", lineHeight: "1.15" }}>
+                            <LogOut size={12} />
                             Leave Project
                         </button>
 
                         {isOwner && (
                             <button type="button" onClick={() => setIsInviteOpen(true)}
-                                className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-green-500 px-3.5 font-semibold text-white shadow-[0_5px_15px_rgba(34,197,94,0.16)] transition hover:bg-green-600"
-                                style={{ fontSize: "12px", lineHeight: "1" }}>
-                                <Plus size={14} />
+                                className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-green-500 px-3 font-semibold text-white shadow-[0_5px_15px_rgba(34,197,94,0.16)] transition hover:bg-green-600"
+                                style={{ appearance: "none", fontFamily: "inherit", fontSize: "10px", lineHeight: "1.15" }}>
+                                <Plus size={12} />
                                 Invite Member
                             </button>
                         )}
@@ -92,7 +92,7 @@ function ProjectMembers({ project }) {
 
                                             {isOwner && member.role !== PROJECT_ROLE.OWNER ? (
                                                 <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-                                                    <RoleDropdown member={member} onChange={changeRole} />
+                                                    <MemberRoleToggle member={member} onChange={changeRole} />
                                                     <button type="button" onClick={() => setMemberToRemove(member)} aria-label={`Remove ${displayName}`} title="Remove member"
                                                         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/20">
                                                         <MoreHorizontal size={15} />

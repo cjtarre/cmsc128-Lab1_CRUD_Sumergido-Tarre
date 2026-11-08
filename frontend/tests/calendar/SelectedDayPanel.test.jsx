@@ -26,6 +26,25 @@ describe("SelectedDayPanel", () => {
         expect(screen.getByText("Finish report")).toBeTruthy();
     });
 
+    it("orders activities by time, keeps equal times stable, and places untimed tasks last", () => {
+        const unsorted = [
+            { ...task, id: 5, title: "No time", dueTime: "" },
+            { ...task, id: 3, title: "Evening", dueTime: "10:15 PM" },
+            { ...task, id: 1, title: "Morning", dueTime: "08:00 AM" },
+            { ...task, id: 2, title: "Afternoon", dueTime: "17:00" },
+            { ...task, id: 4, title: "Another evening", dueTime: "22:15" },
+        ];
+
+        render(<SelectedDayPanel date={date} tasks={unsorted} onTaskClick={vi.fn()} />);
+
+        const titles = screen.getAllByRole("button", {
+            name: /^(Morning|Afternoon|Evening|Another evening|No time)$/,
+        }).map((button) => button.textContent);
+
+        expect(titles).toEqual(["Morning", "Afternoon", "Evening", "Another evening", "No time"]);
+        expect(unsorted[0].title).toBe("No time");
+    });
+
     it("renders the empty state", () => {
         render(<SelectedDayPanel date={date} tasks={[]} onTaskClick={vi.fn()} />);
 
@@ -56,7 +75,7 @@ describe("SelectedDayPanel", () => {
         expect(screen.queryByText("Complete the documentation.")).toBeNull();
     });
 
-    it("uses No description when an expanded task has no description", () => {
+    it("omits empty descriptions but keeps the available tags", () => {
         render(
             <SelectedDayPanel
                 date={date}
@@ -66,7 +85,8 @@ describe("SelectedDayPanel", () => {
         );
 
         fireEvent.click(screen.getByRole("button", { name: "Expand Finish report" }));
-        expect(screen.getByText("No description.")).toBeTruthy();
+        expect(screen.queryByText("No description.")).toBeNull();
+        expect(screen.getByText("School")).toBeTruthy();
     });
 
     it("adds a task when editing is allowed", () => {

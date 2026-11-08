@@ -1,10 +1,17 @@
-import { Check, Mail, X } from "lucide-react";
+import { useState } from "react";
+import { Check, ChevronDown, Mail, X } from "lucide-react";
 
 import { getDisplayName } from "../../../../shared/utils/userUtils";
+import { filterProjectInvitations } from "../../utils/projectUtils";
 
 // Display and respond to pending project invitations.
-function ProjectInvitations({ invites, respondingInviteId, onRespond }) {
+function ProjectInvitations({ invites, respondingInviteId, onRespond, searchTerm = "" }) {
+    const [showAll, setShowAll] = useState(false);
     if (!invites.length) return null;
+
+    const searching = Boolean(searchTerm.trim());
+    const filteredInvites = filterProjectInvitations(invites, searchTerm);
+    const visibleInvites = searching || showAll ? filteredInvites : filteredInvites.slice(0, 3);
 
     return (
         <section className="mt-6">
@@ -12,12 +19,17 @@ function ProjectInvitations({ invites, respondingInviteId, onRespond }) {
                 <Mail size={14} className="text-green-500" />
                 <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Pending Invitations</h2>
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-green-100 px-1.5 text-[10px] font-semibold text-green-600 dark:bg-green-950/50 dark:text-green-400">
-                    {invites.length}
+                    {filteredInvites.length}
                 </span>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(300px,380px))]">
-                {invites.map((invite) => {
+            {searching && filteredInvites.length === 0 && (
+                <p role="status" className="rounded-xl border border-white/50 bg-white/25 px-4 py-3 text-xs text-slate-500 dark:border-white/10 dark:bg-white/[0.02] dark:text-slate-400">
+                    No pending invitations match your search.
+                </p>
+            )}
+            <div className={`grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(300px,380px))] ${showAll || searching ? "max-h-[420px] overflow-y-auto pr-1" : ""}`}>
+                {visibleInvites.map((invite) => {
                     const inviter = getDisplayName(invite.inviter, "A Takda user");
                     const responding = respondingInviteId === invite.id;
 
@@ -61,6 +73,17 @@ function ProjectInvitations({ invites, respondingInviteId, onRespond }) {
                     );
                 })}
             </div>
+            {!searching && invites.length > 3 && (
+                <button
+                    type="button"
+                    aria-expanded={showAll}
+                    onClick={() => setShowAll((current) => !current)}
+                    className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-green-600 transition hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950/20"
+                >
+                    <ChevronDown size={14} className={`transition-transform ${showAll ? "rotate-180" : ""}`} />
+                    {showAll ? "Show fewer invitations" : `View all ${invites.length} invitations`}
+                </button>
+            )}
         </section>
     );
 }

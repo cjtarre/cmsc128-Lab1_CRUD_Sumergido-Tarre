@@ -1,19 +1,21 @@
 import { useMemo, useState } from "react";
-import { FolderKanban, Plus, Search } from "lucide-react";
+import { ArrowDownUp, Filter, FolderKanban, Plus, Search } from "lucide-react";
 
 import ConfirmDialog from "../../../shared/components/common/ConfirmDialog";
+import EmptyState from "../../../shared/components/common/EmptyState";
 import CreateProject from "../components/forms/CreateProject";
 import DeletedProjects from "../components/cards/DeletedProjects";
 import EditProject from "../components/forms/EditProject";
 import ProjectGrid from "../components/cards/ProjectGrid";
 import ProjectInvitations from "../components/members/ProjectInvitations";
+import ProjectSelect from "../components/filters/ProjectSelect";
 import {
     handleDeleteProject,
     handleRestoreProject,
     handleUpdateProject,
 } from "../handlers/projectHandlers";
 import { useProjects } from "../hooks/useProjects";
-import { filterCollaborativeProjects } from "../utils/projectUtils";
+import { filterAndSortCollaborativeProjects, filterProjectInvitations, getProjectsSearchPlaceholder } from "../utils/projectUtils";
 
 function Projects() {
     const {
@@ -25,6 +27,8 @@ function Projects() {
 
     // Page UI state.
     const [searchTerm, setSearchTerm] = useState("");
+    const [membershipFilter, setMembershipFilter] = useState("all");
+    const [sortBy, setSortBy] = useState("default");
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isDeletedOpen, setIsDeletedOpen] = useState(false);
     const [editingProject, setEditingProject] = useState(null);
@@ -32,9 +36,24 @@ function Projects() {
     const [projectToRestore, setProjectToRestore] = useState(null);
 
     const collaborativeProjects = useMemo(
-        () => filterCollaborativeProjects(projects, searchTerm),
-        [projects, searchTerm]
+        () => filterAndSortCollaborativeProjects(projects, {
+            searchTerm,
+            membership: membershipFilter,
+            sortBy,
+        }),
+        [projects, searchTerm, membershipFilter, sortBy]
     );
+
+    // The search covers both projects and invitations. Filters apply only to projects.
+    const searching = Boolean(searchTerm.trim());
+    const matchingInvites = useMemo(
+        () => filterProjectInvitations(invites, searchTerm),
+        [invites, searchTerm]
+    );
+    const searchPlaceholder = getProjectsSearchPlaceholder(projects, invites);
+    const showProjectsSection = !searching || loading || Boolean(error) || collaborativeProjects.length > 0;
+    const noSearchMatches = searching && !loading && !error
+        && collaborativeProjects.length === 0 && matchingInvites.length === 0;
 
     return (
         <>
@@ -55,17 +74,21 @@ function Projects() {
                         {/* Search and primary action. */}
                         <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-[500px] sm:pt-3">
                             <div className="relative min-w-0 flex-1">
-                                <span className="pointer-events-none absolute left-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-lg bg-slate-100/80 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400">
-                                    <Search size={13} strokeWidth={2.2} />
-                                </span>
+                                <Search
+                                    size={16}
+                                    strokeWidth={2}
+                                    aria-hidden="true"
+                                    className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-500 dark:text-slate-300"
+                                />
 
                                 <input
                                     type="search"
+                                    aria-label="Search projects and pending invitations"
                                     value={searchTerm}
                                     onChange={(event) => setSearchTerm(event.target.value)}
-                                    placeholder="Search projects..."
+                                    placeholder={searchPlaceholder}
                                     className="h-9 w-full rounded-xl border border-white/70 bg-white/45 pl-10 pr-3 font-medium text-slate-700 shadow-sm outline-none backdrop-blur-xl transition placeholder:font-normal placeholder:text-slate-400 hover:bg-white/60 focus:border-green-200 focus:bg-white/70 focus:ring-2 focus:ring-green-100/50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-200 dark:placeholder:text-slate-500 dark:hover:bg-white/[0.05] dark:focus:border-green-800 dark:focus:bg-white/[0.05] dark:focus:ring-green-900/30 sm:h-10"
-                                    style={{ fontSize: "11px", lineHeight: "1" }}
+                                    style={{ fontSize: "12px", lineHeight: "1" }}
                                 />
                             </div>
 
@@ -88,24 +111,57 @@ function Projects() {
                 {/* Pending invitations. */}
                 {!loading && !error && (
                     <ProjectInvitations
-                        invites={invites}
+                        invites={matchingInvites}
+                        searchTerm={searchTerm}
                         respondingInviteId={respondingInviteId}
                         onRespond={respondToInvite}
                     />
                 )}
 
-                {/* Collaborative projects. */}
+                {/* Keep the main section visible by default; hide it only when no projects match a search. */}
+                {showProjectsSection && (
                 <section className="mt-5 rounded-2xl border border-white/60 bg-white/20 p-3 shadow-[0_8px_28px_rgba(15,23,42,0.025)] backdrop-blur-xl dark:border-white/[0.07] dark:bg-white/[0.015] sm:mt-6 sm:p-4">
-                    <div className="mb-3 flex items-center gap-2 px-1">
-                        <h2 className="text-[12px] font-semibold text-slate-700 dark:text-slate-200 sm:text-sm">
-                            Your Projects
-                        </h2>
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-[12px] font-semibold text-slate-700 dark:text-slate-200 sm:text-sm">
+                                Your Projects
+                            </h2>
 
-                        {!loading && !error && (
-                            <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-white/60 px-1.5 py-0.5 text-[9px] font-medium text-slate-400 shadow-sm dark:bg-white/[0.06] dark:text-slate-500">
-                                {collaborativeProjects.length}
-                            </span>
-                        )}
+                            {!loading && !error && (
+                                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-white/60 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 shadow-sm dark:bg-white/[0.06] dark:text-slate-400">
+                                    {collaborativeProjects.length}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-end gap-1.5">
+                            <ProjectSelect
+                                label="Filter projects by membership"
+                                Icon={Filter}
+                                value={membershipFilter}
+                                defaultValue="all"
+                                onChange={setMembershipFilter}
+                                options={[
+                                    { value: "all", label: "All" },
+                                    { value: "owned", label: "Owned" },
+                                    { value: "shared", label: "Shared" },
+                                ]}
+                            />
+                            <ProjectSelect
+                                label="Sort projects"
+                                Icon={ArrowDownUp}
+                                wide
+                                value={sortBy}
+                                defaultValue="default"
+                                onChange={setSortBy}
+                                options={[
+                                    { value: "default", label: "Default" },
+                                    { value: "name-asc", label: "Name A–Z" },
+                                    { value: "name-desc", label: "Name Z–A" },
+                                    { value: "tasks-desc", label: "Most tasks" },
+                                ]}
+                            />
+                        </div>
                     </div>
 
                     {loading ? (
@@ -130,15 +186,22 @@ function Projects() {
                             onDelete={setProjectToDelete}
                             searching={Boolean(searchTerm.trim())}
                         />
-                    ) : searchTerm ? (
+                    ) : searchTerm.trim() || membershipFilter !== "all" ? (
                         <div className="flex min-h-28 w-full max-w-[380px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 bg-white/20 px-6 text-center backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.02] sm:min-h-40">
                             <Search size={18} className="text-slate-300 dark:text-slate-600 sm:h-5 sm:w-5" />
                             <h3 className="mt-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
                                 No matching projects
                             </h3>
                             <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
-                                Try another project name.
+                                Try another search or change the filter.
                             </p>
+                            <button
+                                type="button"
+                                onClick={() => { setSearchTerm(""); setMembershipFilter("all"); }}
+                                className="mt-2.5 text-xs font-semibold text-green-600 hover:underline dark:text-green-400"
+                            >
+                                Clear search and filters
+                            </button>
                         </div>
                     ) : (
                         <button
@@ -168,9 +231,22 @@ function Projects() {
                         </button>
                     )}
                 </section>
+                )}
 
-                {/* Recoverable deleted projects. */}
-                {!loading && !error && (
+                {noSearchMatches && (
+                    <div className="mt-5 sm:mt-6">
+                        <EmptyState
+                            compact
+                            title="No matching results"
+                            description="Try another project or invitation name, or change your project filter."
+                            actionLabel="Clear search and filters"
+                            onAction={() => { setSearchTerm(""); setMembershipFilter("all"); }}
+                        />
+                    </div>
+                )}
+
+                {/* Recoverable deleted projects remain outside the global search. */}
+                {!loading && !error && !searching && (
                     <DeletedProjects
                         projects={deletedProjects}
                         open={isDeletedOpen}
