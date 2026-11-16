@@ -6,6 +6,7 @@ import { useAuth } from "../../auth/hooks/useAuth";
 import ConfirmDialog from "../../../shared/components/common/ConfirmDialog";
 import { getDisplayName, getInitials } from "../../../shared/utils/userUtils";
 import { DISPLAY_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, validateDisplayName, validatePassword, validateUsername } from "../../../shared/utils/validation";
+import ProfileFocusPlaylists from "../components/ProfileFocusPlaylists";
 
 function Profile() {
     const { user, authLoading, logout, updateProfile, updateEmail, updatePassword } = useAuth();
@@ -227,6 +228,8 @@ function Profile() {
                     </div>
                 </form>
             </section>
+
+            {user && <ProfileFocusPlaylists key={user.id} />}
 
             {/* Security */}
             <section className="overflow-hidden rounded-2xl border border-white/70 bg-white/85 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85 dark:shadow-black/20">
