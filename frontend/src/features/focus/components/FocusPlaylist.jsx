@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Maximize2, Minimize2, Music2, Plus } from "lucide-react";
 
 import { getFocusPlaylists, updateFocusPlaylist } from "../services/focusPlaylistService";
@@ -12,7 +13,7 @@ const initialBrowserPlaylist = (key) => {
     return typeof id === "string" && /^[a-zA-Z0-9]{22}$/.test(id) && id.length === 22 ? id : null;
 };
 
-function FocusPlaylist({ className, storageKey, initialPlaylistId, locked }) {
+function FocusPlaylist({ className, storageKey, initialPlaylistId, floating, locked }) {
     const activeKey = `${storageKey}:active`;
     const [browserId, setBrowserId] = useState(() => initialBrowserPlaylist(storageKey));
     const [playlists, setPlaylists] = useState([]);
@@ -23,12 +24,14 @@ function FocusPlaylist({ className, storageKey, initialPlaylistId, locked }) {
     const [error, setError] = useState("");
     const [expanded, setExpanded] = useState(false);
     const [adding, setAdding] = useState(false);
+    const [playerWindowId, setPlayerWindowId] = useState(null);
 
     const choices = browserId && !playlists.some(({ id }) => id === browserId)
         ? [{ id: browserId, name: "Browser playlist", browserOnly: true }, ...playlists]
         : playlists;
     const selected = choices.find(({ id }) => id === selectedId) ?? choices[0];
-    const playerHeight = locked || expanded ? 352 : 152;
+    const playerIsFloating = Boolean(floating && floating.id === playerWindowId);
+    const playerHeight = !playerIsFloating && (locked || expanded) ? 352 : 152;
     const canManage = !locked && loadState === "ready";
 
     useEffect(() => {
@@ -95,6 +98,19 @@ function FocusPlaylist({ className, storageKey, initialPlaylistId, locked }) {
         void savePlaylist(selected.id, null);
     }
 
+    const player = selected && (
+        <iframe
+            key={`${selected.id}:${locked}`}
+            id="focus-spotify-player"
+            title={`Spotify playlist: ${selected.name}`}
+            src={`https://open.spotify.com/embed/playlist/${selected.id}`}
+            height={playerHeight}
+            className={playerIsFloating ? undefined : "mt-3 block w-full rounded-xl border-0"}
+            allow="autoplay; clipboard-write; encrypted-media"
+            sandbox={locked ? "allow-scripts allow-same-origin" : undefined}
+        />
+    );
+
     return (
         <section className={className}>
             <div className="flex min-h-9 flex-wrap items-center gap-2">
@@ -109,7 +125,7 @@ function FocusPlaylist({ className, storageKey, initialPlaylistId, locked }) {
                             {choices.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
                         </FocusSelect>
                     )}
-                    {selected && !locked && (
+                    {selected && !locked && !playerIsFloating && (
                         <button type="button" aria-label={expanded ? "Collapse player" : "Expand player"}
                             title={expanded ? "Collapse player" : "Expand player"}
                             aria-expanded={expanded} aria-controls="focus-spotify-player"
@@ -121,17 +137,32 @@ function FocusPlaylist({ className, storageKey, initialPlaylistId, locked }) {
                 </div>
             </div>
 
-            {selected && (
-                <iframe
-                    key={`${selected.id}:${playerHeight}:${locked}`}
-                    id="focus-spotify-player"
-                    title={`Spotify playlist: ${selected.name}`}
-                    src={`https://open.spotify.com/embed/playlist/${selected.id}`}
-                    height={playerHeight}
-                    className="mt-3 block w-full rounded-xl border-0"
-                    allow="autoplay; clipboard-write; encrypted-media"
-                    sandbox={locked ? "allow-scripts allow-same-origin" : undefined}
-                />
+            {!playerIsFloating && player}
+            {playerIsFloating && selected && (
+                <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">Spotify is in the floating window.</p>
+            )}
+            {floating && selected && createPortal(
+                <div className="focus-spotify">
+                    <div className="focus-track-header">
+                        <Music2 size={14} aria-hidden="true" />
+                        <p className="focus-track-title" title={selected.name}>
+                            {playerIsFloating ? "Spotify" : selected.name}
+                        </p>
+                        <button type="button" className="focus-player-action"
+                            title="Moving the player restarts playback."
+                            aria-label={playerIsFloating
+                                ? "Return Spotify player to Takda. Playback restarts."
+                                : "Float Spotify player. Playback restarts."}
+                            onClick={() => {
+                                setPlayerWindowId(playerIsFloating ? null : floating.id);
+                                floating.resizePlayer(!playerIsFloating);
+                            }}>
+                            {playerIsFloating ? "Return player" : "Float player"}
+                        </button>
+                    </div>
+                    {playerIsFloating && player}
+                </div>,
+                floating.spotifyHost
             )}
 
             {loadState === "loading" && !selected && <p role="status" className="mt-3 text-xs">Loading playlists…</p>}

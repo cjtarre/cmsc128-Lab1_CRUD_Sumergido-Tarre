@@ -1,15 +1,17 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { Lock, Target } from "lucide-react";
+import { Lock, PictureInPicture2, Target } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { useAuth } from "../../auth/hooks/useAuth";
 import { STATUS } from "../../tasks/constants/taskOptions";
 import { useTaskData } from "../../tasks/context/TaskContext";
 import FocusActivity from "../components/FocusActivity";
+import FloatingFocusTimer from "../components/FloatingFocusTimer";
 import FocusSelect from "../components/FocusSelect";
 import FocusPlaylist from "../components/FocusPlaylist";
 import FocusTimerSettings from "../components/FocusTimerSettings";
 import { useFocusDashboard } from "../hooks/useFocusDashboard";
+import { useFocusPictureInPicture } from "../hooks/useFocusPictureInPicture";
 import { focusControlStyle } from "../utils/focusControlStyle";
 
 const phaseButton = (phase) => phase === "focus" ? "Start focus session" : "Start break";
@@ -20,6 +22,7 @@ function FocusDashboard({ userId, initialPlaylistId }) {
     const [selectedTaskId, setSelectedTaskId] = useState("");
     const dialogRef = useRef(null);
     const { timer, durations, dispatch, focusWeek, lockEnabled, setLockEnabled, locked } = useFocusDashboard(userId);
+    const { floating, floatError, openFloating, supported: canFloat } = useFocusPictureInPicture();
     const { phase, status, remainingMs, durationMinutes } = timer;
     const availableTasks = tasks.filter((task) => task.status !== STATUS.COMPLETED);
     const selectedTask = availableTasks.find((task) => String(task.id) === selectedTaskId);
@@ -35,6 +38,7 @@ function FocusDashboard({ userId, initialPlaylistId }) {
     const remainingSeconds = Math.ceil(remainingMs / 1000);
     const minutes = String(Math.floor(remainingSeconds / 60)).padStart(2, "0");
     const seconds = String(remainingSeconds % 60).padStart(2, "0");
+    const countdown = `${minutes}:${seconds}`;
     const progress = Math.min(1, Math.max(0, 1 - remainingMs / (durationMinutes * 60_000)));
     const sessionActive = status === "running" || status === "paused";
     const countdownSize = locked && !selectedTask
@@ -58,6 +62,7 @@ function FocusDashboard({ userId, initialPlaylistId }) {
             ? "Focus session complete. Take a break when you’re ready."
             : "Break complete. Start another focus session when you’re ready.",
     }[status];
+    const handlePrimary = () => dispatch({ type: "primary", now: Date.now() });
 
     return (
         <dialog
@@ -79,15 +84,26 @@ function FocusDashboard({ userId, initialPlaylistId }) {
                         <h2 id="focus-phase" className="flex items-center gap-2 text-sm font-semibold">
                             <Target size={16} aria-hidden="true" /> {phase === "focus" ? "Focus timer" : "Break timer"}
                         </h2>
-                        {!locked && !sessionActive && (
-                            <FocusTimerSettings durations={durations}
-                                onSave={(nextDurations) => dispatch({ type: "setDurations", durations: nextDurations })} />
-                        )}
+                        <div className="flex shrink-0 items-center gap-2">
+                            {canFloat && (
+                                <button type="button" onClick={openFloating} style={focusControlStyle}
+                                    aria-label={floating ? "Show floating timer" : "Float timer"}
+                                    title={floating ? "Show floating timer" : "Float timer"}
+                                    className="flex size-9 items-center justify-center rounded-lg border border-white/75 bg-white/50 text-slate-700 hover:bg-white/80 focus-visible:outline-2 focus-visible:outline-green-700 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-200 dark:hover:bg-white/10">
+                                    <PictureInPicture2 size={17} aria-hidden="true" />
+                                </button>
+                            )}
+                            {!locked && !sessionActive && (
+                                <FocusTimerSettings durations={durations}
+                                    onSave={(nextDurations) => dispatch({ type: "setDurations", durations: nextDurations })} />
+                            )}
+                        </div>
                     </div>
+                    {floatError && <p role="alert" className="text-xs text-red-700 dark:text-red-300">{floatError}</p>}
                     <div className={`flex flex-1 flex-col justify-center px-2 text-center ${locked && !selectedTask ? "py-6 sm:py-10" : "py-3 sm:py-4"}`}>
                         <p role="timer" aria-label="Time remaining"
                             className={`${countdownSize} leading-none font-semibold tracking-tight text-green-800 tabular-nums dark:text-green-300`}>
-                            {minutes}:{seconds}
+                            {countdown}
                         </p>
                         <p role="status" className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                             {locked && <Lock size={14} aria-hidden="true" className="mr-1.5 inline align-text-bottom" />}
@@ -132,7 +148,7 @@ function FocusDashboard({ userId, initialPlaylistId }) {
                     {!locked && (
                         <div className="space-y-3">
                             <div className="flex flex-wrap gap-2">
-                                <button type="button" onClick={() => dispatch({ type: "primary", now: Date.now() })}
+                                <button type="button" onClick={handlePrimary}
                                     style={focusControlStyle}
                                     className="flex-1 rounded-xl bg-green-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-800 dark:bg-green-400 dark:text-slate-950 dark:hover:bg-green-300">
                                     {primaryLabel}
@@ -160,9 +176,15 @@ function FocusDashboard({ userId, initialPlaylistId }) {
                         <FocusActivity className={glassCard} week={focusWeek} />
                     )}
                     <FocusPlaylist key="focus-playlist" className={`${glassCard} flex flex-1 flex-col`}
-                        storageKey={`takda-focus-playlist:${userId}`} initialPlaylistId={initialPlaylistId} locked={locked} />
+                        storageKey={`takda-focus-playlist:${userId}`} initialPlaylistId={initialPlaylistId}
+                        floating={floating} locked={locked} />
                 </div>
             </div>
+            {floating && (
+                <FloatingFocusTimer floating={floating} countdown={countdown} phase={phase} locked={locked}
+                    statusMessage={statusMessage} taskTitle={selectedTask?.title} progress={progress}
+                    primaryLabel={primaryLabel} onPrimary={handlePrimary} />
+            )}
         </dialog>
     );
 }
