@@ -20,9 +20,10 @@ function ProjectBoard({ projectId, tasks, setTasks, canEdit }) {
                 </div>
 
                 <div className="relative w-full sm:w-64">
-                    <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search tasks..."
-                        className="h-10 w-full rounded-xl border border-white/70 bg-white/50 py-2 pl-9 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-green-200 focus:bg-white/70 focus:ring-2 focus:ring-green-100/50 dark:border-white/10 dark:bg-white/[0.035] dark:text-slate-200 dark:focus:border-green-800 dark:focus:ring-green-900/30" />
+                    <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search tasks..." aria-label="Search board tasks"
+                        className="h-9 w-full rounded-xl border border-white/70 bg-white/50 py-1.5 pl-9 pr-3 text-[11px] text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-green-200 focus:bg-white/70 focus:ring-2 focus:ring-green-100/50 dark:border-white/10 dark:bg-white/[0.035] dark:text-slate-200 dark:focus:border-green-800 dark:focus:ring-green-900/30"
+                        style={{ fontFamily: "inherit", fontSize: "11px", lineHeight: "1.2" }} />
                 </div>
             </div>
 

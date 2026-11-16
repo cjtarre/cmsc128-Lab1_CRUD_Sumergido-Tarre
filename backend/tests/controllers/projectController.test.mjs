@@ -95,6 +95,7 @@ describe("projectController", () => {
                         projects: {
                             id: 2,
                             project_name: "Second",
+                            owner: "u3",
                             is_default: false,
                             created_at: "2026-01-01T00:00:00Z",
                         },
@@ -104,6 +105,7 @@ describe("projectController", () => {
                         projects: {
                             id: 1,
                             project_name: "Default",
+                            owner: "u1",
                             is_default: true,
                             created_at: "2026-02-01T00:00:00Z",
                         },
@@ -166,6 +168,7 @@ describe("projectController", () => {
                 role: "owner",
                 task_count: 2,
                 member_count: 2,
+                owner_profile: { username: "owner", display_name: "Owner" },
             });
 
             expect(returned[0].members).toEqual([
@@ -186,6 +189,7 @@ describe("projectController", () => {
                 role: "editor",
                 task_count: 1,
                 member_count: 1,
+                owner_profile: { username: "editor", display_name: "Editor" },
             });
         });
 

@@ -1,56 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-    BookOpen,
-    Briefcase,
-    CalendarDays,
-    Code2,
-    Database,
-    Flag,
-    Folder,
-    GraduationCap,
-    Heart,
-    Home,
-    Lightbulb,
-    Palette,
-    Plane,
-    Rocket,
-    Star,
-    Target,
-    Terminal,
-    X,
-} from "lucide-react";
-
-const PROJECT_ICONS = [
-    { id: "folder", icon: Folder, label: "Folder" },
-    { id: "briefcase", icon: Briefcase, label: "Briefcase" },
-    { id: "book-open", icon: BookOpen, label: "Book" },
-    { id: "graduation-cap", icon: GraduationCap, label: "School" },
-    { id: "code", icon: Code2, label: "Code" },
-    { id: "terminal", icon: Terminal, label: "Terminal" },
-    { id: "database", icon: Database, label: "Database" },
-    { id: "calendar", icon: CalendarDays, label: "Calendar" },
-    { id: "target", icon: Target, label: "Target" },
-    { id: "flag", icon: Flag, label: "Flag" },
-    { id: "lightbulb", icon: Lightbulb, label: "Idea" },
-    { id: "palette", icon: Palette, label: "Creative" },
-    { id: "plane", icon: Plane, label: "Plane" },
-    { id: "rocket", icon: Rocket, label: "Rocket" },
-    { id: "star", icon: Star, label: "Star" },
-    { id: "heart", icon: Heart, label: "Heart" },
-    { id: "home", icon: Home, label: "Home" },
-];
-
-const PROJECT_ACCENTS = [
-    { id: "green", label: "Green", className: "bg-green-500" },
-    { id: "blue", label: "Blue", className: "bg-blue-500" },
-    { id: "purple", label: "Purple", className: "bg-purple-500" },
-    { id: "orange", label: "Orange", className: "bg-orange-500" },
-    { id: "pink", label: "Pink", className: "bg-pink-500" },
-    { id: "red", label: "Red", className: "bg-red-500" },
-    { id: "amber", label: "Amber", className: "bg-amber-400" },
-    { id: "cyan", label: "Cyan", className: "bg-cyan-500" },
-    { id: "slate", label: "Slate", className: "bg-slate-500" },
-];
+import { X } from "lucide-react";
+import { PROJECT_ICON_OPTIONS, PROJECT_ACCENT_OPTIONS } from "../../constants/projectOptions";
 
 function EditProject({ isOpen, project, onClose, onSubmit }) {
     const [projectName, setProjectName] = useState("");
@@ -145,7 +95,7 @@ function EditProject({ isOpen, project, onClose, onSubmit }) {
                     </span>
 
                     <div className="mt-2 grid grid-cols-5 gap-1.5 min-[360px]:grid-cols-6">
-                        {PROJECT_ICONS.map(({ id, icon: Icon, label }) => {
+                        {PROJECT_ICON_OPTIONS.map(({ id, icon: Icon, label }) => {
                             const selected = icon === id;
 
                             return (
@@ -175,7 +125,7 @@ function EditProject({ isOpen, project, onClose, onSubmit }) {
                     </span>
 
                     <div className="mt-2 flex flex-wrap gap-2">
-                        {PROJECT_ACCENTS.map((color) => (
+                        {PROJECT_ACCENT_OPTIONS.map((color) => (
                             <button
                                 key={color.id}
                                 type="button"

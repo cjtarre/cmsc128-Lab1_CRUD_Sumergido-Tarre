@@ -1,4 +1,4 @@
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Crown, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 
@@ -15,6 +15,13 @@ function ProjectCard({ project, onEdit, onDelete }) {
     const remainingMembers = Math.max((project.member_count || 0) - visibleMembers.length, 0);
     const ProjectIcon = PROJECT_ICONS[project.icon] || PROJECT_ICONS.folder;
     const accentClasses = PROJECT_ACCENTS[project.accent] || PROJECT_ACCENTS.green;
+
+    const ownerProfile = project.owner_profile || members.find((member) => member.user_id === project.owner);
+    const ownerLabel = project.role === "owner"
+        ? "Owner: You"
+        : ownerProfile
+            ? `Owner: ${getDisplayName(ownerProfile, "Project owner")}`
+            : "Project owner";
 
     // Stop card navigation while handling project options.
     const handleOption = (event, callback) => {
@@ -116,12 +123,17 @@ function ProjectCard({ project, onEdit, onDelete }) {
                 </div>
 
                 <div
-                    className="mt-1 flex items-center gap-1.5 font-medium text-slate-400 dark:text-slate-500 sm:mt-1.5"
+                    className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-medium text-slate-400 dark:text-slate-500 sm:mt-1.5"
                     style={{ fontSize: "9px" }}
                 >
                     <span>{project.task_count || 0} {project.task_count === 1 ? "task" : "tasks"}</span>
                     <span>·</span>
                     <span>{project.member_count || 0} {project.member_count === 1 ? "member" : "members"}</span>
+                    <span>·</span>
+                    <span className="inline-flex min-w-0 items-center gap-1" title={ownerLabel}>
+                        <Crown size={9} aria-hidden="true" className="shrink-0 text-amber-500 dark:text-amber-400" />
+                        <span className="min-w-0 truncate">{ownerLabel}</span>
+                    </span>
                 </div>
             </div>
         </motion.div>

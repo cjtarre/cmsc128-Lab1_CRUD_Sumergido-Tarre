@@ -101,8 +101,14 @@ const getAllProjects = async (req, res) => {
         const projectsWithSummary = projects.map((project) => {
             const members = projectMembers.get(project.id) || [];
 
+            const ownerProfile = profileMap.get(project.owner);
+
             return {
                 ...project,
+                owner_profile: ownerProfile ? {
+                    username: ownerProfile.username || null,
+                    display_name: ownerProfile.display_name || null,
+                } : null,
                 task_count: taskCounts.get(project.id) || 0,
                 member_count: members.length,
                 members: members.slice(0, 4),

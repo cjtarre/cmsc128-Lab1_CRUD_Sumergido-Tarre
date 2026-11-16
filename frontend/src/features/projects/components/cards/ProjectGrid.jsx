@@ -3,22 +3,19 @@ import { ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import ProjectCard from "./ProjectCard";
+import { PROJECT_BATCH_SIZE, PROJECT_STACK_DEPTH, PROJECT_STACK_DELAY, PROJECT_DESKTOP_BREAKPOINT } from "../../constants/projectOptions";
 
-const PROJECT_BATCH_SIZE = 12;
-const STACK_DEPTH = 4;
-const STACK_DELAY = 500;
-const DESKTOP_BREAKPOINT = "(min-width: 640px)";
 
 // Track the Tailwind sm breakpoint for direction-specific Motion animations.
 function useDesktopView() {
     const [isDesktop, setIsDesktop] = useState(() =>
         typeof window !== "undefined"
-            ? window.matchMedia(DESKTOP_BREAKPOINT).matches
+            ? window.matchMedia(PROJECT_DESKTOP_BREAKPOINT).matches
             : false
     );
 
     useEffect(() => {
-        const media = window.matchMedia(DESKTOP_BREAKPOINT);
+        const media = window.matchMedia(PROJECT_DESKTOP_BREAKPOINT);
         const handleChange = (event) => setIsDesktop(event.matches);
 
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -46,7 +43,7 @@ function ProjectGrid({ projects, onEdit, onDelete, searching = false }) {
 
         setExpanded(false);
 
-        const timer = setTimeout(() => setExpanded(true), STACK_DELAY);
+        const timer = setTimeout(() => setExpanded(true), PROJECT_STACK_DELAY);
         return () => clearTimeout(timer);
     }, [projects.length, searching, isDesktop]);
 
@@ -79,7 +76,7 @@ function ProjectGrid({ projects, onEdit, onDelete, searching = false }) {
 
                         const stackIndex = Math.min(
                             index,
-                            STACK_DEPTH - 1
+                            PROJECT_STACK_DEPTH - 1
                         );
 
                         const isMobileStacked =
@@ -154,7 +151,7 @@ function ProjectGrid({ projects, onEdit, onDelete, searching = false }) {
                                             isInitialBatch
                                                 ? Math.min(
                                                     index,
-                                                    STACK_DEPTH
+                                                    PROJECT_STACK_DEPTH
                                                 ) * 0.06
                                                 : 0,
                                     },

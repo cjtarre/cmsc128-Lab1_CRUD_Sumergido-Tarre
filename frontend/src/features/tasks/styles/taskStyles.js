@@ -33,13 +33,56 @@ const taskStyles = {
 // Custom tag colors are stored as six-digit hex values in the database.
 export const getTagColor = (tag) => tag?.color || DEFAULT_TAG_COLOR;
 
+const colorChannels = (hex) => {
+    const safe = /^#[0-9a-f]{6}$/i.test(hex) ? hex : DEFAULT_TAG_COLOR;
+    return [1, 3, 5].map((index) => parseInt(safe.slice(index, index + 2), 16));
+};
+
+const toHex = (rgb) => `#${rgb.map((value) => value.toString(16).padStart(2, "0")).join("")}`;
+const blendWithWhite = (rgb, weight) => rgb.map((value) => Math.round(value * weight + 255 * (1 - weight)));
+const luminance = (rgb) => rgb.reduce((sum, channel, index) => {
+    const value = channel / 255;
+    const linear = value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    return sum + linear * [0.2126, 0.7152, 0.0722][index];
+}, 0);
+
+// Swatches need their own contrast treatment: white/pale colors must retain a
+// visible outline, and their selection checkmark must never blend into the fill.
+export const getTagSwatchStyle = (hex) => {
+    const rgb = colorChannels(hex);
+    const brightness = luminance(rgb);
+    return {
+        backgroundColor: toHex(rgb),
+        color: brightness > 0.179 ? "#000000" : "#ffffff",
+        borderColor: brightness > 0.72 ? "#94a3b8" : "#64748b",
+    };
+};
+
+// Use the saved color for the dot, but darken label text as needed for contrast.
 export const getTagInlineStyle = (tag, selected = false) => {
-    const color = getTagColor(tag);
+    const rgb = colorChannels(getTagColor(tag));
+    // Very dark custom colors should look dark, not wash out into a gray pill.
+    // Keep the original saved HEX value for the dot and for persistence.
+    if (luminance(rgb) < 0.025) {
+        return {
+            borderColor: selected ? "#64748b" : "#475569",
+            backgroundColor: selected ? "#111318" : "#1c2028",
+            color: "#ffffff",
+        };
+    }
+    const background = blendWithWhite(rgb, selected ? 0.22 : 0.10);
+    const minimumContrast = 4.5;
+    const maxTextLuminance = (luminance(background) + 0.05) / minimumContrast - 0.05;
+    let readable = [...rgb];
+
+    while (luminance(readable) > maxTextLuminance) {
+        readable = readable.map((channel) => Math.max(0, channel - 1));
+    }
 
     return {
-        borderColor: selected ? `${color}40` : "transparent",
-        backgroundColor: selected ? `${color}20` : `${color}0D`,
-        color,
+        borderColor: selected ? toHex(blendWithWhite(rgb, 0.48)) : "transparent",
+        backgroundColor: toHex(background),
+        color: toHex(readable),
     };
 };
 

@@ -5,6 +5,25 @@ import { formatDueTime } from "../../../shared/utils/dateUtils";
 import { STATUS, PRIORITY, priorityLabels, statusLabels } from "../../tasks/constants/taskOptions";
 import taskStyles, { getTagInlineStyle } from "../../tasks/styles/taskStyles";
 
+// Sort the day agenda chronologically without changing the original task array.
+// Tasks without a valid time appear last; equal times keep their existing order.
+function dueTimeMinutes(value) {
+    const formatted = formatDueTime(value);
+    const parts = formatted.match(/^(\d{1,2}):(\d{2})\s+(AM|PM)$/i);
+    if (!parts) return null;
+
+    const hours = Number(parts[1]) % 12 + (parts[3].toUpperCase() === "PM" ? 12 : 0);
+    return hours * 60 + Number(parts[2]);
+}
+
+function compareTasksByDueTime(a, b) {
+    const first = dueTimeMinutes(a.dueTime);
+    const second = dueTimeMinutes(b.dueTime);
+    if (first === null) return second === null ? 0 : 1;
+    if (second === null) return -1;
+    return first - second;
+}
+
 function SelectedDayPanel({
     date,
     tasks,
@@ -23,7 +42,7 @@ function SelectedDayPanel({
     const toggleExpanded = (taskId) => setExpandedTaskId((currentId) => currentId === taskId ? null : taskId);
 
     return (
-        <aside className="overflow-hidden rounded-2xl border border-white/70 bg-white/75 shadow-[0_10px_35px_rgba(15,23,42,0.055)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/75 dark:shadow-black/20">
+        <aside data-takda-selected-day className="overflow-hidden rounded-2xl border border-white/70 bg-white/75 shadow-[0_10px_35px_rgba(15,23,42,0.055)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/75 dark:shadow-black/20">
             <div className="border-b border-green-100/60 bg-green-50/45 px-4 py-4 dark:border-green-900/30 dark:bg-green-950/20 sm:px-5">
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2.5">
@@ -51,113 +70,109 @@ function SelectedDayPanel({
                 </p>
 
                 {tasks.length > 0 ? (
-                    <div className="space-y-2">
-                        {tasks.map((task) => {
+                    <div className="divide-y divide-slate-200/70 dark:divide-white/10">
+                        {[...tasks].sort(compareTasksByDueTime).map((task) => {
                             const isCompleted = task.status === STATUS.COMPLETED;
                             const isExpanded = expandedTaskId === task.id;
                             const taskMeta = getTaskMeta?.(task);
                             const taskProject = getTaskProject?.(task);
                             const canToggle = !readOnly && onToggleComplete && !taskProject;
+                            const hasDetails = Boolean(task.description?.trim() || task.tags?.length);
 
                             return (
-                                <div key={task.id} className="overflow-hidden rounded-xl border border-white/80 bg-white/65 shadow-sm transition hover:border-green-200 hover:bg-white/80 hover:shadow-md dark:border-white/10 dark:bg-white/[0.035] dark:hover:border-green-900/60 dark:hover:bg-white/[0.05]">
-                                    <div className="flex items-start gap-2.5 p-3">
-                                        {canToggle && (
-                                            <button type="button" onClick={() => onToggleComplete(task.id)} aria-label={isCompleted ? `Mark ${task.title} as incomplete` : `Mark ${task.title} as complete`} className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${isCompleted ? "border-green-500 bg-green-500 text-white" : "border-slate-300 bg-white/40 hover:border-green-500 dark:border-slate-600 dark:bg-white/[0.03]"}`}>
+                                <div key={task.id} className="py-3 first:pt-0 last:pb-0">
+                                    <div className="flex min-w-0 items-start gap-2 sm:gap-2.5">
+                                        {canToggle ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => onToggleComplete(task.id)}
+                                                aria-label={isCompleted ? `Mark ${task.title} as incomplete` : `Mark ${task.title} as complete`}
+                                                className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition focus:outline-none focus:ring-2 focus:ring-green-300/60 ${isCompleted ? "border-green-500 bg-green-500 text-white" : "border-slate-300 bg-white/50 hover:border-green-500 dark:border-slate-600 dark:bg-white/[0.03]"}`}
+                                            >
                                                 {isCompleted && <Check size={11} strokeWidth={3} />}
                                             </button>
+                                        ) : (
+                                            <span aria-hidden="true" className="mt-1 h-5 w-5 shrink-0" />
                                         )}
 
-                                        {taskMeta?.initials && (
-                                            <div title={taskMeta.name} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-50 text-[8px] font-bold text-green-600 dark:bg-green-950/40 dark:text-green-400">
-                                                {taskMeta.initials}
-                                            </div>
-                                        )}
+                                        <span className="w-[3.7rem] shrink-0 pt-1.5 text-[10px] font-medium text-slate-400 dark:text-slate-500 sm:w-[4.1rem]">
+                                            {task.dueTime ? formatDueTime(task.dueTime) : "—"}
+                                        </span>
 
                                         <div className="min-w-0 flex-1">
-                                            <button type="button" onClick={() => onTaskClick?.(task)} className="block max-w-full text-left">
-                                                <p className={`truncate text-xs font-semibold transition hover:text-green-600 dark:hover:text-green-400 ${isCompleted ? "text-slate-400 line-through dark:text-slate-500" : "text-slate-700 dark:text-slate-200"}`}>{task.title}</p>
-                                            </button>
-
-                                            <div className="mt-1 flex flex-wrap items-center gap-2">
-                                                {taskProject && (
-                                                    <span className="inline-flex min-w-0 items-center gap-1 text-[9px] font-medium text-green-600 dark:text-green-400">
-                                                        <FolderKanban size={10} className="shrink-0" />
-                                                        <span className="max-w-32 truncate">{taskProject.name}</span>
-                                                        <span className="text-slate-300 dark:text-slate-600">·</span>
-                                                        <span className="text-slate-400 dark:text-slate-500">Project task</span>
+                                            <div className="flex min-w-0 items-start gap-1.5">
+                                                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                                                    <button type="button" onClick={() => onTaskClick?.(task)} className="min-w-0 max-w-full text-left">
+                                                        <span className={`block break-words text-[13px] font-semibold leading-snug transition hover:text-green-600 dark:hover:text-green-400 ${isCompleted ? "text-slate-400 line-through dark:text-slate-500" : "text-slate-700 dark:text-slate-200"}`}>
+                                                            {task.title}
+                                                        </span>
+                                                    </button>
+                                                    <span className={`whitespace-nowrap text-[10px] font-medium ${taskStyles.status[task.status] || "text-slate-500 dark:text-slate-400"}`}>
+                                                        {statusLabels[task.status] || task.status}
                                                     </span>
-                                                )}
-
-                                                {taskMeta?.name && (
-                                                    <span className="text-[9px] text-slate-400 dark:text-slate-500">{taskMeta.name === "Unassigned" ? "Unassigned" : `${taskMetaLabel} ${taskMeta.name}`}</span>
-                                                )}
-
-                                                {task.dueTime && <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDueTime(task.dueTime)}</span>}
-
-                                                {task.priority && task.priority !== PRIORITY.NONE && (
-                                                    <span className={`rounded-full px-1.5 py-0.5 text-[8px] font-semibold uppercase ${isCompleted ? "bg-slate-100/80 text-slate-400 dark:bg-slate-700/70 dark:text-slate-500" : taskStyles.priority[task.priority]}`}>
-                                                        {priorityLabels[task.priority]}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <button type="button" onClick={() => toggleExpanded(task.id)} aria-label={isExpanded ? `Collapse ${task.title}` : `Expand ${task.title}`} aria-expanded={isExpanded} className={`rounded-lg p-1.5 transition ${isExpanded ? "bg-green-100/80 text-green-600 dark:bg-green-900/40 dark:text-green-400" : "text-slate-400 hover:bg-green-50/70 hover:text-green-600 dark:text-slate-500 dark:hover:bg-green-950/30 dark:hover:text-green-400"}`}>
-                                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                                        </button>
-                                    </div>
-
-                                    {isExpanded && (
-                                        <div className="border-t border-green-100/60 bg-green-50/30 px-3 py-3 dark:border-green-900/30 dark:bg-green-950/15">
-                                            <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Description</p>
-                                            <p className="mt-1 whitespace-pre-wrap text-[10px] leading-relaxed text-slate-600 dark:text-slate-300">{task.description?.trim() || "No description."}</p>
-
-                                            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[10px]">
-                                                <div>
-                                                    <span className="text-slate-400 dark:text-slate-500">Status: </span>
-                                                    <span className="font-medium text-slate-600 dark:text-slate-300">{statusLabels[task.status] || task.status}</span>
+                                                    {task.priority && task.priority !== PRIORITY.NONE && (
+                                                        <span className={`whitespace-nowrap rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${isCompleted ? "bg-slate-100/80 text-slate-400 dark:bg-slate-700/70 dark:text-slate-500" : taskStyles.priority[task.priority]}`}>
+                                                            {priorityLabels[task.priority]}
+                                                        </span>
+                                                    )}
                                                 </div>
 
-                                                {task.priority && task.priority !== PRIORITY.NONE && (
-                                                    <div>
-                                                        <span className="text-slate-400 dark:text-slate-500">Priority: </span>
-                                                        <span className="font-medium text-slate-600 dark:text-slate-300">{priorityLabels[task.priority]}</span>
-                                                    </div>
-                                                )}
-
-                                                {taskProject && (
-                                                    <div>
-                                                        <span className="text-slate-400 dark:text-slate-500">Project: </span>
-                                                        <span className="font-medium text-green-600 dark:text-green-400">{taskProject.name}</span>
-                                                    </div>
-                                                )}
-
-                                                {taskMeta?.name && (
-                                                    <div>
-                                                        {taskMeta.name === "Unassigned" ? (
-                                                            <span className="font-medium text-slate-500 dark:text-slate-400">Unassigned</span>
-                                                        ) : (
-                                                            <>
-                                                                <span className="text-slate-400 dark:text-slate-500">{taskMetaLabel}: </span>
-                                                                <span className="font-medium text-slate-600 dark:text-slate-300">{taskMeta.name}</span>
-                                                            </>
-                                                        )}
-                                                    </div>
+                                                {hasDetails ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleExpanded(task.id)}
+                                                        aria-label={isExpanded ? `Collapse ${task.title}` : `Expand ${task.title}`}
+                                                        aria-expanded={isExpanded}
+                                                        className={`shrink-0 rounded-lg p-1.5 transition ${isExpanded ? "bg-green-100/80 text-green-600 dark:bg-green-900/40 dark:text-green-400" : "text-slate-400 hover:bg-green-50/70 hover:text-green-600 dark:text-slate-500 dark:hover:bg-green-950/30 dark:hover:text-green-400"}`}
+                                                    >
+                                                        {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                                    </button>
+                                                ) : (
+                                                    <span aria-hidden="true" className="h-[26px] w-[26px] shrink-0" />
                                                 )}
                                             </div>
 
-                                            {task.tags?.length > 0 && (
-                                                <div className="mt-3 flex flex-wrap gap-1">
-                                                    {task.tags.map((tag) => (
-                                                        <span key={tag.tag_id} className="rounded-full border border-transparent px-2 py-0.5 text-[9px] font-medium shadow-sm" style={getTagInlineStyle(tag)}>
-                                                            {tag.tag_name}
+                                            {(taskProject || taskMeta?.name) && (
+                                                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                    {taskProject && (
+                                                        <span className="inline-flex min-w-0 items-center gap-1 text-[9px] font-medium text-green-600 dark:text-green-400">
+                                                            <FolderKanban size={10} className="shrink-0" />
+                                                            <span className="max-w-32 truncate">{taskProject.name}</span>
+                                                            <span className="text-slate-300 dark:text-slate-600">·</span>
+                                                            <span className="text-slate-400 dark:text-slate-500">Project task</span>
                                                         </span>
-                                                    ))}
+                                                    )}
+                                                    {taskMeta?.name && (
+                                                        <span className="inline-flex min-w-0 items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500">
+                                                            {taskMeta.initials && (
+                                                                <span title={taskMeta.name} className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-green-50 text-[8px] font-bold text-green-600 dark:bg-green-950/40 dark:text-green-400">
+                                                                    {taskMeta.initials}
+                                                                </span>
+                                                            )}
+                                                            <span>{taskMeta.name === "Unassigned" ? "Unassigned" : `${taskMetaLabel} ${taskMeta.name}`}</span>
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {isExpanded && hasDetails && (
+                                                <div className="mt-2.5 space-y-2 border-l-2 border-green-100/80 pl-3 dark:border-green-900/50">
+                                                    {task.description?.trim() && (
+                                                        <p className="whitespace-pre-wrap text-xs leading-relaxed text-slate-600 dark:text-slate-300">{task.description.trim()}</p>
+                                                    )}
+                                                    {task.tags?.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {task.tags.map((tag) => (
+                                                                <span key={tag.tag_id} className="rounded-full border border-transparent px-2 py-0.5 text-[9px] font-medium" style={getTagInlineStyle(tag)}>
+                                                                    {tag.tag_name}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             );
                         })}

@@ -80,3 +80,41 @@ export const PROJECT_ACCENTS = {
     cyan: "bg-cyan-50 text-cyan-500 group-hover:bg-cyan-100/80 dark:bg-cyan-950/40 dark:text-cyan-400",
     slate: "bg-slate-100 text-slate-500 group-hover:bg-slate-200/80 dark:bg-slate-800 dark:text-slate-400",
 };
+// Choices offered by the project appearance editor.
+export const PROJECT_ICON_OPTIONS = [
+    { id: "folder", icon: Folder, label: "Folder" },
+    { id: "briefcase", icon: Briefcase, label: "Briefcase" },
+    { id: "book-open", icon: BookOpen, label: "Book" },
+    { id: "graduation-cap", icon: GraduationCap, label: "School" },
+    { id: "code", icon: Code2, label: "Code" },
+    { id: "terminal", icon: Terminal, label: "Terminal" },
+    { id: "database", icon: Database, label: "Database" },
+    { id: "calendar", icon: CalendarDays, label: "Calendar" },
+    { id: "target", icon: Target, label: "Target" },
+    { id: "flag", icon: Flag, label: "Flag" },
+    { id: "lightbulb", icon: Lightbulb, label: "Idea" },
+    { id: "palette", icon: Palette, label: "Creative" },
+    { id: "plane", icon: Plane, label: "Plane" },
+    { id: "rocket", icon: Rocket, label: "Rocket" },
+    { id: "star", icon: Star, label: "Star" },
+    { id: "heart", icon: Heart, label: "Heart" },
+    { id: "home", icon: Home, label: "Home" },
+];
+
+export const PROJECT_ACCENT_OPTIONS = [
+    { id: "green", label: "Green", className: "bg-green-500" },
+    { id: "blue", label: "Blue", className: "bg-blue-500" },
+    { id: "purple", label: "Purple", className: "bg-purple-500" },
+    { id: "orange", label: "Orange", className: "bg-orange-500" },
+    { id: "pink", label: "Pink", className: "bg-pink-500" },
+    { id: "red", label: "Red", className: "bg-red-500" },
+    { id: "amber", label: "Amber", className: "bg-amber-400" },
+    { id: "cyan", label: "Cyan", className: "bg-cyan-500" },
+    { id: "slate", label: "Slate", className: "bg-slate-500" },
+];
+
+// Project grid paging and motion configuration.
+export const PROJECT_BATCH_SIZE = 12;
+export const PROJECT_STACK_DEPTH = 4;
+export const PROJECT_STACK_DELAY = 500;
+export const PROJECT_DESKTOP_BREAKPOINT = "(min-width: 640px)";
