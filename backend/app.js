@@ -19,11 +19,18 @@ const notificationRoutes = require("./routes/notificationRoutes");
 
 // Middleware
 const app = express();
+// The production container receives public traffic through one Caddy proxy.
+if (process.env.TRUST_SINGLE_PROXY === "true") {
+    app.set("trust proxy", 1);
+}
+
 app.use(helmet());
 app.use(cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
 }));
 app.use(express.json());
+
+app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 
 // Connect CRUD route endpoints to the Express app
 app.use("/api/auth", authRoutes);
