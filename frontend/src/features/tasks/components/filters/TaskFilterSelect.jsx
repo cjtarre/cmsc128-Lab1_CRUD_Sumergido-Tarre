@@ -8,7 +8,9 @@ function TaskFilterSelect({ value, onChange, children, className = "" }) {
         .filter((child) => isValidElement(child) && child.type === "option")
         .map((child) => ({ value: String(child.props.value ?? ""), label: child.props.children }));
     const currentValue = String(value ?? "");
-    const selected = options.find((option) => option.value === currentValue) || options[0];
+    const selectedIndex = Math.max(0, options.findIndex((option) => option.value === currentValue));
+    const selected = options[selectedIndex];
+    const selectedOptionValue = selected?.value;
     const [open, setOpen] = useState(false);
     const [above, setAbove] = useState(false);
     const wrapperRef = useRef(null);
@@ -38,10 +40,9 @@ function TaskFilterSelect({ value, onChange, children, className = "" }) {
     }, [open]);
 
     useEffect(() => {
-        if (!open) return;
-        const selectedIndex = options.findIndex((option) => option.value === currentValue);
-        optionRefs.current[Math.max(selectedIndex, 0)]?.focus();
-    }, [open, currentValue]);
+        if (!open || selectedOptionValue === undefined) return;
+        optionRefs.current[selectedIndex]?.focus();
+    }, [open, selectedIndex, selectedOptionValue]);
 
     const toggle = () => {
         if (!open) {

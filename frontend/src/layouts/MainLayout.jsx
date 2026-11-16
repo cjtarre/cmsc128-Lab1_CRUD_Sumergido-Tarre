@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import TaskCompanion from "../features/companion/TaskCompanion";
 import { useAuth } from "../features/auth/hooks/useAuth";
+import PageTransition from "../shared/components/effects/PageTransition";
 import Header from "../shared/components/header/Header";
 import MobileNavbar from "../shared/components/navigation/MobileNavBar";
 import Navbar from "../shared/components/navigation/NavBar";
@@ -10,6 +11,7 @@ const getCompanionEnabledKey = (userId) => `takda-companion-enabled:${userId}`;
 
 function MainLayout() {
     const { user } = useAuth();
+    const { pathname } = useLocation();
 
     const [companionEnabled, setCompanionEnabled] = useState(
         () => localStorage.getItem(getCompanionEnabledKey(user.id)) !== "false"
@@ -58,8 +60,10 @@ function MainLayout() {
                     <Navbar />
                 </div>
 
-                <main className="min-w-0 flex-1 overflow-y-auto p-5 lg:p-6">
-                    <Outlet />
+                <main key={pathname} className="min-w-0 flex-1 overflow-y-auto p-5 lg:p-6">
+                    <PageTransition>
+                        <Outlet />
+                    </PageTransition>
                 </main>
             </div>
 
@@ -67,7 +71,7 @@ function MainLayout() {
                 <MobileNavbar />
             </div>
 
-            {companionEnabled && <TaskCompanion userId={user.id} />}
+            {companionEnabled && <TaskCompanion key={user.id} userId={user.id} />}
         </div>
     );
 }
