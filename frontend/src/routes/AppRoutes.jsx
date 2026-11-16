@@ -1,5 +1,4 @@
-import { AnimatePresence } from "motion/react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 
 import { useAuth } from "../features/auth/hooks/useAuth";
 import ForgotPassword from "../features/auth/pages/ForgotPassword";
@@ -26,8 +25,12 @@ import Settings from "../pages/Settings";
 import PageTransition from "../shared/components/effects/PageTransition";
 import ProtectedRoute from "./ProtectedRoute";
 
+function PublicPageLayout() {
+    const { pathname } = useLocation();
+    return <PageTransition key={pathname}><Outlet /></PageTransition>;
+}
+
 function AppRoutes() {
-    const location = useLocation();
     const { isAuthenticated, authLoading } = useAuth();
 
     if (authLoading) {
@@ -39,44 +42,40 @@ function AppRoutes() {
     }
 
     return (
-        <AnimatePresence mode="wait">
-            <PageTransition key={location.pathname}>
-                <Routes location={location}>
-                    <Route path="/" element={<LandingPage />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Routes>
+            <Route element={<PublicPageLayout />}>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/login" element={isAuthenticated ? <Navigate to="/my-tasks" replace /> : <Login />} />
+                <Route path="/signup" element={isAuthenticated ? <Navigate to="/my-tasks" replace /> : <Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="*" element={<NotFound />} />
+            </Route>
 
-                    <Route path="/login" element={isAuthenticated ? <Navigate to="/my-tasks" replace /> : <Login />} />
-                    <Route path="/signup" element={isAuthenticated ? <Navigate to="/my-tasks" replace /> : <Signup />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-
-                    <Route
-                        element={
-                            <ProtectedRoute>
-                                <TaskProvider>
-                                    <NotificationProvider>
-                                        <MainLayout />
-                                    </NotificationProvider>
-                                </TaskProvider>
-                            </ProtectedRoute>
-                        }
-                    >
-                        <Route path="/my-tasks" element={<MyTasks />} />
-                        <Route path="/projects" element={<Projects />} />
-                        <Route path="/projects/:projectId" element={<ProjectWorkspace />} />
-                        <Route path="/projects/:projectId/settings" element={<ProjectSettings />} />
-                        <Route path="/calendar" element={<Calendar />} />
-                        <Route path="/focus" element={<FocusMode />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/settings" element={<Settings />} />
-                        <Route path="/notifications" element={<Notifications />} />
-                    </Route>
-
-                    <Route path="*" element={<NotFound />} />
-                </Routes>
-            </PageTransition>
-        </AnimatePresence>
+            <Route
+                element={
+                    <ProtectedRoute>
+                        <TaskProvider>
+                            <NotificationProvider>
+                                <MainLayout />
+                            </NotificationProvider>
+                        </TaskProvider>
+                    </ProtectedRoute>
+                }
+            >
+                <Route path="/my-tasks" element={<MyTasks />} />
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/projects/:projectId" element={<ProjectWorkspace />} />
+                <Route path="/projects/:projectId/settings" element={<ProjectSettings />} />
+                <Route path="/calendar" element={<Calendar />} />
+                <Route path="/focus" element={<FocusMode />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/notifications" element={<Notifications />} />
+            </Route>
+        </Routes>
     );
 }
 

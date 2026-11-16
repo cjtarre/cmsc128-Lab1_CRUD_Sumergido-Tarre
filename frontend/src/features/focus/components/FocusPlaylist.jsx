@@ -100,14 +100,14 @@ function FocusPlaylist({ className, storageKey, initialPlaylistId, floating, loc
 
     const player = selected && (
         <iframe
-            key={`${selected.id}:${locked}`}
+            key={selected.id}
             id="focus-spotify-player"
             title={`Spotify playlist: ${selected.name}`}
             src={`https://open.spotify.com/embed/playlist/${selected.id}`}
             height={playerHeight}
             className={playerIsFloating ? undefined : "mt-3 block w-full rounded-xl border-0"}
             allow="autoplay; clipboard-write; encrypted-media"
-            sandbox={locked ? "allow-scripts allow-same-origin" : undefined}
+            sandbox="allow-scripts allow-same-origin"
         />
     );
 
