@@ -13,7 +13,9 @@ function CompactSelect({ id, name, value, children, onChange, disabled = false, 
             disabled: Boolean(child.props.disabled),
         }));
     const selectedValue = String(value ?? "");
-    const selected = options.find((option) => option.value === selectedValue) ?? options[0];
+    const selectedIndex = Math.max(0, options.findIndex((option) => option.value === selectedValue));
+    const selected = options[selectedIndex];
+    const selectedOptionValue = selected?.value;
     const [open, setOpen] = useState(false);
     const [position, setPosition] = useState(null);
     const triggerRef = useRef(null);
@@ -68,10 +70,9 @@ function CompactSelect({ id, name, value, children, onChange, disabled = false, 
     }, [open]);
 
     useEffect(() => {
-        if (!open) return;
-        const selectedIndex = options.findIndex((option) => option.value === selectedValue);
-        optionRefs.current[Math.max(0, selectedIndex)]?.focus();
-    }, [open, selectedValue, options.length]);
+        if (!open || selectedOptionValue === undefined) return;
+        optionRefs.current[selectedIndex]?.focus();
+    }, [open, selectedIndex, selectedOptionValue]);
 
     const choose = (newValue) => {
         onChange?.({ target: { name, value: newValue } });

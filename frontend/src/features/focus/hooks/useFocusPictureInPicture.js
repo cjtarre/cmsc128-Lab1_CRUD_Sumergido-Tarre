@@ -100,7 +100,30 @@ const floatingStyles = `
     }
     .focus-track-header { min-width: 0; padding-inline: 2px; }
     .focus-track-title { flex: 1; font-size: 11px; font-weight: 600; }
-    .focus-spotify iframe { display: block; width: 100%; border: 0; border-radius: 8px; }
+    .focus-spotify {
+        container-type: inline-size;
+        grid-template-columns: minmax(0, 1fr);
+        overflow: clip;
+    }
+
+    .focus-spotify iframe {
+        display: block;
+        width: 100%;
+        border: 0;
+        border-radius: 8px;
+    }
+
+    @supports (scale: calc(1px / 1px)) {
+        @container (width < 280px) {
+            .focus-spotify iframe {
+                --player-scale: calc(100cqi / 280px);
+                width: 280px;
+                transform-origin: top left;
+                scale: var(--player-scale);
+                margin-bottom: calc(152px * (var(--player-scale) - 1));
+            }
+        }
+    }
     button {
         appearance: none;
         border: 1px solid var(--border);
