@@ -81,15 +81,13 @@ describe("createTask", () => {
             },
         }, res = createResponse();
 
-        const newTask = {
+        const taskWithoutTags = {
             task_id: 1, task_name: "New Task",
             project_id: PROJECT_ID, assignee_id: null,
+            project: { id: PROJECT_ID }, assignee: null, task_tag: [],
         };
-        const taskWithTags = { ...newTask, task_tag: [] };
 
-        mockQuery.single
-            .mockResolvedValueOnce({ data: newTask, error: null })
-            .mockResolvedValueOnce({ data: taskWithTags, error: null });
+        mockQuery.single.mockResolvedValueOnce({ data: taskWithoutTags, error: null });
 
         await createTask(req, res);
 
@@ -100,8 +98,10 @@ describe("createTask", () => {
             priority_level: "high", status: "not_started", due_date: "2026-10-05",
             project_id: PROJECT_ID, assignee_id: null, user_id: mockUser.id,
         }]);
+        expect(mockQuery.select).toHaveBeenCalledWith(expect.stringContaining("task_tag"));
+        expect(mockQuery.single).toHaveBeenCalledTimes(1);
         expect(res.status).toHaveBeenCalledWith(201);
-        expect(res.json).toHaveBeenCalledWith(taskWithTags);
+        expect(res.json).toHaveBeenCalledWith(taskWithoutTags);
     });
 
     it("creates a task with tags", async () => {
@@ -136,6 +136,7 @@ describe("createTask", () => {
         expect(mockQuery.insert).toHaveBeenCalledWith([
             { task_id: 1, tag_id: 1 }, { task_id: 1, tag_id: 2 },
         ]);
+        expect(mockQuery.single).toHaveBeenCalledTimes(2);
         expect(res.status).toHaveBeenCalledWith(201);
         expect(res.json).toHaveBeenCalledWith(taskWithTags);
     });
@@ -201,14 +202,13 @@ describe("updateTask", () => {
             task_id: 1, task_name: "Updated Task", task_info: "Updated information",
             project_id: PROJECT_ID, priority_level: "high",
             status: "completed", due_date: "2026-10-10",
+            task_tag: [{ tags: { tag_id: 2, tag_name: "School" } }],
         };
 
         mockQuery.maybeSingle.mockResolvedValueOnce({ data: baseTask, error: null });
         mockQuery.select
             .mockReturnValueOnce(mockQuery)
-            .mockResolvedValueOnce({ data: [updatedTask], error: null })
-            .mockReturnValueOnce(mockQuery);
-        mockQuery.single.mockResolvedValueOnce({ data: updatedTask, error: null });
+            .mockResolvedValueOnce({ data: [updatedTask], error: null });
 
         await updateTask(req, res);
 
@@ -218,6 +218,9 @@ describe("updateTask", () => {
             priority_level: "high", status: "completed", due_date: "2026-10-10",
         });
         expect(mockQuery.eq).toHaveBeenCalledWith("task_id", 1);
+        expect(mockQuery.select).toHaveBeenNthCalledWith(2, expect.stringContaining("task_tag"));
+        expect(mockQuery.single).not.toHaveBeenCalled();
+        expect(mockQuery.delete).not.toHaveBeenCalled();
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(updatedTask);
     });
