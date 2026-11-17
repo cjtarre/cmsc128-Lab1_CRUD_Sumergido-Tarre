@@ -8,6 +8,7 @@ import TaskDetails from "../../tasks/components/table/TaskDetails";
 import EditTask from "../../tasks/components/forms/EditTask";
 import DeleteTask from "../../tasks/components/forms/DeleteTask";
 import AddTask from "../../tasks/components/forms/AddTask";
+import { compareTasksByDueTime } from "../utils/calendarTaskOrder";
 import SelectedDayPanel from "./SelectedDayPanel";
 
 function CalendarView({
@@ -77,21 +78,7 @@ function CalendarView({
     const getTasksForDate = (date) => {
         const value = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 
-        // Match the Selected Day agenda: earlier times first, untimed tasks last.
-        const timeInMinutes = (task) => {
-            const parts = formatDueTime(task.dueTime).match(/^(\d{1,2}):(\d{2})\s+(AM|PM)$/i);
-            if (!parts) return null;
-
-            return (Number(parts[1]) % 12 + (parts[3].toUpperCase() === "PM" ? 12 : 0)) * 60 + Number(parts[2]);
-        };
-
-        return tasks.filter((task) => task.dueDate === value).sort((first, second) => {
-            const firstTime = timeInMinutes(first);
-            const secondTime = timeInMinutes(second);
-            if (firstTime === null) return secondTime === null ? 0 : 1;
-            if (secondTime === null) return -1;
-            return firstTime - secondTime;
-        });
+        return tasks.filter((task) => task.dueDate === value).sort(compareTasksByDueTime);
     };
 
     const getTasksForDay = (day) => day ? getTasksForDate(new Date(year, month, day)) : [];

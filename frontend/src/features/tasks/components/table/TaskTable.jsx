@@ -1,5 +1,6 @@
 import TaskRow from "./TaskRow";
 import SortButtonToggle from "../filters/TaskColumnSort";
+import { getTaskGridColumns } from "../../styles/taskStyles";
 import { taskSortLabels, dueDateSortLabels } from "../../utils/taskUtils";
 
 function TaskTable({
@@ -16,9 +17,7 @@ function TaskTable({
     onDelete,
     onView,
 }) {
-    const gridColumns = collaborative
-        ? "sm:grid-cols-[minmax(180px,2fr)_minmax(100px,0.9fr)_minmax(95px,0.8fr)_minmax(75px,0.65fr)_minmax(135px,1.05fr)_minmax(110px,1fr)_44px]"
-        : "sm:grid-cols-[minmax(0,2.3fr)_minmax(110px,0.9fr)_minmax(180px,1.2fr)_44px]";
+    const gridColumns = getTaskGridColumns(collaborative);
 
     return (
         <div className="min-w-0">

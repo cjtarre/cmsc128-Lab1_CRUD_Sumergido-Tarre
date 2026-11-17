@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
 import { lookupFocusPlaylistName } from "../services/focusPlaylistService";
-import { focusControlStyle } from "../utils/focusControlStyle";
+import { focusControlStyle } from "../styles/focusControlStyle";
 import { getSpotifyPlaylistId } from "../utils/spotifyPlaylist";
 
 const fieldClass = "h-9 w-full min-w-0 rounded-lg border border-white/75 bg-white/55 px-2.5 text-slate-800 outline-none placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-emerald-500/60 dark:border-white/15 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-400";

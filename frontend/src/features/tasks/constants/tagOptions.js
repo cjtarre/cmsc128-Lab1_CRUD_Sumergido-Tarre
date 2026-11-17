@@ -1,5 +1,5 @@
 // Shared limits and color presets for task tags.
-export const TAG_COLORS = ["#22c55e", "#3b82f6", "#8b5cf6", "#ec4899", "#ef4444", "#f97316", "#eab308", "#14b8a6", "#64748b"];
+export const DEFAULT_TAG_COLOR = "#64748b";
 
 export const TAG_COLOR_NAMES = {
     "#22c55e": "Green",
@@ -10,7 +10,10 @@ export const TAG_COLOR_NAMES = {
     "#f97316": "Orange",
     "#eab308": "Yellow",
     "#14b8a6": "Teal",
-    "#64748b": "Slate",
+    [DEFAULT_TAG_COLOR]: "Slate",
 };
 
+export const TAG_COLORS = Object.keys(TAG_COLOR_NAMES);
+
+export const TAG_NAME_MAX_LENGTH = 50;
 export const MAX_SELECTED_TAGS = 3;

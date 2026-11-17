@@ -6,7 +6,9 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 import AuthPanel from "../../src/features/auth/components/AuthPanel";
 import { useAuth } from "../../src/features/auth/hooks/useAuth";
+import { authService } from "../../src/features/auth/services/authService";
 import ForgotPassword from "../../src/features/auth/pages/ForgotPassword";
+import ResetPassword from "../../src/features/auth/pages/ResetPassword";
 import Login from "../../src/features/auth/pages/Login";
 import Signup from "../../src/features/auth/pages/Signup";
 
@@ -15,7 +17,7 @@ vi.mock("../../src/features/auth/hooks/useAuth", () => ({
 }));
 
 vi.mock("../../src/features/auth/services/authService", () => ({
-    authService: { forgotPassword: vi.fn() },
+    authService: { forgotPassword: vi.fn(), resetPassword: vi.fn() },
 }));
 
 vi.mock("../../src/shared/components/effects/HoverText", () => ({
@@ -104,6 +106,35 @@ describe("Auth forms", () => {
         fireEvent.click(screen.getByLabelText("Back to login"));
 
         expect(screen.getByLabelText("Username or email").value).toBe("login@example.com");
+    });
+
+    it.each([
+        "#access_token=test-access&refresh_token=test-refresh&type=recovery",
+        "?access_token=test-access&refresh_token=test-refresh&type=recovery",
+    ])("resets the password using recovery tokens in %s", async (recovery) => {
+        const originalUrl = window.location.href;
+        window.history.replaceState(null, "", `/reset-password${recovery}`);
+        authService.resetPassword.mockResolvedValueOnce({});
+
+        try {
+            render(
+                <MemoryRouter initialEntries={["/reset-password"]}>
+                    <Routes>
+                        <Route path="/reset-password" element={<ResetPassword />} />
+                        <Route path="/login" element={<p>Login after reset</p>} />
+                    </Routes>
+                </MemoryRouter>
+            );
+
+            fireEvent.change(screen.getByLabelText("New password"), { target: { value: "NewPassword1!" } });
+            fireEvent.change(screen.getByLabelText("Confirm new password"), { target: { value: "NewPassword1!" } });
+            fireEvent.click(screen.getByRole("button", { name: "Reset password" }));
+
+            await screen.findByText("Login after reset");
+            expect(authService.resetPassword).toHaveBeenCalledWith("test-access", "test-refresh", "NewPassword1!");
+        } finally {
+            window.history.replaceState(null, "", originalUrl);
+        }
     });
 
     it("clears the signup draft when the auth panel is closed", () => {

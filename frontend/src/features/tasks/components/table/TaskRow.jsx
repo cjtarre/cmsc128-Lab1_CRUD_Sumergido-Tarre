@@ -3,9 +3,11 @@ import { createPortal } from "react-dom";
 import { CalendarDays, Check, ChevronDown, UserRound } from "lucide-react";
 
 import ActionButtons from "./ActionButtons";
-import taskStyles, { getTagInlineStyle } from "../../styles/taskStyles";
+import taskStyles, { getTagInlineStyle, getTaskGridColumns } from "../../styles/taskStyles";
 import { formatDueDate } from "../../../../shared/utils/dateUtils";
-import { STATUS, PRIORITY, priorityLabels, statusLabels } from "../../constants/taskOptions";
+import { STATUS, PRIORITY, priorityLabels, STATUS_OPTIONS } from "../../constants/taskOptions";
+
+const statusOptions = STATUS_OPTIONS.map(([value, label]) => ({ value, label: label || value }));
 
 function TaskRow({
     title = "Untitled Task", description = "", status = STATUS.NOT_STARTED, priority = PRIORITY.NONE,
@@ -18,7 +20,6 @@ function TaskRow({
     const rowRef = useRef(null), statusButtonRef = useRef(null), statusMenuRef = useRef(null);
 
     const isCompleted = status === STATUS.COMPLETED;
-    const statusOptions = Object.values(STATUS).map((value) => ({ value, label: statusLabels[value] || value }));
     const currentStatus = statusOptions.find((option) => option.value === status) || statusOptions[0];
     const assigneeName = assignee?.display_name || assignee?.username || "Unassigned";
     const assigneeInitials = assignee ? assigneeName.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase() : null;
@@ -70,9 +71,7 @@ function TaskRow({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [isStatusOpen]);
 
-    const gridColumns = collaborative
-        ? "sm:grid-cols-[minmax(180px,2fr)_minmax(100px,0.9fr)_minmax(95px,0.8fr)_minmax(75px,0.65fr)_minmax(135px,1.05fr)_minmax(110px,1fr)_44px]"
-        : "sm:grid-cols-[minmax(0,2.3fr)_minmax(110px,0.9fr)_minmax(180px,1.2fr)_44px]";
+    const gridColumns = getTaskGridColumns(collaborative);
 
     const statusMenu = isStatusOpen && onStatusChange && createPortal(
         <div

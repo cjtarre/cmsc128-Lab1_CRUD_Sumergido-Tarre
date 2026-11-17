@@ -5,6 +5,12 @@ import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock3 } from "lucide-r
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const TWO_DIGITS = (number) => String(number).padStart(2, "0");
 
+const timeColumns = [
+    { label: "Hour", values: Array.from({ length: 12 }, (_, index) => index + 1), key: "hour" },
+    { label: "Minute", values: Array.from({ length: 60 }, (_, index) => index), key: "minute" },
+    { label: "AM / PM", values: ["AM", "PM"], key: "period" },
+];
+
 function parseDate(value) {
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
     if (!match) return null;
@@ -173,12 +179,6 @@ function TaskDateTimePicker({
             </div>
         </>
     );
-
-    const timeColumns = [
-        { label: "Hour", values: Array.from({ length: 12 }, (_, index) => index + 1), key: "hour" },
-        { label: "Minute", values: Array.from({ length: 60 }, (_, index) => index), key: "minute" },
-        { label: "AM / PM", values: ["AM", "PM"], key: "period" },
-    ];
 
     const pickTime = (
         <>

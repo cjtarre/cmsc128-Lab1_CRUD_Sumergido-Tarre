@@ -1,102 +1,25 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Maximize2, Minimize2, Music2, Plus } from "lucide-react";
 
-import { getFocusPlaylists, updateFocusPlaylist } from "../services/focusPlaylistService";
-import { readFocusValue, writeFocusValue } from "../utils/focusSessionStorage";
-import { focusControlStyle } from "../utils/focusControlStyle";
+import { EMBED_COMPACT_HEIGHT, EMBED_EXPANDED_HEIGHT } from "../constants/focusPlayer";
+import { useFocusPlaylists } from "../hooks/useFocusPlaylists";
+import { focusControlStyle } from "../styles/focusControlStyle";
 import FocusPlaylistForm from "./FocusPlaylistForm";
 import FocusSelect from "./FocusSelect";
 
-const initialBrowserPlaylist = (key) => {
-    const id = readFocusValue("localStorage", key, null);
-    return typeof id === "string" && /^[a-zA-Z0-9]{22}$/.test(id) && id.length === 22 ? id : null;
-};
-
-function FocusPlaylist({ className, storageKey, initialPlaylistId, floating, locked }) {
-    const activeKey = `${storageKey}:active`;
-    const [browserId, setBrowserId] = useState(() => initialBrowserPlaylist(storageKey));
-    const [playlists, setPlaylists] = useState([]);
-    const [selectedId, setSelectedId] = useState(() => initialPlaylistId ?? readFocusValue("localStorage", activeKey, null));
-    const [loadState, setLoadState] = useState("loading");
-    const [loadAttempt, setLoadAttempt] = useState(0);
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState("");
+function FocusPlaylist({
+    className, storageKey, initialPlaylistId, floating, locked, visible = true,
+    playerIsFloating = false, onToggleFloatingPlayer,
+}) {
+    const {
+        choices, selected, loadState, saving, error, adding, canManage,
+        selectPlaylist, savePlaylist, addPlaylist, removeSelected, retryLoad, openAddForm, closeAddForm,
+    } = useFocusPlaylists({ storageKey, initialPlaylistId, locked, visible });
     const [expanded, setExpanded] = useState(false);
-    const [adding, setAdding] = useState(false);
-    const [playerWindowId, setPlayerWindowId] = useState(null);
+    if (!visible) return null;
 
-    const choices = browserId && !playlists.some(({ id }) => id === browserId)
-        ? [{ id: browserId, name: "Browser playlist", browserOnly: true }, ...playlists]
-        : playlists;
-    const selected = choices.find(({ id }) => id === selectedId) ?? choices[0];
-    const playerIsFloating = Boolean(floating && floating.id === playerWindowId);
-    const playerHeight = !playerIsFloating && (locked || expanded) ? 352 : 152;
-    const canManage = !locked && loadState === "ready";
-
-    useEffect(() => {
-        const controller = new AbortController();
-        getFocusPlaylists(controller.signal).then((saved) => {
-            if (controller.signal.aborted) return;
-            setPlaylists(saved);
-            const localId = initialBrowserPlaylist(storageKey);
-            if (localId && saved.some(({ id }) => id === localId)) {
-                writeFocusValue("localStorage", storageKey, null);
-                setBrowserId(null);
-            }
-            setLoadState("ready");
-        }).catch(() => {
-            if (!controller.signal.aborted) setLoadState("failed");
-        });
-        return () => controller.abort();
-    }, [loadAttempt, storageKey]);
-
-    function selectPlaylist(id) {
-        setSelectedId(id);
-        writeFocusValue("localStorage", activeKey, id);
-    }
-
-    async function savePlaylist(id, name) {
-        if (!canManage || saving) return;
-        setSaving(true);
-        setError("");
-        try {
-            const saved = await updateFocusPlaylist(id, name);
-            setPlaylists(saved);
-            if (id === browserId) {
-                writeFocusValue("localStorage", storageKey, null);
-                setBrowserId(null);
-            }
-            selectPlaylist(name === null ? saved[0]?.id ?? null : id);
-            setAdding(false);
-        } catch (requestError) {
-            setError(requestError.response?.data?.error ?? "Could not update your playlists. Try again.");
-        } finally {
-            setSaving(false);
-        }
-    }
-
-    function addPlaylist(id, name) {
-        if (playlists.some((playlist) => playlist.id === id)) {
-            setError("This playlist is already saved to your account.");
-            return;
-        }
-        void savePlaylist(id, name);
-    }
-
-    function removeSelected() {
-        if (selected.browserOnly) {
-            if (!writeFocusValue("localStorage", storageKey, null)) {
-                setError("Could not remove the playlist from this browser.");
-                return;
-            }
-            setBrowserId(null);
-            selectPlaylist(playlists[0]?.id ?? null);
-            setError("");
-            return;
-        }
-        void savePlaylist(selected.id, null);
-    }
+    const playerHeight = !playerIsFloating && (locked || expanded) ? EMBED_EXPANDED_HEIGHT : EMBED_COMPACT_HEIGHT;
 
     const player = selected && (
         <iframe
@@ -119,7 +42,7 @@ function FocusPlaylist({ className, storageKey, initialPlaylistId, floating, loc
                 </h2>
                 <div className="flex min-w-0 flex-[1_1_9rem] items-center justify-end gap-2">
                     {selected && (
-                        <FocusSelect className="w-full max-w-48" aria-label="Choose focus playlist"
+                        <FocusSelect className="w-full max-w-48" aria-label="Choose focus playlist" inlineMenu={locked}
                             value={selected.id} onChange={(event) => selectPlaylist(event.target.value)}
                             disabled={saving || choices.length < 2}>
                             {choices.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
@@ -153,10 +76,7 @@ function FocusPlaylist({ className, storageKey, initialPlaylistId, floating, loc
                             aria-label={playerIsFloating
                                 ? "Return Spotify player to Takda. Playback restarts."
                                 : "Float Spotify player. Playback restarts."}
-                            onClick={() => {
-                                setPlayerWindowId(playerIsFloating ? null : floating.id);
-                                floating.resizePlayer(!playerIsFloating);
-                            }}>
+                            onClick={onToggleFloatingPlayer}>
                             {playerIsFloating ? "Return player" : "Float player"}
                         </button>
                     </div>
@@ -169,16 +89,13 @@ function FocusPlaylist({ className, storageKey, initialPlaylistId, floating, loc
             {loadState === "failed" && (
                 <p role="status" className="mt-3 text-xs text-slate-600 dark:text-slate-400">
                     Could not load your account playlists.{" "}
-                    {!locked && <button type="button" className="font-medium underline" onClick={() => {
-                        setLoadState("loading");
-                        setLoadAttempt((current) => current + 1);
-                    }}>Retry</button>}
+                    {!locked && <button type="button" className="font-medium underline" onClick={retryLoad}>Retry</button>}
                 </p>
             )}
 
             {canManage && !adding && (
                 <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 pt-3 text-xs">
-                    <button type="button" disabled={saving} style={focusControlStyle} onClick={() => { setError(""); setAdding(true); }}
+                    <button type="button" disabled={saving} style={focusControlStyle} onClick={openAddForm}
                         className="inline-flex items-center gap-1 font-medium text-green-800 hover:underline dark:text-green-300">
                         <Plus size={14} aria-hidden="true" /> Add playlist
                     </button>
@@ -199,7 +116,7 @@ function FocusPlaylist({ className, storageKey, initialPlaylistId, floating, loc
 
             {canManage && adding && (
                 <FocusPlaylistForm saving={saving} onSave={addPlaylist}
-                    onCancel={() => { setAdding(false); setError(""); }} />
+                    onCancel={closeAddForm} />
             )}
 
             {saving && <p role="status" className="mt-2 text-xs">Updating playlists…</p>}

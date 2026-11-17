@@ -47,27 +47,6 @@ export const PROJECT_TABS = [
 // Valid workspace view IDs used for URL validation.
 export const PROJECT_TAB_IDS = new Set(PROJECT_TABS.map((tab) => tab.id));
 
-// Available project icons.
-export const PROJECT_ICONS = {
-    folder: Folder,
-    briefcase: Briefcase,
-    "book-open": BookOpen,
-    "graduation-cap": GraduationCap,
-    code: Code2,
-    terminal: Terminal,
-    database: Database,
-    calendar: CalendarDays,
-    target: Target,
-    flag: Flag,
-    lightbulb: Lightbulb,
-    palette: Palette,
-    plane: Plane,
-    rocket: Rocket,
-    star: Star,
-    heart: Heart,
-    home: Home,
-};
-
 // Project icon accent styles.
 export const PROJECT_ACCENTS = {
     green: "bg-green-50 text-green-500 group-hover:bg-green-100/80 dark:bg-green-950/40 dark:text-green-400",
@@ -100,6 +79,8 @@ export const PROJECT_ICON_OPTIONS = [
     { id: "heart", icon: Heart, label: "Heart" },
     { id: "home", icon: Home, label: "Home" },
 ];
+
+export const PROJECT_ICONS = Object.fromEntries(PROJECT_ICON_OPTIONS.map(({ id, icon }) => [id, icon]));
 
 export const PROJECT_ACCENT_OPTIONS = [
     { id: "green", label: "Green", className: "bg-green-500" },

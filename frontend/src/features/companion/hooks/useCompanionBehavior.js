@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { STATUS } from "../tasks/constants/taskOptions";
-import { COMPANION_STATE, COMPANION_TIMING } from "./companionStates";
-import { getRandomMessage } from "./companionMessages";
-
-const DESKTOP_PET_SIZE = 88;
-const MOBILE_PET_SIZE = 68;
-const DESKTOP_EDGE = 24;
-const MOBILE_EDGE = 12;
-const MOBILE_BREAKPOINT = 640;
-const DRAG_THRESHOLD = 6;
+import { STATUS } from "../../tasks/constants/taskOptions";
+import { COMPANION_STATE, COMPANION_TIMING } from "../companionStates";
+import { getRandomMessage } from "../companionMessages";
+import {
+    DESKTOP_PET_SIZE, MOBILE_PET_SIZE, DESKTOP_EDGE, MOBILE_EDGE, MOBILE_BREAKPOINT, DRAG_THRESHOLD,
+} from "../constants/companionLayout";
 
 const getPositionKey = (userId) => `takda-companion-x:${userId}`;
 
