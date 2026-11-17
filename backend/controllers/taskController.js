@@ -235,6 +235,8 @@ const createTask = async (req, res) => {
             tagIdList = [...new Set(tag_ids.map(Number))];
         }
 
+        const hasTags = tagIdList.length > 0;
+
         const { data: newTask, error: newTaskError } = await supabase
             .from("tasks")
             .insert([{
@@ -247,12 +249,12 @@ const createTask = async (req, res) => {
                 assignee_id: assignee_id || null,
                 user_id: req.user.id // creator; access is decided by project membership
             }])
-            .select()
+            .select(hasTags ? "*" : TASK_SELECT)
             .single();
 
         if (newTaskError) throw newTaskError;
 
-        if (tagIdList.length > 0) {
+        if (hasTags) {
             const taskTags = tagIdList.map(tag_id => ({
                 task_id: newTask.task_id,
                 tag_id
@@ -301,6 +303,10 @@ const createTask = async (req, res) => {
             } catch (notifyError) {
                 console.error("Error sending task assignment notification:", notifyError);
             }
+        }
+
+        if (!hasTags) {
+            return res.status(201).json(newTask);
         }
 
         const { data: taskWithTags, error: taskWithTagsError } = await supabase
@@ -372,18 +378,19 @@ const updateTask = async (req, res) => {
             updates.assignee_id = assignee_id || null;
         }
 
+        const shouldReplaceTags = tagIdList !== undefined;
         const { data, error: updateError } = await supabase
             .from("tasks")
             .update(updates)
             .eq("task_id", task.task_id)
-            .select();
+            .select(shouldReplaceTags ? "*" : TASK_SELECT);
 
         if (updateError) throw updateError;
         if (!data || data.length === 0) {
             return res.status(404).json({ error: "Task not found" });
         }
 
-        if (tagIdList !== undefined) {
+        if (shouldReplaceTags) {
             const { error: deleteError } = await supabase
                 .from("task_tag")
                 .delete()
@@ -453,6 +460,10 @@ const updateTask = async (req, res) => {
             } catch (notifyError) {
                 console.error("Error sending task assignment notification:", notifyError);
             }
+        }
+
+        if (!shouldReplaceTags) {
+            return res.status(200).json(data[0]);
         }
 
         const { data: updatedTask, error: fetchError } = await supabase
