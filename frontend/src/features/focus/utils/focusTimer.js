@@ -1,5 +1,28 @@
-export const DEFAULT_DURATIONS = { focus: 25, break: 5 };
-export const MAX_DURATIONS = { focus: 120, break: 60 };
+import { DEFAULT_DURATIONS, MAX_DURATIONS } from "../constants/focusDurations";
+
+const getNextPhase = (phase) => phase === "focus" ? "break" : "focus";
+const phaseButton = (phase) => phase === "focus" ? "Start focus session" : "Start break";
+
+export function getFocusTimerLabels({ phase, status }, durations) {
+    const primaryLabel = {
+        ready: phaseButton(phase),
+        running: "Pause",
+        paused: "Resume",
+        finished: phaseButton(getNextPhase(phase)),
+    }[status];
+
+    const statusMessage = {
+        ready: phase === "focus"
+            ? `${durations.focus} min focus · ${durations.break} min break`
+            : `${durations.break} min break`,
+        running: phase === "focus" ? "Focus session in progress." : "Break in progress.",
+        paused: "Timer paused.",
+        finished: phase === "focus"
+            ? "Focus session complete. Take a break when you’re ready."
+            : "Break complete. Start another focus session when you’re ready.",
+    }[status];
+    return { primaryLabel, statusMessage };
+}
 
 export function getDurationMinutes(phase, value) {
     return Number.isInteger(value) && value >= 1 && value <= MAX_DURATIONS[phase]
@@ -36,7 +59,7 @@ export function focusTimerReducer(timer, action, durations = DEFAULT_DURATIONS) 
                     : { ...updated, status: "paused", endsAt: null };
             }
 
-            const nextPhase = timer.phase === "focus" ? "break" : "focus";
+            const nextPhase = getNextPhase(timer.phase);
             const next = timer.status === "finished" ? createFocusTimer(nextPhase, durations[nextPhase]) : timer;
             return { ...next, status: "running", endsAt: action.now + next.remainingMs };
         }

@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { Lock, PictureInPicture2, Target } from "lucide-react";
+import { Lock, Music2, PictureInPicture2, Target } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { useAuth } from "../../auth/hooks/useAuth";
@@ -12,9 +12,11 @@ import FocusPlaylist from "../components/FocusPlaylist";
 import FocusTimerSettings from "../components/FocusTimerSettings";
 import { useFocusDashboard } from "../hooks/useFocusDashboard";
 import { useFocusPictureInPicture } from "../hooks/useFocusPictureInPicture";
-import { focusControlStyle } from "../utils/focusControlStyle";
+import { useFocusSpotifyControls } from "../hooks/useFocusSpotifyControls";
+import { focusControlStyle } from "../styles/focusControlStyle";
+import { getFocusTimerLabels } from "../utils/focusTimer";
+import { isSpotifyPlaylistId } from "../utils/spotifyPlaylist";
 
-const phaseButton = (phase) => phase === "focus" ? "Start focus session" : "Start break";
 const glassCard = "rounded-3xl border border-white/70 bg-white/35 p-5 shadow-[0_8px_28px_rgba(15,23,42,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.035] sm:p-6";
 
 function FocusDashboard({ userId, initialPlaylistId }) {
@@ -23,6 +25,8 @@ function FocusDashboard({ userId, initialPlaylistId }) {
     const dialogRef = useRef(null);
     const { timer, durations, dispatch, focusWeek, lockEnabled, setLockEnabled, locked } = useFocusDashboard(userId);
     const { floating, floatError, openFloating, supported: canFloat } = useFocusPictureInPicture();
+    const { showSpotify, playerIsFloating, toggleSpotify, toggleFloatingPlayer } =
+        useFocusSpotifyControls({ userId, initialPlaylistId, floating });
     const { phase, status, remainingMs, durationMinutes } = timer;
     const availableTasks = tasks.filter((task) => task.status !== STATUS.COMPLETED);
     const selectedTask = availableTasks.find((task) => String(task.id) === selectedTaskId);
@@ -34,7 +38,6 @@ function FocusDashboard({ userId, initialPlaylistId }) {
         else dialog.show();
     }, [locked]);
 
-    const nextPhase = phase === "focus" ? "break" : "focus";
     const remainingSeconds = Math.ceil(remainingMs / 1000);
     const minutes = String(Math.floor(remainingSeconds / 60)).padStart(2, "0");
     const seconds = String(remainingSeconds % 60).padStart(2, "0");
@@ -45,23 +48,7 @@ function FocusDashboard({ userId, initialPlaylistId }) {
         ? "text-[clamp(3.75rem,25cqi,10rem)]"
         : "text-[clamp(3rem,20cqi,8rem)]";
 
-    const primaryLabel = {
-        ready: phaseButton(phase),
-        running: "Pause",
-        paused: "Resume",
-        finished: phaseButton(nextPhase),
-    }[status];
-
-    const statusMessage = {
-        ready: phase === "focus"
-            ? `${durations.focus} min focus · ${durations.break} min break`
-            : `${durations.break} min break`,
-        running: phase === "focus" ? "Focus session in progress." : "Break in progress.",
-        paused: "Timer paused.",
-        finished: phase === "focus"
-            ? "Focus session complete. Take a break when you’re ready."
-            : "Break complete. Start another focus session when you’re ready.",
-    }[status];
+    const { primaryLabel, statusMessage } = getFocusTimerLabels(timer, durations);
     const handlePrimary = () => dispatch({ type: "primary", now: Date.now() });
 
     return (
@@ -77,14 +64,21 @@ function FocusDashboard({ userId, initialPlaylistId }) {
                 <h1 id="focus-title" className="text-2xl font-semibold tracking-tight">Focus Mode</h1>
             </header>
 
-            <div className="grid min-w-0 items-start gap-4 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:items-stretch xl:gap-5">
+            <div className={`grid min-w-0 items-start gap-4 xl:gap-5 ${showSpotify
+                ? "md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:items-stretch"
+                : ""}`}>
                 <section aria-labelledby="focus-phase"
-                    className={`${glassCard} @container flex min-w-0 flex-col gap-4 md:col-start-2 md:row-start-1`}>
-                    <div className="relative z-10 flex min-h-9 items-center justify-between gap-2">
+                    className={`${glassCard} @container flex min-w-0 flex-col gap-4 ${showSpotify ? "md:col-start-2 md:row-start-1" : ""}`}>
+                    <div className="relative z-10 flex min-h-9 flex-wrap items-center justify-between gap-2">
                         <h2 id="focus-phase" className="flex items-center gap-2 text-sm font-semibold">
                             <Target size={16} aria-hidden="true" /> {phase === "focus" ? "Focus timer" : "Break timer"}
                         </h2>
-                        <div className="flex shrink-0 items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button type="button" onClick={toggleSpotify} aria-expanded={showSpotify}
+                                style={focusControlStyle}
+                                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/75 bg-white/50 px-2.5 text-xs font-medium text-slate-700 hover:bg-white/80 focus-visible:outline-2 focus-visible:outline-green-700 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-200 dark:hover:bg-white/10">
+                                <Music2 size={15} aria-hidden="true" /> {showSpotify ? "Hide Spotify" : "Show Spotify"}
+                            </button>
                             {canFloat && (
                                 <button type="button" onClick={openFloating} style={focusControlStyle}
                                     aria-label={floating ? "Show floating timer" : "Float timer"}
@@ -122,6 +116,7 @@ function FocusDashboard({ userId, initialPlaylistId }) {
                         <FocusSelect
                             className="mt-2"
                             id="focus-task"
+                            aria-label="Task (optional)"
                             value={selectedTask ? selectedTaskId : ""}
                             onChange={(event) => setSelectedTaskId(event.target.value)}
                             disabled={loading || Boolean(error) || availableTasks.length === 0}
@@ -171,13 +166,14 @@ function FocusDashboard({ userId, initialPlaylistId }) {
                     )}
                 </section>
 
-                <div className="flex min-w-0 flex-col gap-4 md:col-start-1 md:row-start-1 xl:gap-5">
+                <div className={`min-w-0 flex-col gap-4 xl:gap-5 ${locked && !showSpotify ? "hidden" : "flex"} ${showSpotify ? "md:col-start-1 md:row-start-1" : ""}`}>
                     {!locked && (
                         <FocusActivity className={glassCard} week={focusWeek} />
                     )}
                     <FocusPlaylist key="focus-playlist" className={`${glassCard} flex flex-1 flex-col`}
                         storageKey={`takda-focus-playlist:${userId}`} initialPlaylistId={initialPlaylistId}
-                        floating={floating} locked={locked} />
+                        floating={floating} locked={locked} visible={showSpotify}
+                        playerIsFloating={playerIsFloating} onToggleFloatingPlayer={toggleFloatingPlayer} />
                 </div>
             </div>
             {floating && (
@@ -192,7 +188,9 @@ function FocusDashboard({ userId, initialPlaylistId }) {
 function FocusMode() {
     const { user } = useAuth();
     const [params] = useSearchParams();
-    return <FocusDashboard key={user.id} userId={user.id} initialPlaylistId={params.get("playlist")} />;
+    const playlistId = params.get("playlist");
+    return <FocusDashboard key={user.id} userId={user.id}
+        initialPlaylistId={isSpotifyPlaylistId(playlistId) ? playlistId : null} />;
 }
 
 export default FocusMode;

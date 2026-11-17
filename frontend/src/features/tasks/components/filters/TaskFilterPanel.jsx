@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, Search, SlidersHorizontal, X } from "lucide-react";
 
-import { PRIORITY, priorityLabels, STATUS, statusLabels } from "../../constants/taskOptions";
+import { PRIORITY_OPTIONS, STATUS_OPTIONS } from "../../constants/taskOptions";
 import { useTaskData } from "../../context/TaskContext";
 
 function FilterGroup({ label, items, selected, onChange }) {
@@ -29,8 +29,8 @@ function FilterGroup({ label, items, selected, onChange }) {
 function FilterGroups({ availableTags, priorityFilter, statusFilter, tagFilter, onPriorityFilterChange, onStatusFilterChange, onTagFilterChange }) {
     return (
         <div className="divide-y divide-slate-200/60 dark:divide-white/[0.08]">
-            <FilterGroup label="Priority" items={Object.values(PRIORITY).map((value) => [value, priorityLabels[value]])} selected={priorityFilter} onChange={onPriorityFilterChange} />
-            <FilterGroup label="Status" items={Object.values(STATUS).map((value) => [value, statusLabels[value]])} selected={statusFilter} onChange={onStatusFilterChange} />
+            <FilterGroup label="Priority" items={PRIORITY_OPTIONS} selected={priorityFilter} onChange={onPriorityFilterChange} />
+            <FilterGroup label="Status" items={STATUS_OPTIONS} selected={statusFilter} onChange={onStatusFilterChange} />
             <FilterGroup label="Tags" items={availableTags.map((tag) => [tag.tag_id, tag.tag_name])} selected={tagFilter} onChange={onTagFilterChange} />
         </div>
     );

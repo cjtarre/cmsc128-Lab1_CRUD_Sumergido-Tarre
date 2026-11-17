@@ -9,6 +9,7 @@ import { DATE_TIME_FIELDS, EDIT_SELECT_FIELDS, PRIORITY, STATUS } from "../../co
 import CompactSelect from "../../../../shared/components/common/CompactSelect";
 import TagPicker from "./TagPicker";
 import TaskDateTimePicker from "./TaskDateTimePicker";
+import { taskSelectStyle } from "../../styles/taskStyles";
 import { useTaskFormFields } from "../../hooks/useTaskFormFields";
 
 const emptyFormData = {
@@ -69,7 +70,6 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
         }`;
 
     const mobileControlStyle = isMobile ? { fontSize: "11px", lineHeight: "1" } : undefined;
-    const taskSelectStyle = { appearance: "none", WebkitAppearance: "none", fontFamily: "inherit", fontSize: "11px", lineHeight: "1.2" };
     const taskDateStyle = { fontFamily: "inherit", fontSize: "11px", lineHeight: "1.2" };
 
     const tagButtons = (

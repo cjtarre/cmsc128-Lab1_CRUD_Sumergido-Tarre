@@ -2,8 +2,8 @@ import { useId, useRef } from "react";
 import { MoreVertical } from "lucide-react";
 
 import { useDropdown } from "../../../shared/hooks/useDropdown";
-import { focusControlStyle } from "../utils/focusControlStyle";
-import { MAX_DURATIONS } from "../utils/focusTimer";
+import { focusControlStyle } from "../styles/focusControlStyle";
+import { MAX_DURATIONS } from "../constants/focusDurations";
 
 const durationInput = "mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm tabular-nums dark:border-white/15 dark:bg-slate-900";
 

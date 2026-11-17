@@ -1,4 +1,5 @@
-import { DEFAULT_DURATIONS, getDurationMinutes } from "./focusTimer";
+import { DEFAULT_DURATIONS } from "../constants/focusDurations";
+import { getDurationMinutes } from "./focusTimer";
 
 const weekdayLabel = new Intl.DateTimeFormat(undefined, { weekday: "short" });
 

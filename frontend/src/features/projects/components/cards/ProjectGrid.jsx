@@ -2,34 +2,13 @@ import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
+import { useMediaQuery } from "../../../../shared/hooks/useMediaQuery";
 import ProjectCard from "./ProjectCard";
 import { PROJECT_BATCH_SIZE, PROJECT_STACK_DEPTH, PROJECT_STACK_DELAY, PROJECT_DESKTOP_BREAKPOINT } from "../../constants/projectOptions";
 
 
-// Track the Tailwind sm breakpoint for direction-specific Motion animations.
-function useDesktopView() {
-    const [isDesktop, setIsDesktop] = useState(() =>
-        typeof window !== "undefined"
-            ? window.matchMedia(PROJECT_DESKTOP_BREAKPOINT).matches
-            : false
-    );
-
-    useEffect(() => {
-        const media = window.matchMedia(PROJECT_DESKTOP_BREAKPOINT);
-        const handleChange = (event) => setIsDesktop(event.matches);
-
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setIsDesktop(media.matches);
-        media.addEventListener("change", handleChange);
-
-        return () => media.removeEventListener("change", handleChange);
-    }, []);
-
-    return isDesktop;
-}
-
 function ProjectGrid({ projects, onEdit, onDelete, searching = false }) {
-    const isDesktop = useDesktopView();
+    const isDesktop = useMediaQuery(PROJECT_DESKTOP_BREAKPOINT);
     const [expanded, setExpanded] = useState(false);
     const [visibleCount, setVisibleCount] = useState(PROJECT_BATCH_SIZE);
 

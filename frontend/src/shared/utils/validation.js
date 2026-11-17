@@ -36,14 +36,42 @@ export function validateUsername(username) {
     return null;
 }
 
+const passwordRules = [
+    {
+        key: "length",
+        label: `At least ${PASSWORD_MIN_LENGTH} characters`,
+        error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`,
+        test: (password) => password.length >= PASSWORD_MIN_LENGTH,
+    },
+    {
+        key: "uppercase",
+        label: "One uppercase letter",
+        error: "Password must include an uppercase letter.",
+        test: (password) => /[A-Z]/.test(password),
+    },
+    {
+        key: "lowercase",
+        label: "One lowercase letter",
+        error: "Password must include a lowercase letter.",
+        test: (password) => /[a-z]/.test(password),
+    },
+    {
+        key: "number",
+        label: "One number",
+        error: "Password must include a number.",
+        test: (password) => /\d/.test(password),
+    },
+    {
+        key: "special",
+        label: "One special character",
+        error: "Password must include a special character.",
+        test: (password) => /[^A-Za-z0-9]/.test(password),
+    },
+];
+
 export function validatePassword(password) {
     if (!password) return "Password is required.";
-    if (password.length < PASSWORD_MIN_LENGTH) return `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
-    if (!/[A-Z]/.test(password)) return "Password must include an uppercase letter.";
-    if (!/[a-z]/.test(password)) return "Password must include a lowercase letter.";
-    if (!/\d/.test(password)) return "Password must include a number.";
-    if (!/[^A-Za-z0-9]/.test(password)) return "Password must include a special character.";
-    return null;
+    return passwordRules.find(({ test }) => !test(password))?.error ?? null;
 }
 
 export function validateSignup({ displayName, username, email, password, confirmPassword }) {
@@ -71,13 +99,7 @@ export function validateSignup({ displayName, username, email, password, confirm
 
 // Return the shared password requirements and their current validation state.
 export function getPasswordRequirements(password = "") {
-    return [
-        { key: "length", label: `At least ${PASSWORD_MIN_LENGTH} characters`, met: password.length >= PASSWORD_MIN_LENGTH },
-        { key: "uppercase", label: "One uppercase letter", met: /[A-Z]/.test(password) },
-        { key: "lowercase", label: "One lowercase letter", met: /[a-z]/.test(password) },
-        { key: "number", label: "One number", met: /\d/.test(password) },
-        { key: "special", label: "One special character", met: /[^A-Za-z0-9]/.test(password) },
-    ];
+    return passwordRules.map(({ key, label, test }) => ({ key, label, met: test(password) }));
 }
 
 // Check whether a password satisfies every shared password requirement.
