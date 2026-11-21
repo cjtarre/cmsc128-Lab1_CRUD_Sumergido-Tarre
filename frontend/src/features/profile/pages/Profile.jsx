@@ -1,4 +1,4 @@
-import { ChevronDown, Eye, EyeOff, LockKeyhole, LogOut, Mail, Save, User } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, LockKeyhole, LogOut, Mail, Moon, PawPrint, Save, Sun, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -6,10 +6,11 @@ import { useAuth } from "../../auth/hooks/useAuth";
 import ConfirmDialog from "../../../shared/components/common/ConfirmDialog";
 import { getDisplayName, getInitials } from "../../../shared/utils/userUtils";
 import { DISPLAY_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, validateDisplayName, validatePassword, validateUsername } from "../../../shared/utils/validation";
-import ProfileFocusPlaylists from "../components/ProfileFocusPlaylists";
+import { useTheme } from "../../../shared/context/ThemeContext";
 
 function Profile() {
     const { user, authLoading, logout, updateProfile, updateEmail, updatePassword } = useAuth();
+    const { theme, setTheme } = useTheme();
 
     const [displayName, setDisplayName] = useState("");
     const [username, setUsername] = useState("");
@@ -22,6 +23,11 @@ function Profile() {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+    const [accountInformationOpen, setAccountInformationOpen] = useState(false);
+    const [preferencesOpen, setPreferencesOpen] = useState(false);
+    const [companionEnabled, setCompanionEnabled] = useState(
+        () => user?.id ? localStorage.getItem(`takda-companion-enabled:${user.id}`) !== "false" : true
+    );
 
     const savedDisplayName = user?.display_name?.trim() || "";
     const savedUsername = user?.username?.trim() || "";
@@ -110,6 +116,16 @@ function Profile() {
         try { await logout(); } finally { window.location.replace("/"); }
     };
 
+    const handleCompanionToggle = () => {
+        if (!user?.id) return;
+        const nextValue = !companionEnabled;
+        setCompanionEnabled(nextValue);
+        localStorage.setItem(`takda-companion-enabled:${user.id}`, String(nextValue));
+        window.dispatchEvent(new CustomEvent("takda-companion-setting-change", {
+            detail: { userId: user.id, enabled: nextValue },
+        }));
+    };
+
     if (authLoading) {
         return (
             <div className="flex min-h-[300px] items-center justify-center">
@@ -125,8 +141,8 @@ function Profile() {
         <div className="mx-auto w-full max-w-2xl space-y-5 pb-8">
             {/* Header */}
             <div>
-                <h1 className="text-xl font-semibold text-slate-800 dark:text-white sm:text-2xl">Profile</h1>
-                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500 sm:text-sm">Manage your account information and security.</p>
+                <h1 className="text-xl font-semibold text-slate-800 dark:text-white sm:text-2xl">Account</h1>
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500 sm:text-sm">Manage account details, security, appearance, and preferences.</p>
             </div>
 
             {/* Profile summary */}
@@ -149,13 +165,24 @@ function Profile() {
 
             {/* Account information */}
             <section className="overflow-hidden rounded-2xl border border-white/70 bg-white/85 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85 dark:shadow-black/20">
-                <form onSubmit={handleProfileSubmit}>
-                    <div className="border-b border-slate-100/80 px-5 py-4 dark:border-white/[0.07] sm:px-6">
-                        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Account Information</h3>
-                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Update how your account information appears in Takda.</p>
+                <button
+                    type="button"
+                    onClick={() => setAccountInformationOpen((open) => !open)}
+                    aria-expanded={accountInformationOpen}
+                    className="flex w-full items-center gap-3 p-5 text-left transition hover:bg-slate-50/80 dark:hover:bg-slate-800/50 sm:px-6"
+                >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        <User size={17} />
                     </div>
+                    <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Account Information</h3>
+                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Display name, username, and email address.</p>
+                    </div>
+                    <ChevronDown size={18} className={`shrink-0 text-slate-400 transition-transform duration-200 ${accountInformationOpen ? "rotate-180" : ""}`} />
+                </button>
 
-                    <div className="space-y-5 p-5 sm:p-6">
+                {accountInformationOpen && (
+                <form onSubmit={handleProfileSubmit} className="space-y-5 border-t border-slate-100/80 p-5 dark:border-white/[0.07] sm:p-6">
                         <div className="space-y-1.5">
                             <label htmlFor="displayName" className="text-xs font-medium text-slate-600 dark:text-slate-300">Display name</label>
 
@@ -225,11 +252,74 @@ function Profile() {
                                 {savingProfile ? "Saving..." : "Save changes"}
                             </button>
                         </div>
-                    </div>
                 </form>
+                )}
             </section>
 
-            {user && <ProfileFocusPlaylists key={user.id} />}
+            {/* Account preferences */}
+            <section className="overflow-hidden rounded-2xl border border-white/70 bg-white/85 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85 dark:shadow-black/20">
+                <button
+                    type="button"
+                    onClick={() => setPreferencesOpen((open) => !open)}
+                    aria-expanded={preferencesOpen}
+                    className="flex w-full items-center gap-3 p-5 text-left transition hover:bg-slate-50/80 dark:hover:bg-slate-800/50 sm:px-6"
+                >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        <Sun size={17} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Preferences</h3>
+                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Customize the appearance and behavior of Takda.</p>
+                    </div>
+                    <ChevronDown size={18} className={`shrink-0 text-slate-400 transition-transform duration-200 ${preferencesOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {preferencesOpen && (
+                <div className="divide-y divide-slate-100/80 border-t border-slate-100/80 dark:divide-white/[0.07] dark:border-white/[0.07]">
+                    <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/80 bg-green-50/70 text-green-500 shadow-sm dark:border-white/10 dark:bg-green-950/30 dark:text-green-400">
+                                {theme === "dark" ? <Moon size={17} /> : <Sun size={17} />}
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Theme</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">Choose how Takda looks.</p>
+                            </div>
+                        </div>
+                        <select
+                            value={theme}
+                            onChange={(event) => setTheme(event.target.value)}
+                            className="shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-600 outline-none transition dark:border-white/10 dark:bg-slate-900 dark:text-slate-200"
+                        >
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/80 bg-green-50/70 text-green-500 shadow-sm dark:border-white/10 dark:bg-green-950/30 dark:text-green-400">
+                                <PawPrint size={17} />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Task Companion</p>
+                                <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">Show your companion while using Takda.</p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={companionEnabled}
+                            aria-label="Show Task Companion"
+                            onClick={handleCompanionToggle}
+                            className={`${companionEnabled ? "bg-green-500" : "bg-slate-300 dark:bg-slate-700"} relative h-6 w-11 shrink-0 rounded-full shadow-inner transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900`}
+                        >
+                            <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${companionEnabled ? "translate-x-5" : "translate-x-0"}`} />
+                        </button>
+                    </div>
+                </div>
+                )}
+            </section>
 
             {/* Security */}
             <section className="overflow-hidden rounded-2xl border border-white/70 bg-white/85 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85 dark:shadow-black/20">

@@ -1,4 +1,4 @@
-import { LogOut, Settings, User } from "lucide-react";
+import { ListMusic, LogOut, Settings } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -69,12 +69,11 @@ function ProfileMenu() {
                         </div>
 
                         <div className="p-1.5">
-                            <Link to="/profile" onClick={() => setOpen(false)} className={itemClass}>
-                                <User size={16} /> Profile
+                            <Link to="/account" onClick={() => setOpen(false)} className={itemClass}>
+                                <Settings size={16} /> Account
                             </Link>
-
-                            <Link to="/settings" onClick={() => setOpen(false)} className={itemClass}>
-                                <Settings size={16} /> Settings
+                            <Link to="/focus" onClick={() => setOpen(false)} className={itemClass}>
+                                <ListMusic size={16} /> Focus Mode
                             </Link>
                         </div>
 
