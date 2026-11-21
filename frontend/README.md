@@ -15,6 +15,7 @@ Vite is used as the frontend development and build tool, while React is used to 
 - ESLint
 - Vitest
 - React Testing Library
+- TanStack Query
 
 ## Features
 
@@ -35,6 +36,12 @@ The frontend currently supports:
 - Loading, success, error, and confirmation feedback
 
 The authentication forms also preserve appropriate non-sensitive information when moving between related authentication pages. Signup display name and email progress may be retained for the current browser session, while passwords and password confirmations are not stored in session storage.
+
+## API Caching
+
+The frontend uses TanStack Query to deduplicate requests and cache read results in memory. Projects, tasks, tags, members, invitations, project activities, and notifications have shared query keys. Data is considered fresh for 30 seconds, retained for up to 5 minutes, and background refetching is disabled on browser-window focus.
+
+Mutations update or invalidate only the resources that changed. Logout clears the query cache to prevent cross-account reuse. Cached data is not persisted to local storage or used as a fallback when the backend is unavailable.
 
 ## Installation
 
