@@ -44,7 +44,7 @@ function AppRoutes() {
     return (
         <Routes>
             <Route element={<PublicPageLayout />}>
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/" element={isAuthenticated ? <Navigate to="/my-tasks" replace /> : <LandingPage />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/login" element={isAuthenticated ? <Navigate to="/my-tasks" replace /> : <Login />} />
