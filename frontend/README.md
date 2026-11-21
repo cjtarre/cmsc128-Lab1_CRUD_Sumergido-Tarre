@@ -75,7 +75,13 @@ Run the frontend test suite:
 npm test
 ```
 
-The frontend tests cover authentication behavior, protected routing, services, hooks, task handlers, utilities, and form validation.
+The frontend tests cover authentication behavior, protected routing, services, hooks, profile interactions, project workflows, task handlers, calendar and notification behavior, utilities, and form validation. API and Supabase calls are mocked, so frontend tests do not require a running backend or database.
+
+To run a focused test file while developing:
+
+```bash
+npx vitest run tests/profile/Profile.test.jsx
+```
 
 ## ESLint
 

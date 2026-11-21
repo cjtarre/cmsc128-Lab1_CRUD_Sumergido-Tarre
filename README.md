@@ -408,7 +408,7 @@ Verify the frontend production build:
 npm run build
 ```
 
-The automated tests cover authentication, task CRUD, project collaboration, membership and role access control, invitations, notifications, services, hooks, handlers, validation, utilities, and shared frontend functionality.
+The automated tests use Vitest. Backend tests cover controllers and authorization utilities; frontend tests cover authentication, protected routing, services, hooks, components, profile interactions, task and project workflows, notifications, and validation utilities. API and Supabase calls are mocked, so valid Supabase credentials are not required to run the test suites.
 
 ---
 

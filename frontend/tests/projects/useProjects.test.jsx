@@ -1,5 +1,7 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+// @vitest-environment jsdom
+
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useProjects } from "../../src/features/projects/hooks/useProjects";
 import { createQueryWrapper } from "../queryTestUtils";
@@ -58,6 +60,9 @@ const waitForReload = async (result) => {
 
 describe("useProjects", () => {
     let wrapper = createQueryWrapper();
+
+    afterEach(cleanup);
+
     beforeEach(() => {
         wrapper = createQueryWrapper();
         vi.clearAllMocks();
