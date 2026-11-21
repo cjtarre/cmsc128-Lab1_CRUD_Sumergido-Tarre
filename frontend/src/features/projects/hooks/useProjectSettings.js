@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -16,10 +16,9 @@ export function useProjectSettings(projectId) {
         retry: false,
     });
     const [projectOverride, setProjectOverride] = useState(null);
-    const project = projectOverride || projectQuery.data || null;
-    useEffect(() => {
-        setProjectOverride(null);
-    }, [projectId]);
+    const project = projectOverride?.projectId === projectId
+        ? projectOverride.project
+        : projectQuery.data || null;
     const loading = projectQuery.isLoading;
     const [deleting, setDeleting] = useState(false);
     const projectUnavailable = projectQuery.error?.response?.status === 404 || Boolean(project?.is_default);
@@ -28,7 +27,10 @@ export function useProjectSettings(projectId) {
     const updateProject = async (projectData) => {
         try {
             const updatedProject = await projectService.updateProject(projectId, projectData);
-            setProjectOverride((current) => ({ ...(current || projectQuery.data), ...updatedProject }));
+            setProjectOverride({
+                projectId,
+                project: { ...(projectQuery.data || project), ...updatedProject },
+            });
             queryClient.setQueryData(queryKeys.project(projectId), (current) =>
                 current ? { ...current, ...updatedProject } : current
             );

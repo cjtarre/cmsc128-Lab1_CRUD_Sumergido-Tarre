@@ -1,10 +1,11 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { taskService } from "../services/taskService";
 import { tagService } from "../services/tagService";
 import { convertApiTask } from "../utils/convertApiTask";
 import { queryKeys } from "../../../shared/utils/queryKeys";
+import { useSyncedQueryState } from "../../../shared/hooks/useSyncedQueryState";
 
 const TaskContext = createContext(null);
 
@@ -33,6 +34,7 @@ function convertTask(task) {
         } else if (due >= startOfTomorrow) {
             category = "upcoming";
         }
+
     }
 
     return {
@@ -49,11 +51,9 @@ function convertTask(task) {
     };
 }
 
-export function TaskProvider({ children }) {
-    const [tasks, setTasks] = useState([]);
-    const [searchTerm, setSearchTerm] = useState("");
+const convertTasks = (items) => items.map(convertTask);
 
-    const [availableTags, setAvailableTags] = useState([]);
+export function TaskProvider({ children }) {
     const queryClient = useQueryClient();
     const tasksQuery = useQuery({
         queryKey: queryKeys.defaultTasks,
@@ -63,16 +63,11 @@ export function TaskProvider({ children }) {
         queryKey: queryKeys.tags("default"),
         queryFn: () => tagService.getTags({ defaultProject: true }),
     });
+    const [tasks, setTasks] = useSyncedQueryState(tasksQuery.data, convertTasks);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [availableTags, setAvailableTags] = useSyncedQueryState(tagsQuery.data);
     const loading = tasksQuery.isLoading || tagsQuery.isLoading;
     const error = tasksQuery.isError || tagsQuery.isError ? "Unable to load tasks." : null;
-
-    useEffect(() => {
-        if (tasksQuery.data) setTasks(tasksQuery.data.map(convertTask));
-    }, [tasksQuery.data]);
-
-    useEffect(() => {
-        if (tagsQuery.data) setAvailableTags(tagsQuery.data);
-    }, [tagsQuery.data]);
 
     const loadInitialData = async () => {
         await Promise.all([

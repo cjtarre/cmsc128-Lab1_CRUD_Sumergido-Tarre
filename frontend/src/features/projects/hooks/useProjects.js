@@ -6,6 +6,7 @@ import { useNotifications } from "../../notifications/context/NotificationContex
 import { inviteService } from "../services/inviteService";
 import { projectService } from "../services/projectService";
 import { queryKeys } from "../../../shared/utils/queryKeys";
+import { useSyncedQueryState } from "../../../shared/hooks/useSyncedQueryState";
 
 // Manage project lists, invitations, and project actions.
 export function useProjects() {
@@ -23,19 +24,9 @@ export function useProjects() {
         queryKey: queryKeys.myInvites,
         queryFn: inviteService.getMyInvites,
     });
-    const [projects, setProjects] = useState([]);
-    const [deletedProjects, setDeletedProjects] = useState([]);
-    const [invites, setInvites] = useState([]);
-
-    useEffect(() => {
-        setProjects(Array.isArray(projectsQuery.data) ? projectsQuery.data : []);
-    }, [projectsQuery.data]);
-    useEffect(() => {
-        setDeletedProjects(Array.isArray(deletedProjectsQuery.data) ? deletedProjectsQuery.data : []);
-    }, [deletedProjectsQuery.data]);
-    useEffect(() => {
-        setInvites(Array.isArray(invitesQuery.data) ? invitesQuery.data : []);
-    }, [invitesQuery.data]);
+    const [projects, setProjects] = useSyncedQueryState(projectsQuery.data);
+    const [deletedProjects, setDeletedProjects] = useSyncedQueryState(deletedProjectsQuery.data);
+    const [invites, setInvites] = useSyncedQueryState(invitesQuery.data);
     const loading = projectsQuery.isLoading || deletedProjectsQuery.isLoading || invitesQuery.isLoading;
     const error = projectsQuery.isError || deletedProjectsQuery.isError || invitesQuery.isError
         ? "Unable to load projects."
@@ -109,6 +100,9 @@ export function useProjects() {
             queryClient.setQueryData(queryKeys.projects, (current = []) =>
                 current.filter((item) => item.id !== project.id)
             );
+            queryClient.setQueryData(queryKeys.deletedProjects, (current = []) =>
+                [{ ...project, deleted_at: new Date().toISOString() }, ...current]
+            );
             queryClient.invalidateQueries({ queryKey: queryKeys.deletedProjects });
             toast.success("Project moved to Deleted Projects.");
             return true;
@@ -130,6 +124,12 @@ export function useProjects() {
             await projectService.restoreProject(project.id);
             setDeletedProjects((current) => current.filter((item) => item.id !== project.id));
             setProjects((current) => [{ ...project, deleted_at: null }, ...current]);
+            queryClient.setQueryData(queryKeys.deletedProjects, (current = []) =>
+                current.filter((item) => item.id !== project.id)
+            );
+            queryClient.setQueryData(queryKeys.projects, (current = []) =>
+                [{ ...project, deleted_at: null }, ...current]
+            );
             queryClient.invalidateQueries({ queryKey: queryKeys.projects });
             queryClient.invalidateQueries({ queryKey: queryKeys.deletedProjects });
             toast.success(`${project.project_name} restored.`);

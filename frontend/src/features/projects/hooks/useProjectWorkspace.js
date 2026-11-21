@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { convertApiTask } from "../../tasks/hooks/useTasks";
 import { taskService } from "../../tasks/services/taskService";
 import { projectService } from "../services/projectService";
 import { queryKeys } from "../../../shared/utils/queryKeys";
+import { useSyncedQueryState } from "../../../shared/hooks/useSyncedQueryState";
+
+const convertProjectTasks = (items) => items.map(convertApiTask);
 
 // Manage project workspace data and loading states.
 export function useProjectWorkspace(projectId) {
     const queryClient = useQueryClient();
-    const [tasks, setTasks] = useState([]);
     const [refreshingActivity, setRefreshingActivity] = useState(false);
     const projectQuery = useQuery({
         queryKey: queryKeys.project(projectId),
@@ -22,6 +24,7 @@ export function useProjectWorkspace(projectId) {
         retry: false,
         enabled: Boolean(projectId),
     });
+    const [tasks, setTasks] = useSyncedQueryState(tasksQuery.data, convertProjectTasks);
     const activitiesQuery = useQuery({
         queryKey: queryKeys.activities(projectId),
         queryFn: () => projectService.getActivities(projectId),
@@ -40,12 +43,6 @@ export function useProjectWorkspace(projectId) {
             : "");
     const projectUnavailable = projectQuery.error?.response?.status === 404 || Boolean(project?.is_default);
     const accessDenied = projectQuery.error?.response?.status === 403;
-
-    useEffect(() => {
-        if (tasksQuery.data) {
-            setTasks(tasksQuery.data.map(convertApiTask));
-        }
-    }, [tasksQuery.data]);
 
     // Refresh only the activity feed.
     const loadActivities = useCallback(async () => {

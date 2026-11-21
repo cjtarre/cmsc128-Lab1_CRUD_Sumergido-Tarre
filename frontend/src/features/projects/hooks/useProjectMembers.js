@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -6,6 +6,7 @@ import { inviteService } from "../services/inviteService";
 import { projectService } from "../services/projectService";
 import { getDisplayName } from "../../../shared/utils/userUtils";
 import { queryKeys } from "../../../shared/utils/queryKeys";
+import { useSyncedQueryState } from "../../../shared/hooks/useSyncedQueryState";
 
 // Manage project members, invitations, and related API actions.
 export function useProjectMembers(project, isOwner) {
@@ -20,15 +21,8 @@ export function useProjectMembers(project, isOwner) {
         queryFn: () => inviteService.getProjectInvites(project.id),
         enabled: Boolean(project?.id && isOwner),
     });
-    const [members, setMembers] = useState([]);
-    const [invites, setInvites] = useState([]);
-
-    useEffect(() => {
-        setMembers(Array.isArray(membersQuery.data) ? membersQuery.data : []);
-    }, [membersQuery.data]);
-    useEffect(() => {
-        setInvites(Array.isArray(invitesQuery.data) ? invitesQuery.data : []);
-    }, [invitesQuery.data]);
+    const [members, setMembers] = useSyncedQueryState(membersQuery.data);
+    const [invites, setInvites] = useSyncedQueryState(invitesQuery.data);
     const loading = membersQuery.isLoading || (isOwner && invitesQuery.isLoading);
     const [removingMember, setRemovingMember] = useState(false);
     const [leavingProject, setLeavingProject] = useState(false);

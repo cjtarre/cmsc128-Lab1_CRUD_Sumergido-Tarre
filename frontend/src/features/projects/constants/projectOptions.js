@@ -2,7 +2,7 @@ import {
     AlertTriangle, BookOpen, Briefcase, CalendarDays, ClipboardList, Clock3,
     Code2, Crown, Database, Eye, Flag, Folder, GraduationCap, Heart, Home,
     LayoutDashboard, Lightbulb, ListChecks, ListTodo, Palette, PanelsTopLeft,
-    Pencil, Plane, Rocket, Settings, Star, Target, Terminal, Users,
+    Pencil, Plane, Rocket, Settings, Star, Target, Terminal,
 } from "lucide-react";
 
 export const PROJECT_ROLE = {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AlertTriangle, LogOut, Palette, Plus, Sprout, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -36,12 +36,6 @@ function ProjectMembers({ project }) {
         inviteMember, changeRole, removeMember, leaveProject, cancelInvite,
     } = useProjectMembers(project, isOwner);
     const [deleting, setDeleting] = useState(false);
-
-    useEffect(() => {
-        setAppearanceName(project.project_name || "");
-        setAppearanceIcon(project.icon || "folder");
-        setAppearanceAccent(project.accent || "green");
-    }, [project.project_name, project.icon, project.accent]);
 
     const updateProject = async (projectData) => {
         try {
