@@ -9,7 +9,7 @@ import { getTaskNotifications } from "../utils/notificationUtils";
 
 function Notifications() {
     const { tasks, loading: tasksLoading } = useTaskData();
-    const { notifications, unreadCount, loading: notificationsLoading, refreshNotifications, markRead, markAllRead } = useNotifications();
+    const { notifications, unreadCount, loading: notificationsLoading, refreshNotifications, markRead, markUnread, markAllRead, removeNotification } = useNotifications();
 
     const reminders = getTaskNotifications(tasks);
     const loading = tasksLoading || notificationsLoading;
@@ -46,9 +46,10 @@ function Notifications() {
                         {notifications.map((notification) =>
                             notification.type === "project_invite" ? (
                                 <InviteNotification key={`persistent-${notification.id}`} notification={notification}
-                                    onRead={markRead} onRefresh={refreshNotifications} />
+                                    onRead={markRead} onUnread={markUnread} onRemove={removeNotification} onRefresh={refreshNotifications} />
                             ) : (
-                                <NotificationItem key={`persistent-${notification.id}`} notification={notification} onRead={markRead} />
+                                <NotificationItem key={`persistent-${notification.id}`} notification={notification}
+                                    onRead={markRead} onUnread={markUnread} onRemove={removeNotification} />
                             )
                         )}
 

@@ -19,7 +19,7 @@ function NotificationMenu() {
     const [markingAllRead, setMarkingAllRead] = useState(false);
 
     const reminders = useMemo(() => getTaskNotifications(tasks), [tasks]);
-    const persistentPreview = notifications.slice(0, 4);
+    const persistentPreview = notifications.filter((notification) => !notification.read_at).slice(0, 4);
     const reminderPreview = reminders.slice(0, Math.max(0, 4 - persistentPreview.length));
     const loading = tasksLoading || notificationsLoading;
 
@@ -88,8 +88,8 @@ function NotificationMenu() {
                                 </div>
                             ) : (
                                 <div className="flex h-28 flex-col items-center justify-center px-4 text-center">
-                                    <p className="text-sm font-medium text-slate-600 dark:text-slate-300">You're all caught up</p>
-                                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">No notifications right now.</p>
+                                    <p className="text-sm font-medium text-slate-600 dark:text-slate-300">You're up to date</p>
+                                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">No unread notifications right now.</p>
                                 </div>
                             )}
                         </div>

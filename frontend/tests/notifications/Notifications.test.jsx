@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
@@ -179,6 +179,51 @@ describe("Notifications", () => {
         );
 
         expect(screen.getByText("Implement notifications")).toBeTruthy();
+    });
+
+    it("allows read notifications to be marked unread and marks notifications read by clicking", () => {
+        const markRead = vi.fn();
+        const markUnread = vi.fn();
+
+        useNotifications.mockReturnValue({
+            notifications: [
+                {
+                    id: 51,
+                    type: "task_assigned",
+                    read_at: new Date().toISOString(),
+                    created_at: new Date().toISOString(),
+                    data: { task_id: 8, project_id: 3, task_name: "Read task" },
+                    actor: { username: "gabrielle", display_name: "Gabrielle" },
+                },
+                {
+                    id: 52,
+                    type: "task_assigned",
+                    read_at: null,
+                    created_at: new Date().toISOString(),
+                    data: { task_id: 9, project_id: 3, task_name: "Unread task" },
+                    actor: { username: "gabrielle", display_name: "Gabrielle" },
+                },
+            ],
+            unreadCount: 1,
+            loading: false,
+            markRead,
+            markUnread,
+            markAllRead: vi.fn(),
+            removeNotification: vi.fn(),
+            refreshNotifications: vi.fn(),
+        });
+
+        render(
+            <MemoryRouter>
+                <Notifications />
+            </MemoryRouter>
+        );
+
+        fireEvent.click(screen.getAllByLabelText("Mark notification as unread")[0]);
+        expect(markUnread).toHaveBeenCalledWith(51);
+
+        fireEvent.click(screen.getByText("Unread task"));
+        expect(markRead).toHaveBeenCalledWith(52);
     });
 
     it("does not display future tasks as reminders", () => {

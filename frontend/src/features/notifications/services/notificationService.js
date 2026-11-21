@@ -15,7 +15,10 @@ export const notificationService = {
         const response = await api.patch("/api/notifications/read-all");
         return response.data;
     },
-
+    markUnread: async (notificationId) => {
+        const response = await api.patch(`/api/notifications/${notificationId}/unread`);
+        return response.data;
+    },
     deleteNotification: async (notificationId) => {
         const response = await api.delete(`/api/notifications/${notificationId}`);
         return response.data;

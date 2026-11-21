@@ -65,6 +65,26 @@ export function NotificationProvider({ children }) {
         }
     };
 
+    const markUnread = async (notificationId) => {
+        const notification = notifications.find((item) => item.id === notificationId);
+        if (!notification || !notification.read_at) return;
+
+        queryClient.setQueryData(queryKeys.notifications(user?.id), (current) => current ? {
+            ...current,
+            notifications: current.notifications.map((item) =>
+                item.id === notificationId ? { ...item, read_at: null } : item
+            ),
+            unread_count: Number(current.unread_count) + 1,
+        } : current);
+
+        try {
+            await notificationService.markUnread(notificationId);
+        } catch (error) {
+            console.error("Error marking notification as unread:", error);
+            refreshNotifications();
+        }
+    };
+
     // Remove a notification immediately, then sync the deletion with the server.
     const removeNotification = async (notificationId) => {
         const notification = notifications.find((item) => item.id === notificationId);
@@ -89,7 +109,7 @@ export function NotificationProvider({ children }) {
 
     const value = {
         notifications, unreadCount, loading,
-        refreshNotifications, markRead, markAllRead, removeNotification,
+        refreshNotifications, markRead, markAllRead, markUnread, removeNotification,
     };
 
     return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;

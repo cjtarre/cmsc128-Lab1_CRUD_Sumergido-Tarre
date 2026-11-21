@@ -1,10 +1,10 @@
-import { Check, Mail, X } from "lucide-react";
+import { Check, Mail, MailPlus, Trash2, X } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 
 import { useInviteResponse } from "../hooks/useInviteResponse";
 import { getInviteNotificationMeta } from "../utils/inviteNotificationUtils";
 
-function InviteNotification({ notification, onRead, onRefresh, onClose }) {
+function InviteNotification({ notification, onRead, onUnread, onRemove, onRefresh, onClose }) {
     const { responding, respond, open } = useInviteResponse(notification, onRead, onRefresh, onClose);
     const prefersReducedMotion = useReducedMotion();
     const { actor, projectId, projectName, role, status, pending, accepted, time } = getInviteNotificationMeta(notification);
@@ -29,6 +29,20 @@ function InviteNotification({ notification, onRead, onRefresh, onClose }) {
                     <div className="flex shrink-0 items-center gap-2">
                         {time && <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500">{time}</span>}
                         {!notification.read_at && <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />}
+                        {notification.read_at && onUnread && (
+                            <button type="button" onClick={(event) => { event.stopPropagation(); onUnread(notification.id); }}
+                                aria-label="Mark notification as unread" title="Mark unread"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-green-600 dark:text-slate-500 dark:hover:bg-white/[0.06] dark:hover:text-green-400">
+                                <MailPlus size={14} />
+                            </button>
+                        )}
+                        {onRemove && (
+                            <button type="button" onClick={(event) => { event.stopPropagation(); onRemove(notification.id); }}
+                                aria-label="Dismiss notification" title="Dismiss"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500 dark:text-slate-500 dark:hover:bg-red-950/30 dark:hover:text-red-400">
+                                <Trash2 size={14} />
+                            </button>
+                        )}
                     </div>
                 </div>
 

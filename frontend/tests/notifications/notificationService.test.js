@@ -41,6 +41,14 @@ describe("notificationService", () => {
         expect(api.patch).toHaveBeenCalledWith("/api/notifications/read-all");
     });
 
+    it("marks one notification as unread", async () => {
+        api.patch.mockResolvedValue({ data: { success: true } });
+
+        await notificationService.markUnread(6);
+
+        expect(api.patch).toHaveBeenCalledWith("/api/notifications/6/unread");
+    });
+
     it("deletes a notification", async () => {
         api.delete.mockResolvedValue({ data: { success: true } });
 

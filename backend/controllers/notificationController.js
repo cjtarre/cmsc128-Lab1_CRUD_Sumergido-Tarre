@@ -131,6 +131,46 @@ const markAllNotificationsRead = async (req, res) => {
     }
 };
 
+// PATCH /api/notifications/:notification_id/unread
+const markNotificationUnread = async (req, res) => {
+    try {
+        const notificationId = parseId(req.params.notification_id);
+
+        if (notificationId === null) {
+            return res.status(400).json({ error: "Invalid notification id" });
+        }
+
+        const { data, error } = await supabase
+            .from("notifications")
+            .update({ read_at: null })
+            .eq("id", notificationId)
+            .eq("user_id", req.user.id)
+            .not("read_at", "is", null)
+            .select("id");
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            const { data: existing, error: existsError } = await supabase
+                .from("notifications")
+                .select("id")
+                .eq("id", notificationId)
+                .eq("user_id", req.user.id)
+                .maybeSingle();
+
+            if (existsError) throw existsError;
+            if (!existing) {
+                return res.status(404).json({ error: "Notification not found" });
+            }
+        }
+
+        res.status(200).json({ message: "Notification marked as unread" });
+    } catch (error) {
+        console.error("Error marking notification unread:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
 // DELETE /api/notifications/:notification_id   (dismiss)
 const deleteNotification = async (req, res) => {
     try {
@@ -164,5 +204,6 @@ module.exports = {
     getNotifications,
     markNotificationRead,
     markAllNotificationsRead,
+    markNotificationUnread,
     deleteNotification,
 };
