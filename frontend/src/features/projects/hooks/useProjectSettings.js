@@ -1,55 +1,38 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { projectService } from "../services/projectService";
+import { queryKeys } from "../../../shared/utils/queryKeys";
 
 // Manage project settings data and mutations.
 export function useProjectSettings(projectId) {
     const navigate = useNavigate();
-    const [project, setProject] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [deleting, setDeleting] = useState(false);
-    const [projectUnavailable, setProjectUnavailable] = useState(false);
-
-    // Load the requested project.
+    const queryClient = useQueryClient();
+    const projectQuery = useQuery({
+        queryKey: queryKeys.project(projectId),
+        queryFn: () => projectService.getProject(projectId),
+        retry: false,
+    });
+    const [projectOverride, setProjectOverride] = useState(null);
+    const project = projectOverride || projectQuery.data || null;
     useEffect(() => {
-        const loadProject = async () => {
-            try {
-                setLoading(true);
-                setProjectUnavailable(false);
-
-                const data = await projectService.getProjects();
-                const projects = Array.isArray(data) ? data : [];
-                const matchedProject = projects.find((item) => String(item.id) === String(projectId) && !item.is_default);
-
-                if (!matchedProject) {
-                    setProjectUnavailable(true);
-                    return;
-                }
-
-                setProject(matchedProject);
-            } catch (error) {
-                if (error.response?.status === 404) {
-                    setProjectUnavailable(true);
-                    return;
-                }
-
-                console.error("Error loading project settings:", error);
-                toast.error(error.response?.data?.error || "Unable to load project settings.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadProject();
+        setProjectOverride(null);
     }, [projectId]);
+    const loading = projectQuery.isLoading;
+    const [deleting, setDeleting] = useState(false);
+    const projectUnavailable = projectQuery.error?.response?.status === 404 || Boolean(project?.is_default);
 
     // Update the project and sync local state.
     const updateProject = async (projectData) => {
         try {
             const updatedProject = await projectService.updateProject(projectId, projectData);
-            setProject((current) => ({ ...current, ...updatedProject }));
+            setProjectOverride((current) => ({ ...(current || projectQuery.data), ...updatedProject }));
+            queryClient.setQueryData(queryKeys.project(projectId), (current) =>
+                current ? { ...current, ...updatedProject } : current
+            );
+            queryClient.invalidateQueries({ queryKey: queryKeys.projects });
             toast.success("Project updated.");
             return true;
         } catch (error) {
@@ -67,6 +50,9 @@ export function useProjectSettings(projectId) {
             setDeleting(true);
             await projectService.deleteProject(project.id);
             toast.success("Project deleted.");
+            queryClient.invalidateQueries({ queryKey: queryKeys.projects });
+            queryClient.invalidateQueries({ queryKey: queryKeys.deletedProjects });
+            queryClient.removeQueries({ queryKey: queryKeys.project(projectId) });
             navigate("/projects", { replace: true });
         } catch (error) {
             console.error("Error deleting project:", error);

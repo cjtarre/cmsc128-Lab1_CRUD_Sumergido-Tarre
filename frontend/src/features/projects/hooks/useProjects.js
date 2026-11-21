@@ -1,49 +1,59 @@
 import { useCallback, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { useNotifications } from "../../notifications/context/NotificationContext";
 import { inviteService } from "../services/inviteService";
 import { projectService } from "../services/projectService";
+import { queryKeys } from "../../../shared/utils/queryKeys";
 
 // Manage project lists, invitations, and project actions.
 export function useProjects() {
     const { refreshNotifications } = useNotifications();
+    const queryClient = useQueryClient();
+    const projectsQuery = useQuery({
+        queryKey: queryKeys.projects,
+        queryFn: projectService.getProjects,
+    });
+    const deletedProjectsQuery = useQuery({
+        queryKey: queryKeys.deletedProjects,
+        queryFn: projectService.getDeletedProjects,
+    });
+    const invitesQuery = useQuery({
+        queryKey: queryKeys.myInvites,
+        queryFn: inviteService.getMyInvites,
+    });
     const [projects, setProjects] = useState([]);
     const [deletedProjects, setDeletedProjects] = useState([]);
     const [invites, setInvites] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+
+    useEffect(() => {
+        setProjects(Array.isArray(projectsQuery.data) ? projectsQuery.data : []);
+    }, [projectsQuery.data]);
+    useEffect(() => {
+        setDeletedProjects(Array.isArray(deletedProjectsQuery.data) ? deletedProjectsQuery.data : []);
+    }, [deletedProjectsQuery.data]);
+    useEffect(() => {
+        setInvites(Array.isArray(invitesQuery.data) ? invitesQuery.data : []);
+    }, [invitesQuery.data]);
+    const loading = projectsQuery.isLoading || deletedProjectsQuery.isLoading || invitesQuery.isLoading;
+    const error = projectsQuery.isError || deletedProjectsQuery.isError || invitesQuery.isError
+        ? "Unable to load projects."
+        : "";
     const [deletingProject, setDeletingProject] = useState(false);
     const [restoringProject, setRestoringProject] = useState(false);
     const [respondingInviteId, setRespondingInviteId] = useState(null);
 
     // Load projects, deleted projects, and pending invitations.
     const loadProjects = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError("");
-
-            const [projectsData, deletedData, invitesData] = await Promise.all([
-                projectService.getProjects(),
-                projectService.getDeletedProjects(),
-                inviteService.getMyInvites(),
-            ]);
-
-            setProjects(Array.isArray(projectsData) ? projectsData : []);
-            setDeletedProjects(Array.isArray(deletedData) ? deletedData : []);
-            setInvites(Array.isArray(invitesData) ? invitesData : []);
-        } catch (error) {
-            console.error("Error loading projects:", error);
-            setError("Unable to load projects.");
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+        await Promise.all([
+            queryClient.invalidateQueries({ queryKey: queryKeys.projects }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.deletedProjects }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.myInvites }),
+        ]);
+    }, [queryClient]);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        loadProjects();
-
         const handleInvitesChanged = () => loadProjects();
         window.addEventListener("takda:invites-changed", handleInvitesChanged);
         return () => window.removeEventListener("takda:invites-changed", handleInvitesChanged);
@@ -52,8 +62,10 @@ export function useProjects() {
     // Create a collaborative project.
     const createProject = async (projectName) => {
         try {
-            await projectService.createProject(projectName);
-            await loadProjects();
+            const created = await projectService.createProject(projectName);
+            setProjects((current) => [...current, created]);
+            queryClient.setQueryData(queryKeys.projects, (current = []) => [...current, created]);
+            queryClient.invalidateQueries({ queryKey: queryKeys.deletedProjects });
             toast.success("Project created.");
             return true;
         } catch (error) {
@@ -69,6 +81,12 @@ export function useProjects() {
             const updatedProject = await projectService.updateProject(projectId, projectData);
             setProjects((current) =>
                 current.map((project) => project.id === projectId ? { ...project, ...updatedProject } : project)
+            );
+            queryClient.setQueryData(queryKeys.projects, (current = []) =>
+                current.map((project) => project.id === projectId ? { ...project, ...updatedProject } : project)
+            );
+            queryClient.setQueryData(queryKeys.project(projectId), (current) =>
+                current ? { ...current, ...updatedProject } : current
             );
             toast.success("Project updated.");
             return true;
@@ -86,8 +104,13 @@ export function useProjects() {
         try {
             setDeletingProject(true);
             await projectService.deleteProject(project.id);
+            setProjects((current) => current.filter((item) => item.id !== project.id));
+            setDeletedProjects((current) => [{ ...project, deleted_at: new Date().toISOString() }, ...current]);
+            queryClient.setQueryData(queryKeys.projects, (current = []) =>
+                current.filter((item) => item.id !== project.id)
+            );
+            queryClient.invalidateQueries({ queryKey: queryKeys.deletedProjects });
             toast.success("Project moved to Deleted Projects.");
-            await loadProjects();
             return true;
         } catch (error) {
             console.error("Error deleting project:", error);
@@ -105,8 +128,11 @@ export function useProjects() {
         try {
             setRestoringProject(true);
             await projectService.restoreProject(project.id);
+            setDeletedProjects((current) => current.filter((item) => item.id !== project.id));
+            setProjects((current) => [{ ...project, deleted_at: null }, ...current]);
+            queryClient.invalidateQueries({ queryKey: queryKeys.projects });
+            queryClient.invalidateQueries({ queryKey: queryKeys.deletedProjects });
             toast.success(`${project.project_name} restored.`);
-            await loadProjects();
             return true;
         } catch (error) {
             console.error("Error restoring project:", error);
@@ -130,7 +156,11 @@ export function useProjects() {
                 toast.success("Invitation declined.");
             }
 
-            await loadProjects();
+            setInvites((current) => current.filter((item) => item.id !== invite.id));
+            queryClient.setQueryData(queryKeys.myInvites, (current = []) =>
+                current.filter((item) => item.id !== invite.id)
+            );
+            if (accept) await loadProjects();
             await refreshNotifications();
         } catch (error) {
             console.error("Error responding to invitation:", error);

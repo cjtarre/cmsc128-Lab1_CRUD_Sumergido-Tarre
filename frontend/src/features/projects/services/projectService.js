@@ -3,6 +3,11 @@ import api from "../../../shared/services/api";
 const API_URL = "/api/projects";
 
 export const projectService = {
+    getProject: async (projectId) => {
+        const response = await api.get(`${API_URL}/${projectId}`);
+        return response.data;
+    },
+
     getProjects: async () => {
         const response = await api.get(API_URL);
         return response.data;

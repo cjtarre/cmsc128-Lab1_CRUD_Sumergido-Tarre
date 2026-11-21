@@ -1,102 +1,63 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { convertApiTask } from "../../tasks/hooks/useTasks";
 import { taskService } from "../../tasks/services/taskService";
 import { projectService } from "../services/projectService";
+import { queryKeys } from "../../../shared/utils/queryKeys";
 
 // Manage project workspace data and loading states.
 export function useProjectWorkspace(projectId) {
-    const [project, setProject] = useState(null);
+    const queryClient = useQueryClient();
     const [tasks, setTasks] = useState([]);
-    const [activities, setActivities] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [refreshingActivity, setRefreshingActivity] = useState(false);
-    const [error, setError] = useState("");
-    const [projectUnavailable, setProjectUnavailable] = useState(false);
-    const [accessDenied, setAccessDenied] = useState(false);
-    const activityRequestId = useRef(0);
+    const projectQuery = useQuery({
+        queryKey: queryKeys.project(projectId),
+        queryFn: () => projectService.getProject(projectId),
+        retry: false,
+    });
+    const tasksQuery = useQuery({
+        queryKey: queryKeys.projectTasks(projectId),
+        queryFn: () => taskService.getTasks(projectId),
+        retry: false,
+        enabled: Boolean(projectId),
+    });
+    const activitiesQuery = useQuery({
+        queryKey: queryKeys.activities(projectId),
+        queryFn: () => projectService.getActivities(projectId),
+        retry: false,
+        enabled: Boolean(projectId),
+    });
+
+    const project = projectQuery.data || null;
+    const activities = Array.isArray(activitiesQuery.data) ? activitiesQuery.data : [];
+    const loading = projectQuery.isLoading || tasksQuery.isLoading || activitiesQuery.isLoading;
+    const error = projectQuery.error?.response?.data?.error
+        || tasksQuery.error?.response?.data?.error
+        || activitiesQuery.error?.response?.data?.error
+        || (projectQuery.isError || tasksQuery.isError || activitiesQuery.isError
+            ? "Unable to load this project."
+            : "");
+    const projectUnavailable = projectQuery.error?.response?.status === 404 || Boolean(project?.is_default);
+    const accessDenied = projectQuery.error?.response?.status === 403;
+
+    useEffect(() => {
+        if (tasksQuery.data) {
+            setTasks(tasksQuery.data.map(convertApiTask));
+        }
+    }, [tasksQuery.data]);
 
     // Refresh only the activity feed.
     const loadActivities = useCallback(async () => {
-        const requestId = ++activityRequestId.current;
         try {
             setRefreshingActivity(true);
-            const data = await projectService.getActivities(projectId);
-            if (requestId === activityRequestId.current) {
-                setActivities(Array.isArray(data) ? data : []);
-            }
+            await queryClient.invalidateQueries({ queryKey: queryKeys.activities(projectId) });
         } catch (err) {
-            if (requestId === activityRequestId.current && err.response?.status !== 404 && err.response?.status !== 403) {
-                console.error("Error refreshing project activity:", err);
-            }
+            console.error("Error refreshing project activity:", err);
         } finally {
-            if (requestId === activityRequestId.current) setRefreshingActivity(false);
+            setRefreshingActivity(false);
         }
-    }, [projectId]);
-
-    // Load the project, tasks, and activity together.
-    useEffect(() => {
-        let active = true;
-        // Invalidate activity refreshes started for the previous workspace.
-        activityRequestId.current += 1;
-
-        const loadWorkspace = async () => {
-            try {
-                setLoading(true);
-                setProject(null);
-                setTasks([]);
-                setActivities([]);
-                setRefreshingActivity(false);
-                setError("");
-                setProjectUnavailable(false);
-                setAccessDenied(false);
-
-                const [projectsData, tasksData, activitiesData] = await Promise.all([
-                    projectService.getProjects(),
-                    taskService.getTasks(projectId),
-                    projectService.getActivities(projectId),
-                ]);
-
-                if (!active) return;
-
-                const projects = Array.isArray(projectsData) ? projectsData : [];
-                const matchedProject = projects.find((item) => String(item.id) === String(projectId) && !item.is_default);
-
-                if (!matchedProject) {
-                    setProjectUnavailable(true);
-                    return;
-                }
-
-                setProject(matchedProject);
-                setTasks((Array.isArray(tasksData) ? tasksData : []).map(convertApiTask));
-                setActivities(Array.isArray(activitiesData) ? activitiesData : []);
-            } catch (err) {
-                if (!active) return;
-
-                if (err.response?.status === 404) {
-                    setProjectUnavailable(true);
-                    return;
-                }
-
-                if (err.response?.status === 403) {
-                    setAccessDenied(true);
-                    return;
-                }
-
-                console.error("Error loading project workspace:", err);
-                setError(err.response?.data?.error || "Unable to load this project.");
-            } finally {
-                if (active) setLoading(false);
-            }
-        };
-
-        loadWorkspace();
-
-        return () => {
-            active = false;
-            activityRequestId.current += 1;
-        };
-    }, [projectId]);
+    }, [projectId, queryClient]);
 
     return {
         project, tasks, setTasks, activities,
