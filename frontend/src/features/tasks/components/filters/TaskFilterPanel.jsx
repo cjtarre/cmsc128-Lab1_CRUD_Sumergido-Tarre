@@ -3,6 +3,7 @@ import { Check, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { PRIORITY_OPTIONS, STATUS_OPTIONS } from "../../constants/taskOptions";
 import { useTaskData } from "../../context/TaskContext";
+import { useExclusiveDropdown } from "../../../../shared/hooks/useExclusiveDropdown";
 
 function FilterGroup({ label, items, selected, onChange }) {
     return (
@@ -39,6 +40,7 @@ function FilterGroups({ availableTags, priorityFilter, statusFilter, tagFilter, 
 function TaskFilterPanel({ priorityFilter, onPriorityFilterChange, statusFilter, onStatusFilterChange, tagFilter, onTagFilterChange }) {
     const { availableTags, searchTerm, setSearchTerm } = useTaskData();
     const [filterOpen, setFilterOpen] = useState(false);
+    useExclusiveDropdown(filterOpen, setFilterOpen);
 
     const filterCount = priorityFilter.length + statusFilter.length + tagFilter.length;
 
@@ -66,7 +68,7 @@ function TaskFilterPanel({ priorityFilter, onPriorityFilterChange, statusFilter,
             </button>
 
             {filterOpen && (
-                <div className="absolute right-0 top-[calc(100%+8px)] z-[110] w-[320px] max-w-[calc(100vw-24px)] overflow-hidden rounded-xl border border-white/80 bg-white/95 shadow-[0_18px_50px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/40">
+                <div data-dropdown-popup="true" className="absolute right-0 top-[calc(100%+8px)] z-[110] w-[320px] max-w-[calc(100vw-24px)] overflow-hidden rounded-xl border border-white/80 bg-white/95 shadow-[0_18px_50px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/40">
                     <div className="flex items-center justify-between border-b border-slate-100/70 px-4 py-3 dark:border-white/10">
                         <div>
                             <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-200">Filters</p>

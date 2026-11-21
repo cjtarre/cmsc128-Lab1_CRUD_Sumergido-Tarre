@@ -1,9 +1,11 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
+import { useExclusiveDropdown } from "../../../../shared/hooks/useExclusiveDropdown";
 
 // Small, accessible project dropdown with a consistently styled popup.
 function ProjectSelect({ label, value, defaultValue, options, onChange, Icon, wide = false }) {
     const [open, setOpen] = useState(false);
+    useExclusiveDropdown(open, setOpen);
     const rootRef = useRef(null);
     const triggerRef = useRef(null);
     const optionRefs = useRef([]);

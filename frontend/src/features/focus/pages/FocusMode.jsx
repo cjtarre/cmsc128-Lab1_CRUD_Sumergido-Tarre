@@ -57,7 +57,7 @@ function FocusDashboard({ userId, initialPlaylistId }) {
             aria-labelledby="focus-title"
             onCancel={(event) => event.preventDefault()}
             className={locked
-                ? "fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-6xl overflow-auto rounded-3xl border border-white/70 bg-emerald-50/90 p-4 text-slate-900 shadow-2xl backdrop-blur-2xl backdrop:bg-slate-950/75 dark:border-white/10 dark:bg-slate-950/90 dark:text-white sm:p-7"
+                ? "fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-6xl overflow-auto rounded-3xl border border-white/70 bg-emerald-50/90 p-4 text-slate-900 shadow-2xl backdrop-blur-2xl backdrop:bg-slate-950/75 dark:border-white/10 dark:bg-slate-950/90 dark:text-white sm:max-h-[calc(100dvh_-_3rem)] sm:-translate-y-3 sm:p-7"
                 : "static mx-auto w-full max-w-6xl bg-transparent pb-10 text-slate-900 dark:text-white"}
         >
             <header className={locked ? "sr-only" : "mb-5"}>

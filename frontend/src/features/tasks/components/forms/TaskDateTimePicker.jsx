@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
+import { useExclusiveDropdown } from "../../../../shared/hooks/useExclusiveDropdown";
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const TWO_DIGITS = (number) => String(number).padStart(2, "0");
@@ -57,6 +58,7 @@ function TaskDateTimePicker({
     const isDate = type === "date";
     const selectedDate = parseDate(value);
     const [open, setOpen] = useState(false);
+    useExclusiveDropdown(open, setOpen);
     const [visibleMonth, setVisibleMonth] = useState(() => selectedDate || new Date());
     const [draftTime, setDraftTime] = useState(() => parseTime(value) || { hour: 9, minute: 0, period: "AM" });
     const [position, setPosition] = useState(null);

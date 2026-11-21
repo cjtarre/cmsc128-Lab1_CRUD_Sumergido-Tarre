@@ -36,9 +36,11 @@ function DeletedProjects({ projects, open, onToggle, onRestore }) {
                         {projects.map((project) => (
                             <motion.div
                                 key={project.id}
-                                animate={{ y: 0 }}
-                                whileHover={prefersReducedMotion ? undefined : { y: -2 }}
-                                transition={{ duration: prefersReducedMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
+                                animate={{ y: 0, transition: { duration: 0 } }}
+                                whileHover={prefersReducedMotion ? undefined : {
+                                    y: -2,
+                                    transition: { duration: 0.1, ease: "easeOut" },
+                                }}
                                 className="flex flex-col gap-3 px-4 py-3.5 motion-reduce:transform-none sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex min-w-0 items-center gap-3">
                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100/80 text-slate-400 dark:bg-white/[0.05] dark:text-slate-500">

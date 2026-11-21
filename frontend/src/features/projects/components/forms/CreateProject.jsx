@@ -11,9 +11,19 @@ function CreateProject({ isOpen, onClose, onSubmit }) {
 
     if (!isOpen) return null;
 
+    const handleOutsideClick = (event) => {
+        if (event.target === event.currentTarget && !submitting && projectName === "") onClose();
+    };
+
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/20 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-16 backdrop-blur-sm dark:bg-black/55" role="dialog" aria-modal="true" aria-labelledby="create-project-heading">
-            <div className="w-full max-w-md overflow-hidden rounded-2xl border border-white/70 bg-white/85 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/85">
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-900/20 px-4 py-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm dark:bg-black/55"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-project-heading"
+            onMouseDown={handleOutsideClick}
+        >
+            <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/70 bg-white/85 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/85 sm:max-h-[calc(100dvh-3rem)] sm:-translate-y-3">
                 <div className="flex items-start justify-between border-b border-white/60 px-5 py-4 dark:border-white/10">
                     <div className="flex items-center gap-3">
                         <div className="rounded-xl bg-green-100 p-2 text-green-600 dark:bg-green-950/60 dark:text-green-400"><FolderPlus size={19} /></div>

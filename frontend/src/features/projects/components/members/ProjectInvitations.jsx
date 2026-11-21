@@ -38,10 +38,12 @@ function ProjectInvitations({ invites, respondingInviteId, onRespond, searchTerm
                     return (
                         <motion.div
                             key={invite.id}
-                            animate={{ y: 0 }}
-                            whileHover={prefersReducedMotion ? undefined : { y: -4 }}
+                            animate={{ y: 0, transition: { duration: 0 } }}
+                            whileHover={prefersReducedMotion ? undefined : {
+                                y: -4,
+                                transition: { duration: 0.1, ease: "easeOut" },
+                            }}
                             whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
-                            transition={{ duration: prefersReducedMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
                             className="rounded-2xl border border-green-100/80 bg-white/50 p-4 shadow-[0_8px_30px_rgba(15,23,42,0.035)] backdrop-blur-xl transition-[box-shadow,border-color] hover:shadow-[0_12px_32px_rgba(15,23,42,0.09)] motion-reduce:transform-none dark:border-green-900/30 dark:bg-white/[0.025] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.22)]">
                             <div className="flex items-start gap-3">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-500 dark:bg-green-950/40 dark:text-green-400">

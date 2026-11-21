@@ -41,20 +41,28 @@ function EditProject({ isOpen, project, onClose, onSubmit }) {
         }
     };
 
+    const hasInput = (
+        projectName !== (project.project_name || "")
+        || icon !== (project.icon || "folder")
+        || accent !== (project.accent || "green")
+    );
+
+    const handleOutsideClick = (event) => {
+        if (event.target === event.currentTarget && !saving && !hasInput) onClose();
+    };
+
     return createPortal(
         <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-950/30 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm"
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-950/30 p-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm"
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-project-heading"
-            onMouseDown={(event) => {
-                if (event.target === event.currentTarget && !saving) onClose();
-            }}
+            onMouseDown={handleOutsideClick}
         >
             {/* Internal scrolling keeps the centered dialog usable on short screens. */}
             <form
                 onSubmit={handleSubmit}
-                className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-white/70 bg-white/90 p-5 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/95"
+                className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-white/70 bg-white/90 p-5 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/95 sm:max-h-[calc(100dvh-3rem)] sm:-translate-y-3"
             >
                 <div className="flex items-start justify-between gap-4">
                     <div>

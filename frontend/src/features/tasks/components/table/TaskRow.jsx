@@ -7,6 +7,7 @@ import ActionButtons from "./ActionButtons";
 import taskStyles, { getTagInlineStyle, getTaskGridColumns } from "../../styles/taskStyles";
 import { formatDueDate } from "../../../../shared/utils/dateUtils";
 import { STATUS, PRIORITY, priorityLabels, STATUS_OPTIONS } from "../../constants/taskOptions";
+import { useExclusiveDropdown } from "../../../../shared/hooks/useExclusiveDropdown";
 
 const statusOptions = STATUS_OPTIONS.map(([value, label]) => ({ value, label: label || value }));
 
@@ -17,6 +18,7 @@ function TaskRow({
 }) {
     const prefersReducedMotion = useReducedMotion();
     const [isStatusOpen, setIsStatusOpen] = useState(false);
+    useExclusiveDropdown(isStatusOpen, setIsStatusOpen);
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
     const [showHighlight, setShowHighlight] = useState(false);
     const rowRef = useRef(null), statusButtonRef = useRef(null), statusMenuRef = useRef(null);
@@ -105,8 +107,8 @@ function TaskRow({
             ref={rowRef}
             animate={{ y: 0, transition: { duration: 0 } }}
             whileHover={prefersReducedMotion ? undefined : {
-                y: -4,
-                transition: { duration: 0.14, ease: [0.22, 1, 0.36, 1] },
+                y: -2,
+                transition: { duration: 0.12, ease: [0.22, 1, 0.36, 1] },
             }}
             whileTap={prefersReducedMotion ? undefined : { scale: 0.995 }}
             className={`group relative grid min-w-0 grid-cols-1 gap-2 px-3 py-3 transition-[background-color,box-shadow] duration-300 sm:px-4 sm:py-4 sm:items-center sm:gap-3 motion-reduce:transform-none ${gridColumns} ${

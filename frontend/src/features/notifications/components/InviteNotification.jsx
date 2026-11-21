@@ -12,9 +12,11 @@ function InviteNotification({ notification, onRead, onRefresh, onClose }) {
     return (
         <motion.div
             onClick={open}
-            animate={{ y: 0 }}
-            whileHover={prefersReducedMotion || !accepted ? undefined : { y: -2 }}
-            transition={{ duration: prefersReducedMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
+            animate={{ y: 0, transition: { duration: 0 } }}
+            whileHover={prefersReducedMotion || !accepted ? undefined : {
+                y: -2,
+                transition: { duration: 0.08, ease: "easeOut" },
+            }}
             className={`flex items-start gap-3 px-4 py-3 transition dark:hover:bg-white/[0.03] sm:px-5 ${accepted ? "cursor-pointer hover:bg-green-50/40" : ""} ${notification.read_at ? "" : "bg-green-50/25 dark:bg-green-950/10"}`}>
             <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-500 dark:bg-green-950/50 dark:text-green-400">
                 <Mail size={15} />

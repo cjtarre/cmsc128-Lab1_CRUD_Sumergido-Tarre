@@ -101,29 +101,26 @@ function ProjectGrid({ projects, onEdit, onDelete, searching = false }) {
                                 }
                                 transition={{
                                     opacity: {
-                                        duration: 0.2,
-                                        delay: index * 0.055,
+                                        duration: 0.12,
+                                        delay: index * 0.025,
                                     },
                                     x: {
-                                        type: "spring",
-                                        stiffness: 240,
-                                        damping: 25,
+                                        duration: 0.12,
+                                        ease: [0.22, 1, 0.36, 1],
                                         delay: isDesktop
-                                            ? index * 0.055
+                                            ? index * 0.025
                                             : 0,
                                     },
                                     y: {
-                                        type: "spring",
-                                        stiffness: 240,
-                                        damping: 25,
+                                        duration: 0.12,
+                                        ease: [0.22, 1, 0.36, 1],
                                         delay: !isDesktop
-                                            ? index * 0.055
+                                            ? index * 0.025
                                             : 0,
                                     },
                                     marginTop: {
-                                        type: "spring",
-                                        stiffness: 210,
-                                        damping: 24,
+                                        duration: 0.12,
+                                        ease: [0.22, 1, 0.36, 1],
                                         delay:
                                             !isDesktop &&
                                             expanded &&
@@ -131,19 +128,18 @@ function ProjectGrid({ projects, onEdit, onDelete, searching = false }) {
                                                 ? Math.min(
                                                     index,
                                                     PROJECT_STACK_DEPTH
-                                                ) * 0.06
+                                                ) * 0.025
                                                 : 0,
                                     },
                                     rotate: {
-                                        duration: 0.25,
+                                        duration: 0.12,
                                     },
                                     scale: {
-                                        duration: 0.25,
+                                        duration: 0.12,
                                     },
                                     layout: {
-                                        type: "spring",
-                                        stiffness: 240,
-                                        damping: 28,
+                                        duration: 0.12,
+                                        ease: [0.22, 1, 0.36, 1],
                                     },
                                 }}
                                 style={{

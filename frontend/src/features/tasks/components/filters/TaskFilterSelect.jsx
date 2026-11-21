@@ -1,5 +1,6 @@
 import { Children, isValidElement, useEffect, useId, useRef, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
+import { useExclusiveDropdown } from "../../../../shared/hooks/useExclusiveDropdown";
 
 // A compact custom filter menu. Its onChange matches the native select event
 // shape so existing Project List filter handlers do not need to change.
@@ -12,6 +13,7 @@ function TaskFilterSelect({ value, onChange, children, className = "" }) {
     const selected = options[selectedIndex];
     const selectedOptionValue = selected?.value;
     const [open, setOpen] = useState(false);
+    useExclusiveDropdown(open, setOpen);
     const [above, setAbove] = useState(false);
     const wrapperRef = useRef(null);
     const triggerRef = useRef(null);

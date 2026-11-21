@@ -8,9 +8,11 @@ function TaskReminderItem({ notification }) {
 
     return (
         <motion.div
-            animate={{ y: 0 }}
-            whileHover={prefersReducedMotion ? undefined : { y: -2 }}
-            transition={{ duration: prefersReducedMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
+            animate={{ y: 0, transition: { duration: 0 } }}
+            whileHover={prefersReducedMotion ? undefined : {
+                y: -2,
+                transition: { duration: 0.08, ease: "easeOut" },
+            }}
             className="motion-reduce:transform-none"
         >
         <Link to={`/my-tasks?task=${notification.id}`}
