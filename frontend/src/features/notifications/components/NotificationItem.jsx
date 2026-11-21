@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { motion, useReducedMotion } from "motion/react";
 
 import { handleOpenNotification } from "../handlers/notificationHandlers";
 import { getNotificationDetails } from "../utils/notificationUtils";
@@ -16,11 +17,16 @@ function NotificationMessage({ details }) {
 
 function NotificationItem({ notification, onRead, onClose }) {
     const navigate = useNavigate();
+    const prefersReducedMotion = useReducedMotion();
     const details = getNotificationDetails(notification);
     const { icon: Icon, projectId, time } = details;
 
     return (
-        <button type="button"
+        <motion.button
+            type="button"
+            animate={{ y: 0 }}
+            whileHover={prefersReducedMotion || !details.canOpen ? undefined : { y: -2 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
             onClick={() => handleOpenNotification({ notification, canOpen: details.canOpen, projectId, onRead, onClose, navigate })}
             className={`flex w-full min-w-0 items-start gap-2.5 px-3 py-3 text-left transition dark:hover:bg-white/[0.03] sm:gap-3 sm:px-5 ${details.canOpen ? "hover:bg-green-50/40" : "cursor-default"} ${notification.read_at ? "" : "bg-green-50/25 dark:bg-green-950/10"}`}>
             <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${details.iconClass}`}>
@@ -43,7 +49,7 @@ function NotificationItem({ notification, onRead, onClose }) {
 
                 {details.action && <p className="mt-1 text-[10px] text-green-600 dark:text-green-400">{details.action}</p>}
             </div>
-        </button>
+        </motion.button>
     );
 }
 

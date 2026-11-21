@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { createPortal } from "react-dom";
 import { CalendarDays, Check, ChevronDown, UserRound } from "lucide-react";
 
@@ -14,6 +15,7 @@ function TaskRow({
     dueDate = "", dueTime = "", tags = [], assignee = null, collaborative = false, highlighted = false,
     onToggleComplete, onStatusChange, onEdit, onDelete, onView,
 }) {
+    const prefersReducedMotion = useReducedMotion();
     const [isStatusOpen, setIsStatusOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
     const [showHighlight, setShowHighlight] = useState(false);
@@ -99,9 +101,15 @@ function TaskRow({
     );
 
     return (
-        <div
+        <motion.div
             ref={rowRef}
-            className={`group relative grid min-w-0 grid-cols-1 gap-2 px-3 py-3 transition-all duration-300 sm:px-4 sm:py-4 sm:items-center sm:gap-3 ${gridColumns} ${
+            animate={{ y: 0, transition: { duration: 0 } }}
+            whileHover={prefersReducedMotion ? undefined : {
+                y: -4,
+                transition: { duration: 0.14, ease: [0.22, 1, 0.36, 1] },
+            }}
+            whileTap={prefersReducedMotion ? undefined : { scale: 0.995 }}
+            className={`group relative grid min-w-0 grid-cols-1 gap-2 px-3 py-3 transition-[background-color,box-shadow] duration-300 sm:px-4 sm:py-4 sm:items-center sm:gap-3 motion-reduce:transform-none ${gridColumns} ${
                 showHighlight
                     ? "bg-green-50/80 shadow-[inset_3px_0_0_rgb(34,197,94)] dark:bg-green-950/25"
                     : "hover:bg-green-50/25 dark:hover:bg-white/[0.025]"
@@ -338,7 +346,7 @@ function TaskRow({
             <div className="hidden shrink-0 items-center justify-end sm:sticky sm:right-4 sm:z-10 sm:flex sm:bg-gradient-to-l sm:from-white/95 sm:via-white/90 sm:to-transparent sm:pl-4 sm:opacity-0 sm:pointer-events-none sm:transition-all sm:duration-150 sm:group-hover:pointer-events-auto sm:group-hover:opacity-100 dark:sm:from-slate-900/95 dark:sm:via-slate-900/90">
                 {(onEdit || onDelete) && <ActionButtons onEdit={onEdit} onDelete={onDelete} />}
             </div>
-        </div>
+        </motion.div>
     );
 }
 

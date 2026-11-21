@@ -1,14 +1,23 @@
 import { CalendarDays, GripVertical, User } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 
 import { BOARD_COLUMNS, PRIORITY } from "../../constants/taskOptions";
 import taskStyles, { getTagInlineStyle } from "../../styles/taskStyles";
 
 function BoardTaskCard({ task, canEdit, isDragging, isUpdating, onDragStart, onDragEnd, onStatusChange }) {
+    const prefersReducedMotion = useReducedMotion();
     const assigneeName = task.assignee?.display_name || task.assignee?.username || task.assigneeName || task.assignee_name || "Unassigned";
 
     return (
-        <article draggable={canEdit && !isUpdating} onDragStart={(event) => onDragStart(event, task)} onDragEnd={onDragEnd}
-            className={`rounded-xl border border-white/80 bg-white/75 p-3.5 shadow-[0_4px_14px_rgba(15,23,42,0.035)] transition dark:border-white/10 dark:bg-slate-900/65 ${canEdit ? "lg:cursor-grab lg:active:cursor-grabbing" : ""} ${isDragging ? "scale-[0.98] opacity-40" : "hover:bg-white/90 dark:hover:bg-slate-900/80"} ${isUpdating ? "pointer-events-none opacity-60" : ""}`}>
+        <motion.article
+            draggable={canEdit && !isUpdating}
+            onDragStart={(event) => onDragStart(event, task)}
+            onDragEnd={onDragEnd}
+            animate={{ y: 0 }}
+            whileHover={prefersReducedMotion || isDragging || isUpdating ? undefined : { y: -4 }}
+            whileTap={isDragging || isUpdating ? undefined : { scale: 0.985 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
+            className={`rounded-xl border border-white/80 bg-white/75 p-3.5 shadow-[0_4px_14px_rgba(15,23,42,0.035)] transition-[background-color,border-color,box-shadow] hover:shadow-[0_10px_24px_rgba(15,23,42,0.09)] dark:border-white/10 dark:bg-slate-900/65 dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.22)] motion-reduce:transform-none ${canEdit ? "lg:cursor-grab lg:active:cursor-grabbing" : ""} ${isDragging ? "scale-[0.98] opacity-40" : "hover:bg-white/90 dark:hover:bg-slate-900/80"} ${isUpdating ? "pointer-events-none opacity-60" : ""}`}>
             <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-1.5">
                     {canEdit && <GripVertical size={13} className="mt-1 hidden shrink-0 text-slate-300 dark:text-slate-600 lg:block" />}
@@ -46,7 +55,7 @@ function BoardTaskCard({ task, canEdit, isDragging, isUpdating, onDragStart, onD
                     </label>
                 </div>
             )}
-        </article>
+        </motion.article>
     );
 }
 

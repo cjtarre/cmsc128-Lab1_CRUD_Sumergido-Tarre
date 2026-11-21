@@ -1,9 +1,11 @@
 import { ChevronDown, RotateCcw, Trash2 } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 
 import { formatDeletedProjectDate } from "../../utils/projectUtils";
 
 // Display recoverable deleted projects.
 function DeletedProjects({ projects, open, onToggle, onRestore }) {
+    const prefersReducedMotion = useReducedMotion();
     if (!projects.length) return null;
 
     return (
@@ -32,8 +34,12 @@ function DeletedProjects({ projects, open, onToggle, onRestore }) {
 
                     <div className="max-h-[280px] divide-y divide-slate-100/70 overflow-y-auto overscroll-contain dark:divide-white/[0.05]">
                         {projects.map((project) => (
-                            <div key={project.id}
-                                className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+                            <motion.div
+                                key={project.id}
+                                animate={{ y: 0 }}
+                                whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                                transition={{ duration: prefersReducedMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
+                                className="flex flex-col gap-3 px-4 py-3.5 motion-reduce:transform-none sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex min-w-0 items-center gap-3">
                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100/80 text-slate-400 dark:bg-white/[0.05] dark:text-slate-500">
                                         <Trash2 size={14} />
@@ -55,7 +61,7 @@ function DeletedProjects({ projects, open, onToggle, onRestore }) {
                                     <RotateCcw size={12} />
                                     Restore
                                 </button>
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
                 </div>
