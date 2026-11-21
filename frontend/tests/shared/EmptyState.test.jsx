@@ -8,7 +8,7 @@ afterEach(cleanup);
 describe("EmptyState", () => {
     it("shows a compact search empty state with an available clear action", () => {
         const onAction = vi.fn();
-        render(
+        const { container } = render(
             <EmptyState
                 compact
                 title="No matching results"
@@ -19,6 +19,7 @@ describe("EmptyState", () => {
         );
 
         expect(screen.getByRole("status")).toBeTruthy();
+        expect(container.firstElementChild.className).toContain("w-full");
         expect(screen.getByText("No matching results")).toBeTruthy();
         fireEvent.click(screen.getByRole("button", { name: "Clear search and filters" }));
         expect(onAction).toHaveBeenCalledTimes(1);
