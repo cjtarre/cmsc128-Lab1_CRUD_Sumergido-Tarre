@@ -68,7 +68,7 @@ function Settings() {
                     <select
                         value={theme}
                         onChange={(event) => setTheme(event.target.value)}
-                        className="shrink-0 rounded-lg border border-white/80 bg-white/60 px-2.5 py-2 text-xs text-slate-600 shadow-sm backdrop-blur-md outline-none transition hover:border-green-200 focus:border-green-400 focus:ring-2 focus:ring-green-100/60 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-200 dark:hover:border-green-900/60 dark:focus:border-green-600 dark:focus:ring-green-950/50 sm:px-3 sm:text-sm"
+                        className="shrink-0 rounded-lg border border-white/80 bg-white/60 px-2.5 py-2 text-xs text-slate-600 shadow-sm backdrop-blur-md outline-none transition hover:border-green-200 focus:border-green-400 focus:ring-2 focus:ring-green-100/60 dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:border-green-800/60 dark:hover:bg-slate-900 dark:focus:border-green-600 dark:focus:ring-green-950/50 sm:px-3 sm:text-sm"
                     >
                         <option value="light">Light</option>
                         <option value="dark">Dark</option>

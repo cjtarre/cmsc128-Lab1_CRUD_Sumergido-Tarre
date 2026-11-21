@@ -30,6 +30,34 @@ html.dark {
   color: #f8fafc;
 }
 
+html.dark body,
+html.dark #root {
+  background: #020617;
+}
+
+html.dark :is(input, textarea, select) {
+  color-scheme: dark;
+}
+
+html.dark :is(input, textarea, select) option {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Keep hover/focus surfaces dark even when a component predates a dark variant. */
+html.dark [class*="hover:bg-white"]:hover {
+  background-color: rgba(255, 255, 255, 0.055) !important;
+}
+
+html.dark [class*="hover:bg-slate-50"]:hover,
+html.dark [class*="hover:bg-slate-100"]:hover {
+  background-color: rgba(51, 65, 85, 0.48) !important;
+}
+
+html.dark [class*="hover:border-slate-"]:hover {
+  border-color: rgba(71, 85, 105, 0.72) !important;
+}
+
 body {
   margin: 0;
   min-width: 320px;
