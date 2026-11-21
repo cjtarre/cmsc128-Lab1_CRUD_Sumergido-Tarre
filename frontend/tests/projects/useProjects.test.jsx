@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useProjects } from "../../src/features/projects/hooks/useProjects";
+import { createQueryWrapper } from "../queryTestUtils";
 import { inviteService } from "../../src/features/projects/services/inviteService";
 import { projectService } from "../../src/features/projects/services/projectService";
 
@@ -56,13 +57,15 @@ const waitForReload = async (result) => {
 };
 
 describe("useProjects", () => {
+    let wrapper = createQueryWrapper();
     beforeEach(() => {
+        wrapper = createQueryWrapper();
         vi.clearAllMocks();
         mockLoad();
     });
 
     it("loads projects, deleted projects, and invitations", async () => {
-        const { result } = renderHook(() => useProjects());
+        const { result } = renderHook(() => useProjects(), { wrapper });
 
         await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -77,7 +80,7 @@ describe("useProjects", () => {
         projectService.getDeletedProjects.mockResolvedValue({});
         inviteService.getMyInvites.mockResolvedValue("invalid");
 
-        const { result } = renderHook(() => useProjects());
+        const { result } = renderHook(() => useProjects(), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         expect(result.current.projects).toEqual([]);
@@ -88,16 +91,16 @@ describe("useProjects", () => {
     it("sets an error when loading fails", async () => {
         projectService.getProjects.mockRejectedValue(new Error("failed"));
 
-        const { result } = renderHook(() => useProjects());
+        const { result } = renderHook(() => useProjects(), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         expect(result.current.error).toBe("Unable to load projects.");
     });
 
-    it("creates a project and reloads data", async () => {
+    it("creates a project and updates data locally", async () => {
         projectService.createProject.mockResolvedValue({ id: 4 });
 
-        const { result } = renderHook(() => useProjects());
+        const { result } = renderHook(() => useProjects(), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         clearLoadMocks();
@@ -107,16 +110,15 @@ describe("useProjects", () => {
             success = await result.current.createProject("New Project");
         });
 
-        await waitForReload(result);
-
         expect(success).toBe(true);
         expect(projectService.createProject).toHaveBeenCalledWith("New Project");
+        expect(result.current.projects).toContainEqual({ id: 4 });
     });
 
     it("returns false when project creation fails", async () => {
         projectService.createProject.mockRejectedValue(new Error("failed"));
 
-        const { result } = renderHook(() => useProjects());
+        const { result } = renderHook(() => useProjects(), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         let success;
@@ -130,7 +132,7 @@ describe("useProjects", () => {
     it("updates a project locally", async () => {
         projectService.updateProject.mockResolvedValue({ project_name: "Renamed" });
 
-        const { result } = renderHook(() => useProjects());
+        const { result } = renderHook(() => useProjects(), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         let success;
@@ -142,10 +144,10 @@ describe("useProjects", () => {
         expect(result.current.projects[0].project_name).toBe("Renamed");
     });
 
-    it("deletes and reloads a project", async () => {
+    it("deletes and updates a project locally", async () => {
         projectService.deleteProject.mockResolvedValue({ success: true });
 
-        const { result } = renderHook(() => useProjects());
+        const { result } = renderHook(() => useProjects(), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         clearLoadMocks();
@@ -155,17 +157,16 @@ describe("useProjects", () => {
             success = await result.current.deleteProject({ id: 1 });
         });
 
-        await waitForReload(result);
-
         expect(success).toBe(true);
         expect(projectService.deleteProject).toHaveBeenCalledWith(1);
+        expect(result.current.projects).not.toContainEqual(expect.objectContaining({ id: 1 }));
         expect(result.current.deletingProject).toBe(false);
     });
 
-    it("restores and reloads a project", async () => {
+    it("restores and updates a project locally", async () => {
         projectService.restoreProject.mockResolvedValue({ success: true });
 
-        const { result } = renderHook(() => useProjects());
+        const { result } = renderHook(() => useProjects(), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         clearLoadMocks();
@@ -178,8 +179,6 @@ describe("useProjects", () => {
             });
         });
 
-        await waitForReload(result);
-
         expect(success).toBe(true);
         expect(projectService.restoreProject).toHaveBeenCalledWith(2);
         expect(result.current.restoringProject).toBe(false);
@@ -188,7 +187,7 @@ describe("useProjects", () => {
     it("accepts an invitation and refreshes notifications", async () => {
         inviteService.acceptInvite.mockResolvedValue({ success: true });
 
-        const { result } = renderHook(() => useProjects());
+        const { result } = renderHook(() => useProjects(), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         await act(async () => {
@@ -206,7 +205,7 @@ describe("useProjects", () => {
     it("declines an invitation", async () => {
         inviteService.declineInvite.mockResolvedValue({ success: true });
 
-        const { result } = renderHook(() => useProjects());
+        const { result } = renderHook(() => useProjects(), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         await act(async () => {
@@ -218,7 +217,7 @@ describe("useProjects", () => {
     });
 
     it("reloads when the invitation change event fires", async () => {
-        const { result } = renderHook(() => useProjects());
+        const { result } = renderHook(() => useProjects(), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         clearLoadMocks();

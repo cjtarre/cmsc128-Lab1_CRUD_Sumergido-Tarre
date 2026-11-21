@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useProjectSettings } from "../../src/features/projects/hooks/useProjectSettings";
 import { projectService } from "../../src/features/projects/services/projectService";
+import { createQueryWrapper } from "../queryTestUtils";
 
 const navigate = vi.fn();
 
@@ -13,6 +14,7 @@ vi.mock("react-router-dom", () => ({
 vi.mock("../../src/features/projects/services/projectService", () => ({
     projectService: {
         getProjects: vi.fn(),
+        getProject: vi.fn(),
         updateProject: vi.fn(),
         deleteProject: vi.fn(),
     },
@@ -23,15 +25,22 @@ vi.mock("sonner", () => ({
 }));
 
 describe("useProjectSettings", () => {
+    let wrapper = createQueryWrapper();
     beforeEach(() => {
+        wrapper = createQueryWrapper();
         vi.clearAllMocks();
         projectService.getProjects.mockResolvedValue([
             { id: 5, project_name: "Project", is_default: false },
         ]);
+        projectService.getProject.mockResolvedValue({
+            id: 5,
+            project_name: "Project",
+            is_default: false,
+        });
     });
 
     it("loads the selected collaborative project", async () => {
-        const { result } = renderHook(() => useProjectSettings(5));
+        const { result } = renderHook(() => useProjectSettings(5), { wrapper });
 
         await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -44,20 +53,22 @@ describe("useProjectSettings", () => {
     });
 
     it("marks a missing project unavailable", async () => {
-        projectService.getProjects.mockResolvedValue([]);
+        projectService.getProject.mockRejectedValue({ response: { status: 404 } });
 
-        const { result } = renderHook(() => useProjectSettings(5));
+        const { result } = renderHook(() => useProjectSettings(5), { wrapper });
 
         await waitFor(() => expect(result.current.loading).toBe(false));
         expect(result.current.projectUnavailable).toBe(true);
     });
 
     it("does not allow the default project as project settings target", async () => {
-        projectService.getProjects.mockResolvedValue([
-            { id: 5, project_name: "My Tasks", is_default: true },
-        ]);
+        projectService.getProject.mockResolvedValue({
+            id: 5,
+            project_name: "My Tasks",
+            is_default: true,
+        });
 
-        const { result } = renderHook(() => useProjectSettings(5));
+        const { result } = renderHook(() => useProjectSettings(5), { wrapper });
 
         await waitFor(() => expect(result.current.loading).toBe(false));
         expect(result.current.projectUnavailable).toBe(true);
@@ -66,7 +77,7 @@ describe("useProjectSettings", () => {
     it("updates project state", async () => {
         projectService.updateProject.mockResolvedValue({ project_name: "Renamed" });
 
-        const { result } = renderHook(() => useProjectSettings(5));
+        const { result } = renderHook(() => useProjectSettings(5), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         let success;
@@ -82,7 +93,7 @@ describe("useProjectSettings", () => {
     it("returns false when update fails", async () => {
         projectService.updateProject.mockRejectedValue(new Error("failed"));
 
-        const { result } = renderHook(() => useProjectSettings(5));
+        const { result } = renderHook(() => useProjectSettings(5), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         let success;
@@ -96,7 +107,7 @@ describe("useProjectSettings", () => {
     it("deletes the project and returns to projects", async () => {
         projectService.deleteProject.mockResolvedValue({});
 
-        const { result } = renderHook(() => useProjectSettings(5));
+        const { result } = renderHook(() => useProjectSettings(5), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         await act(async () => {

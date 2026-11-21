@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useProjectMembers } from "../../src/features/projects/hooks/useProjectMembers";
+import { createQueryWrapper } from "../queryTestUtils";
 import { inviteService } from "../../src/features/projects/services/inviteService";
 import { projectService } from "../../src/features/projects/services/projectService";
 
@@ -27,6 +28,10 @@ vi.mock("sonner", () => ({
 }));
 
 describe("useProjectMembers", () => {
+    let wrapper = createQueryWrapper();
+    beforeEach(() => {
+        wrapper = createQueryWrapper();
+    });
     beforeEach(() => {
         vi.clearAllMocks();
         projectService.getMembers.mockResolvedValue([
@@ -37,7 +42,7 @@ describe("useProjectMembers", () => {
     });
 
     it("loads members and owner invitations", async () => {
-        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true));
+        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true), { wrapper });
 
         await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -47,7 +52,7 @@ describe("useProjectMembers", () => {
     });
 
     it("does not load invitations for a non-owner", async () => {
-        const { result } = renderHook(() => useProjectMembers({ id: 10 }, false));
+        const { result } = renderHook(() => useProjectMembers({ id: 10 }, false), { wrapper });
 
         await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -58,7 +63,7 @@ describe("useProjectMembers", () => {
     it("invites a member and reloads", async () => {
         inviteService.createInvite.mockResolvedValue({ id: 9 });
 
-        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true));
+        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         projectService.getMembers.mockClear();
@@ -76,7 +81,7 @@ describe("useProjectMembers", () => {
     it("returns false when inviting fails", async () => {
         inviteService.createInvite.mockRejectedValue(new Error("failed"));
 
-        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true));
+        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         let success;
@@ -90,7 +95,7 @@ describe("useProjectMembers", () => {
     it("changes a member role locally", async () => {
         projectService.changeMemberRole.mockResolvedValue({});
 
-        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true));
+        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         await act(async () => {
@@ -104,7 +109,7 @@ describe("useProjectMembers", () => {
     it("removes a member locally", async () => {
         projectService.removeMember.mockResolvedValue({});
 
-        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true));
+        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         let success;
@@ -119,7 +124,7 @@ describe("useProjectMembers", () => {
     });
 
     it("does not remove an empty member", async () => {
-        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true));
+        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         let success;
@@ -134,7 +139,7 @@ describe("useProjectMembers", () => {
     it("leaves the project", async () => {
         projectService.leaveProject.mockResolvedValue({});
 
-        const { result } = renderHook(() => useProjectMembers({ id: 10 }, false));
+        const { result } = renderHook(() => useProjectMembers({ id: 10 }, false), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         let success;
@@ -150,7 +155,7 @@ describe("useProjectMembers", () => {
     it("cancels an invitation locally", async () => {
         inviteService.cancelInvite.mockResolvedValue({});
 
-        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true));
+        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true), { wrapper });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         await act(async () => {

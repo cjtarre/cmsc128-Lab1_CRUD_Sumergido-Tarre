@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useCreateProject } from "../../src/features/projects/hooks/useCreateProject";
 import { useProjectMembersList } from "../../src/features/projects/hooks/useProjectMembersList";
 import { projectService } from "../../src/features/projects/services/projectService";
+import { createQueryWrapper } from "../queryTestUtils";
 
 vi.mock("../../src/features/projects/services/projectService", () => ({
     projectService: { getMembers: vi.fn() },
@@ -51,12 +52,16 @@ describe("useCreateProject", () => {
 });
 
 describe("useProjectMembersList", () => {
-    beforeEach(() => vi.clearAllMocks());
+    let wrapper = createQueryWrapper();
+    beforeEach(() => {
+        wrapper = createQueryWrapper();
+        vi.clearAllMocks();
+    });
 
     it("loads project members", async () => {
         projectService.getMembers.mockResolvedValue([{ user_id: 1 }]);
 
-        const { result } = renderHook(() => useProjectMembersList(5));
+        const { result } = renderHook(() => useProjectMembersList(5), { wrapper });
 
         await waitFor(() => expect(result.current).toEqual([{ user_id: 1 }]));
         expect(projectService.getMembers).toHaveBeenCalledWith(5);
@@ -65,7 +70,7 @@ describe("useProjectMembersList", () => {
     it("falls back to an empty list when loading fails", async () => {
         projectService.getMembers.mockRejectedValue(new Error("failed"));
 
-        const { result } = renderHook(() => useProjectMembersList(5));
+        const { result } = renderHook(() => useProjectMembersList(5), { wrapper });
 
         await waitFor(() => expect(projectService.getMembers).toHaveBeenCalled());
         expect(result.current).toEqual([]);
