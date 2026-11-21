@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { taskService } from "../services/taskService";
 import { tagService } from "../services/tagService";
 import { convertApiTask } from "../utils/convertApiTask";
+import { queryKeys } from "../../../shared/utils/queryKeys";
 
 const TaskContext = createContext(null);
 
@@ -52,35 +54,32 @@ export function TaskProvider({ children }) {
     const [searchTerm, setSearchTerm] = useState("");
 
     const [availableTags, setAvailableTags] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    const loadInitialData = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            const [fetchedTasks, fetchedTags] = await Promise.all([
-                taskService.getTasks(null, "default"),
-                tagService.getTags({ defaultProject: true }),
-            ]);
-
-            const convertedTasks = fetchedTasks.map(convertTask);
-
-            setTasks(convertedTasks);
-            setAvailableTags(fetchedTags);
-        } catch (error) {
-            console.error("Error loading tasks:", error);
-            setError("Unable to load tasks.");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const queryClient = useQueryClient();
+    const tasksQuery = useQuery({
+        queryKey: queryKeys.defaultTasks,
+        queryFn: () => taskService.getTasks(null, "default"),
+    });
+    const tagsQuery = useQuery({
+        queryKey: queryKeys.tags("default"),
+        queryFn: () => tagService.getTags({ defaultProject: true }),
+    });
+    const loading = tasksQuery.isLoading || tagsQuery.isLoading;
+    const error = tasksQuery.isError || tagsQuery.isError ? "Unable to load tasks." : null;
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        loadInitialData();
-    }, []);
+        if (tasksQuery.data) setTasks(tasksQuery.data.map(convertTask));
+    }, [tasksQuery.data]);
+
+    useEffect(() => {
+        if (tagsQuery.data) setAvailableTags(tagsQuery.data);
+    }, [tagsQuery.data]);
+
+    const loadInitialData = async () => {
+        await Promise.all([
+            queryClient.invalidateQueries({ queryKey: queryKeys.defaultTasks }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.tags("default") }),
+        ]);
+    };
 
     return (
         <TaskContext.Provider
