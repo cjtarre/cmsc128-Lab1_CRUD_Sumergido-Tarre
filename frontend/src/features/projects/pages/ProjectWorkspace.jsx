@@ -1,10 +1,11 @@
-import { Settings } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
+import { motion, useReducedMotion } from "motion/react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import AccessDenied from "../../../pages/AccessDenied";
 import ProjectUnavailable from "../../../pages/ProjectUnavailable";
 import ProjectWorkspaceContent from "../components/workspace/ProjectWorkspaceContent";
-import { PROJECT_ROLE, PROJECT_TABS } from "../constants/projectOptions";
+import { PROJECT_TABS } from "../constants/projectOptions";
 import { useProjectWorkspace } from "../hooks/useProjectWorkspace";
 import { useProjectWorkspaceTab } from "../hooks/useProjectWorkspaceTab";
 import { canEditProject } from "../utils/projectUtils";
@@ -12,13 +13,36 @@ import { canEditProject } from "../utils/projectUtils";
 function ProjectWorkspace() {
     const { projectId } = useParams();
     const { activeTab, setActiveTab } = useProjectWorkspaceTab();
+    const reduceMotion = useReducedMotion();
     const {
         project, tasks, setTasks, activities, loading, refreshingActivity,
         error, projectUnavailable, accessDenied, loadActivities,
     } = useProjectWorkspace(projectId);
 
     const canEdit = canEditProject(project?.role);
-    const isOwner = project?.role === PROJECT_ROLE.OWNER;
+    const activeTabIndex = PROJECT_TABS.findIndex(({ id }) => id === activeTab);
+    const tabRefs = useRef([]);
+    const tabIndicatorRef = useRef(null);
+    const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 });
+
+    useLayoutEffect(() => {
+        const updateIndicator = () => {
+            const nav = tabIndicatorRef.current?.parentElement;
+            const activeButton = tabRefs.current[activeTabIndex];
+            if (!nav || !activeButton) return;
+
+            const navRect = nav.getBoundingClientRect();
+            const buttonRect = activeButton.getBoundingClientRect();
+            setTabIndicator({
+                left: buttonRect.left - navRect.left,
+                width: buttonRect.width,
+            });
+        };
+
+        updateIndicator();
+        window.addEventListener("resize", updateIndicator);
+        return () => window.removeEventListener("resize", updateIndicator);
+    }, [activeTabIndex, activeTab]);
 
     // Workspace loading state.
     if (loading) {
@@ -98,36 +122,22 @@ function ProjectWorkspace() {
                         </div>
                     </div>
 
-                    {/* Desktop owner settings. */}
-                    {isOwner && (
-                        <Link
-                            to={`/projects/${projectId}/settings`}
-                            aria-label="Project settings"
-                            title="Project settings"
-                            className="group mt-1 hidden h-7 shrink-0 items-center gap-1.5 text-slate-400 transition hover:text-green-600 dark:text-slate-500 dark:hover:text-green-400 sm:inline-flex"
-                            style={{ fontSize: "11px", lineHeight: "1" }}
-                        >
-                            <Settings
-                                size={13}
-                                className="transition-transform duration-300 group-hover:rotate-90"
-                            />
-                            <span>Settings</span>
-                        </Link>
-                    )}
                 </div>
             </header>
 
             {/* Workspace views with owner settings included on mobile. */}
             <nav
-                className="mt-5 flex border-b border-slate-200/60 px-1 dark:border-white/10"
+                ref={tabIndicatorRef}
+                className="relative mt-5 flex border-b border-slate-200/60 px-1 dark:border-white/10"
                 aria-label="Project views"
             >
-                {PROJECT_TABS.map(({ id, label, icon: Icon }) => {
+                {PROJECT_TABS.map(({ id, label, icon: Icon }, index) => {
                     const selected = activeTab === id;
 
                     return (
                         <button
                             key={id}
+                            ref={(element) => { tabRefs.current[index] = element; }}
                             type="button"
                             onClick={() => setActiveTab(id)}
                             aria-label={label}
@@ -155,23 +165,27 @@ function ProjectWorkspace() {
                                 {label}
                             </span>
 
-                            {selected && (
-                                <span className="absolute inset-x-1 bottom-[-1px] h-0.5 rounded-full bg-green-500 sm:inset-x-2" />
-                            )}
                         </button>
                     );
                 })}
 
-                {isOwner && (
-                    <Link
-                        to={`/projects/${projectId}/settings`}
-                        aria-label="Settings"
-                        title="Settings"
-                        className="relative flex min-w-0 flex-1 items-center justify-center px-1.5 py-2 text-slate-400 transition hover:text-green-600 dark:text-slate-500 dark:hover:text-green-400 sm:hidden"
-                    >
-                        <Settings size={13} className="shrink-0" strokeWidth={1.7} />
-                    </Link>
+                {activeTabIndex >= 0 && (
+                    <motion.span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute bottom-[-1px] left-0 h-0.5 rounded-full bg-green-500"
+                        initial={false}
+                        animate={{
+                            left: tabIndicator.left,
+                            width: tabIndicator.width,
+                        }}
+                        transition={
+                            reduceMotion
+                                ? { duration: 0 }
+                                : { duration: 0.18, ease: [0.22, 1, 0.36, 1] }
+                        }
+                    />
                 )}
+
             </nav>
 
             {/* Active project workspace view. */}

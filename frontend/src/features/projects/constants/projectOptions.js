@@ -2,7 +2,7 @@ import {
     AlertTriangle, BookOpen, Briefcase, CalendarDays, ClipboardList, Clock3,
     Code2, Crown, Database, Eye, Flag, Folder, GraduationCap, Heart, Home,
     LayoutDashboard, Lightbulb, ListChecks, ListTodo, Palette, PanelsTopLeft,
-    Pencil, Plane, Rocket, Star, Target, Terminal, Users,
+    Pencil, Plane, Rocket, Settings, Star, Target, Terminal, Users,
 } from "lucide-react";
 
 export const PROJECT_ROLE = {
@@ -41,7 +41,7 @@ export const PROJECT_TABS = [
     { id: "list", label: "List", icon: ListTodo },
     { id: "board", label: "Board", icon: PanelsTopLeft },
     { id: "calendar", label: "Calendar", icon: CalendarDays },
-    { id: "members", label: "Members", icon: Users },
+    { id: "settings", label: "Settings", icon: Settings },
 ];
 
 // Valid workspace view IDs used for URL validation.
