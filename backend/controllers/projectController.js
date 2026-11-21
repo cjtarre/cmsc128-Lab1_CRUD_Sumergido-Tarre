@@ -7,6 +7,25 @@ const PROJECT_COLUMNS = "id, project_name, owner, is_default, icon, accent, crea
 // Role-checking is done by requireProjectRole in projectRoutes.js, which sets
 // req.projectId and req.projectRole. Handlers below can rely on both.
 
+const getProject = async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from("projects")
+            .select(PROJECT_COLUMNS)
+            .eq("id", req.projectId)
+            .is("deleted_at", null)
+            .maybeSingle();
+
+        if (error) throw error;
+        if (!data) return res.status(404).json({ error: "Project not found" });
+
+        res.status(200).json({ ...data, role: req.projectRole });
+    } catch (error) {
+        console.error("Error fetching project:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
 // retrieve all projects the authenticated user is a MEMBER of (not just owns),
 // each with the user's role. Default project first, then oldest first.
 // GET /api/projects?deleted=true returns the user's soft-deleted projects instead
@@ -353,6 +372,7 @@ const getProjectActivity = async (req, res) => {
 };
 
 module.exports = {
+    getProject,
     getAllProjects,
     createProject,
     deleteProject,
