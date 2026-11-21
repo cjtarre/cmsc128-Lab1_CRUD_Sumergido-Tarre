@@ -15,7 +15,7 @@ function MobileNavbar() {
     const { unreadCount } = useNotifications();
 
     return (
-        <nav className="sticky bottom-3 left-3 right-3 z-40 rounded-2xl border border-white/70 bg-white/75 px-2 py-1.5 shadow-[0_10px_35px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/75 dark:shadow-black/30 xl:hidden">
+        <nav className="sticky bottom-3 left-3 right-3 z-10 rounded-2xl border border-white/70 bg-white/75 px-2 py-1.5 shadow-[0_10px_35px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/75 dark:shadow-black/30 xl:hidden">
             <div className="mx-auto flex max-w-md items-center justify-around gap-1">
                 {links.map(({ to, label, icon: Icon }) => (
                     <NavLink

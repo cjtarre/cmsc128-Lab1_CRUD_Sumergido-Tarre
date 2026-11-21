@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { PROJECT_ICON_OPTIONS, PROJECT_ACCENT_OPTIONS } from "../../constants/projectOptions";
 
@@ -40,9 +41,12 @@ function EditProject({ isOpen, project, onClose, onSubmit }) {
         }
     };
 
-    return (
+    return createPortal(
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/30 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-950/30 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-project-heading"
             onMouseDown={(event) => {
                 if (event.target === event.currentTarget && !saving) onClose();
             }}
@@ -54,7 +58,7 @@ function EditProject({ isOpen, project, onClose, onSubmit }) {
             >
                 <div className="flex items-start justify-between gap-4">
                     <div>
-                        <h2 className="text-base font-semibold text-slate-800 dark:text-white">
+                        <h2 id="edit-project-heading" className="text-base font-semibold text-slate-800 dark:text-white">
                             Edit Project
                         </h2>
                         <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
@@ -168,7 +172,8 @@ function EditProject({ isOpen, project, onClose, onSubmit }) {
                     </button>
                 </div>
             </form>
-        </div>
+        </div>,
+        document.body
     );
 }
 

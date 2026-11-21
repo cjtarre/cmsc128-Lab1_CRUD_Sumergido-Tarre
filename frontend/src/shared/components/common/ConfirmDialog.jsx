@@ -23,7 +23,7 @@ function ConfirmDialog({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-900/25 px-4 py-4 backdrop-blur-sm dark:bg-black/55 sm:py-0"
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-900/25 px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm dark:bg-black/55 sm:py-0"
             onClick={() => !loading && onCancel?.()}
         >
             <div

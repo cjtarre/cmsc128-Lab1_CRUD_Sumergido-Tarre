@@ -67,7 +67,7 @@ function MainLayout() {
                 </main>
             </div>
 
-            <div id="mobile-navbar" className="relative z-30 xl:hidden">
+            <div id="mobile-navbar" className="relative z-10 xl:hidden">
                 <MobileNavbar />
             </div>
 

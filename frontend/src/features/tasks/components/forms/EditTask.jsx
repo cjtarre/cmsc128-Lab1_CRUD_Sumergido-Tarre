@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useBodyScrollLock } from "../../../../shared/hooks/useBodyScrollLock";
 import { useIsMobile } from "../../../../shared/hooks/useIsMobile";
 import { ChevronDown, X } from "lucide-react";
@@ -91,8 +92,8 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
         </div>
     );
 
-    return (
-        <div className="fixed inset-x-0 bottom-[68px] top-[60px] z-[9999] flex items-start justify-center overflow-hidden bg-slate-900/20 px-2 py-2 backdrop-blur-sm dark:bg-black/55 sm:inset-0 sm:overflow-y-auto sm:px-4 sm:pb-4 sm:pt-20"
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/20 px-2 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-16 backdrop-blur-sm dark:bg-black/55 sm:px-4 sm:pb-4 sm:pt-20"
             role="dialog" aria-modal="true" aria-labelledby="edit-task-heading">
             <div className="mx-auto flex max-h-full w-full max-w-[560px] flex-col overflow-hidden rounded-2xl border border-white/70 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/40 sm:max-h-[calc(100dvh-6.5rem)]">
 
@@ -206,7 +207,8 @@ function EditTask({ task, isOpen, onClose, onSave, collaborative = false, member
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 
