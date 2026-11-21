@@ -217,7 +217,7 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
                         </button>
 
                         <button type="submit" disabled={submitting}
-                            className="h-7 rounded-lg bg-green-500 px-3 font-semibold text-white shadow-[0_6px_18px_rgba(34,197,94,0.18)] transition hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300/60 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-green-400 sm:h-auto sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm"
+                            className="h-7 rounded-lg bg-green-600 px-3 font-semibold text-white shadow-[0_6px_18px_rgba(22,163,74,0.18)] transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300/60 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-green-700 dark:text-white dark:hover:bg-green-600 sm:h-auto sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm"
                             style={isMobile ? { fontSize: "10px", lineHeight: "1" } : undefined}>
                             {submitting ? "Adding..." : "Add Task"}
                         </button>

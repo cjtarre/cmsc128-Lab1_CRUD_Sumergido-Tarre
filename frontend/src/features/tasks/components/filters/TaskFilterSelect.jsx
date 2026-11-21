@@ -74,7 +74,7 @@ function TaskFilterSelect({ value, onChange, children, className = "" }) {
     };
 
     return (
-        <div ref={wrapperRef} className={`relative min-w-0 shrink-0 ${open ? "z-[90]" : ""} ${className}`}>
+        <div ref={wrapperRef} className={`relative min-w-0 shrink-0 ${open ? "z-[999]" : ""} ${className}`}>
             <button ref={triggerRef} type="button" aria-label={`Filter by ${options[0]?.label || "value"}`}
                 aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listId : undefined}
                 onClick={toggle}
@@ -86,7 +86,7 @@ function TaskFilterSelect({ value, onChange, children, className = "" }) {
             {open && (
                 <div id={listId} role="listbox" aria-label={`Choose ${options[0]?.label || "filter"}`}
                     onKeyDown={onOptionsKeyDown}
-                    className={`absolute right-0 z-[100] max-h-56 w-max min-w-full max-w-[min(240px,85vw)] overflow-y-auto overscroll-contain rounded-xl border border-white/80 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/30 ${above ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}>
+                    className={`absolute right-0 z-[9999] max-h-56 w-max min-w-full max-w-[min(240px,85vw)] overflow-y-auto overscroll-contain rounded-xl border border-white/80 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/30 ${above ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}>
                     {options.map((option, index) => {
                         const active = option.value === currentValue;
                         return (

@@ -49,11 +49,16 @@ const colorChannels = (hex) => {
 
 const toHex = (rgb) => `#${rgb.map((value) => value.toString(16).padStart(2, "0")).join("")}`;
 const blendWithWhite = (rgb, weight) => rgb.map((value) => Math.round(value * weight + 255 * (1 - weight)));
+const blendWith = (rgb, target, weight) => rgb.map((value, index) => Math.round(value * (1 - weight) + target[index] * weight));
 const luminance = (rgb) => rgb.reduce((sum, channel, index) => {
     const value = channel / 255;
     const linear = value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
     return sum + linear * [0.2126, 0.7152, 0.0722][index];
 }, 0);
+const contrastRatio = (foreground, background) => {
+    const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+    return (values[0] + 0.05) / (values[1] + 0.05);
+};
 
 // Swatches need their own contrast treatment: white/pale colors must retain a
 // visible outline, and their selection checkmark must never blend into the fill.
@@ -70,6 +75,32 @@ export const getTagSwatchStyle = (hex) => {
 // Use the saved color for the dot, but darken label text as needed for contrast.
 export const getTagInlineStyle = (tag, selected = false) => {
     const rgb = colorChannels(getTagColor(tag));
+    const isDarkMode = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+
+    if (isDarkMode) {
+        if (luminance(rgb) < 0.025) {
+            return {
+                borderColor: selected ? "#64748b" : "#475569",
+                backgroundColor: selected ? "#1c2535" : "#111827",
+                color: "#f8fafc",
+            };
+        }
+
+        const darkBackground = blendWith(rgb, [15, 23, 42], selected ? 0.62 : 0.68);
+        let readable = rgb;
+        const minimumContrast = 4.5;
+
+        while (contrastRatio(readable, darkBackground) < minimumContrast) {
+            readable = readable.map((channel) => Math.round(channel + (255 - channel) * 0.08));
+        }
+
+        return {
+            borderColor: selected ? toHex(blendWith(rgb, [148, 163, 184], 0.48)) : toHex(blendWith(rgb, [71, 85, 105], 0.72)),
+            backgroundColor: toHex(darkBackground),
+            color: toHex(readable),
+        };
+    }
+
     // Very dark custom colors should look dark, not wash out into a gray pill.
     // Keep the original saved HEX value for the dot and for persistence.
     if (luminance(rgb) < 0.025) {

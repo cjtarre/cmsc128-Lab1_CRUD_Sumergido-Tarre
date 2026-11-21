@@ -53,7 +53,7 @@ function TaskFilterPanel({ priorityFilter, onPriorityFilterChange, statusFilter,
     const groups = { availableTags, priorityFilter, statusFilter, tagFilter, onPriorityFilterChange, onStatusFilterChange, onTagFilterChange };
 
     return (
-        <div className={`relative flex h-[48px] min-w-0 items-center gap-1.5 rounded-2xl border border-white/70 bg-white/55 p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/55 dark:shadow-black/20 ${filterOpen ? "z-[100]" : "z-10"}`}>
+        <div className={`relative flex h-[48px] min-w-0 items-center gap-1.5 rounded-2xl border border-white/70 bg-white/55 p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/55 dark:shadow-black/20 ${filterOpen ? "z-[300]" : "z-10"}`}>
             <div className="relative min-w-0 flex-1">
                 <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                 <input type="search" value={searchTerm || ""} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search tasks..." aria-label="Search tasks" className="h-9 w-full rounded-xl border border-transparent bg-white/45 py-1.5 pl-9 pr-3 text-[11px] text-slate-700 outline-none transition placeholder:text-slate-400 hover:bg-white/65 focus:border-green-200 focus:bg-white/80 focus:ring-2 focus:ring-green-100/50 dark:bg-white/[0.035] dark:text-slate-200 dark:placeholder:text-slate-500 dark:hover:bg-white/[0.055] dark:focus:border-green-800 dark:focus:bg-white/[0.06] dark:focus:ring-green-900/30"
@@ -63,7 +63,7 @@ function TaskFilterPanel({ priorityFilter, onPriorityFilterChange, statusFilter,
             <button type="button" onClick={() => setFilterOpen((prev) => !prev)} aria-expanded={filterOpen} aria-label="Filter tasks" className={`relative flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-2.5 text-[10px] font-medium transition ${filterOpen || filterCount > 0 ? "bg-green-50/90 text-green-600 dark:bg-green-950/50 dark:text-green-400" : "bg-white/45 text-slate-500 hover:bg-white/75 dark:bg-white/[0.035] dark:text-slate-400 dark:hover:bg-white/[0.06]"}`}
                 style={{ appearance: "none", fontFamily: "inherit", fontSize: "10px", lineHeight: "1.2" }}>
                 <SlidersHorizontal size={13} />
-                <span className="hidden 2xl:inline">Filters</span>
+                <span>Filters</span>
                 {filterCount > 0 && <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-green-500 px-1 text-[9px] font-semibold text-white">{filterCount}</span>}
             </button>
 

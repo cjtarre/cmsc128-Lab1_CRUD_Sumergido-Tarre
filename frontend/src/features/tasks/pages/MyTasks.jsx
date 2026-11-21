@@ -80,18 +80,19 @@ function MyTasks() {
                     <p className="mt-1 text-xs text-slate-400 dark:text-slate-500 sm:text-sm">Manage and organize your tasks.</p>
                 </div>
 
-                <button type="button" onClick={handlers.handleOpenAddTask} aria-label="Add task" className="group inline-flex h-9 w-9 shrink-0 items-center justify-start overflow-hidden rounded-full bg-green-500 px-2.5 text-white shadow-[0_6px_18px_rgba(34,197,94,0.2)] transition-all duration-200 hover:w-24 hover:bg-green-600 focus:w-24 focus:outline-none focus:ring-2 focus:ring-green-300/60 xl:hidden">
+                <button type="button" onClick={handlers.handleOpenAddTask} aria-label="Add task" className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(22,163,74,0.22)] transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300/60 dark:bg-green-700 dark:text-white dark:hover:bg-green-600 xl:hidden">
                     <Plus size={17} className="shrink-0" />
-                    <span className="ml-1.5 whitespace-nowrap text-xs font-medium opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100">Add Task</span>
+                    <span className="whitespace-nowrap text-xs font-medium">Add Task</span>
                 </button>
 
-                <button type="button" onClick={handlers.handleOpenAddTask} className="hidden shrink-0 items-center gap-2 rounded-xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(34,197,94,0.22)] transition-all hover:-translate-y-0.5 hover:bg-green-600 hover:shadow-[0_10px_28px_rgba(34,197,94,0.28)] focus:outline-none focus:ring-2 focus:ring-green-300/60 dark:hover:bg-green-400 xl:inline-flex">
+                <button type="button" onClick={handlers.handleOpenAddTask} className="hidden shrink-0 items-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(22,163,74,0.22)] transition-all hover:-translate-y-0.5 hover:bg-green-700 hover:shadow-[0_10px_28px_rgba(22,163,74,0.28)] focus:outline-none focus:ring-2 focus:ring-green-300/60 dark:bg-green-700 dark:text-white dark:hover:bg-green-600 xl:inline-flex">
                     <Plus size={17} />
                     Add Task
                 </button>
             </header>
 
-            <div className="grid min-w-0 items-start gap-4 md:grid-cols-[minmax(0,7fr)_minmax(260px,3fr)]">                <div className="min-w-0 rounded-2xl border border-white/70 bg-white/45 p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/45 dark:shadow-black/20">
+            <div className="relative z-[150] grid min-w-0 items-start gap-4 md:grid-cols-[minmax(0,7fr)_minmax(260px,3fr)]">
+                <div className="relative z-[160] min-w-0 rounded-2xl border border-white/70 bg-white/45 p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/45 dark:shadow-black/20">
                     <TaskFilter value={filter} onChange={setFilter} />
                 </div>
 

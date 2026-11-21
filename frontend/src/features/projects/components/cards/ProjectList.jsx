@@ -34,9 +34,12 @@ function ProjectList({ projectId, tasks, setTasks, canEdit }) {
     return (
         <>
             <section className="rounded-3xl border border-white/55 bg-white/20 p-4 shadow-[0_10px_35px_rgba(15,23,42,0.025)] backdrop-blur-xl dark:border-white/[0.07] dark:bg-slate-900/20 sm:p-5">
-                <div>
-                    <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200">List</h2>
-                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Manage and review all tasks shared in this project.</p>
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200">List</h2>
+                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Manage and review all tasks shared in this project.</p>
+                    </div>
+                    {canEdit && <button type="button" onClick={handlers.handleOpenAddTask} className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3 font-semibold text-white shadow-[0_5px_15px_rgba(22,163,74,0.18)] transition hover:bg-green-700 dark:bg-green-700 dark:text-white dark:hover:bg-green-600 lg:hidden" style={{ fontSize: "12px", lineHeight: "1" }}><Plus size={14} /> Add Task</button>}
                 </div>
 
                 {/* Mobile search + filters */}
@@ -50,8 +53,9 @@ function ProjectList({ projectId, tasks, setTasks, canEdit }) {
                     </div>
 
                     <button type="button" onClick={() => setIsMobileFiltersOpen((current) => !current)} aria-label="Task filters" aria-expanded={isMobileFiltersOpen}
-                        className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition ${isMobileFiltersOpen || activeFilterCount ? "border-green-200 bg-green-50/70 text-green-600 dark:border-green-900/50 dark:bg-green-950/30 dark:text-green-400" : "border-white/80 bg-white/55 text-slate-400 hover:bg-white/75 dark:border-white/10 dark:bg-white/[0.035] dark:text-slate-500 dark:hover:bg-white/[0.06]"}`}>
+                        className={`relative flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border px-2.5 text-xs font-medium transition ${isMobileFiltersOpen || activeFilterCount ? "border-green-200 bg-green-50/70 text-green-600 dark:border-green-900/50 dark:bg-green-950/30 dark:text-green-400" : "border-white/80 bg-white/55 text-slate-500 hover:bg-white/75 dark:border-white/10 dark:bg-white/[0.035] dark:text-slate-400 dark:hover:bg-white/[0.06]"}`}>
                         <SlidersHorizontal size={14} />
+                        <span>Filters</span>
                         {activeFilterCount > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-green-500 px-1 text-[8px] font-bold text-white">{activeFilterCount}</span>}
                     </button>
 
@@ -64,7 +68,7 @@ function ProjectList({ projectId, tasks, setTasks, canEdit }) {
                 </div>
 
                 {/* Desktop toolbar */}
-                <div className="mt-4 hidden gap-2.5 lg:flex lg:items-center lg:justify-between">
+                <div className="relative z-40 mt-4 hidden gap-2.5 lg:flex lg:items-center lg:justify-between">
                     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                         <div className="relative min-w-[200px] flex-1 lg:max-w-[350px]">
                             <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -79,11 +83,8 @@ function ProjectList({ projectId, tasks, setTasks, canEdit }) {
                         {hasFilters && <button type="button" onClick={clearFilters} className="h-9 rounded-xl px-2.5 font-medium text-slate-400 transition hover:bg-white/50 hover:text-slate-600 dark:hover:bg-white/[0.04] dark:hover:text-slate-300" style={{ fontSize: "11px", lineHeight: "1" }}>Clear</button>}
                     </div>
 
-                    {canEdit && <button type="button" onClick={handlers.handleOpenAddTask} className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-green-500 px-3.5 font-semibold text-white shadow-[0_5px_15px_rgba(34,197,94,0.16)] transition hover:bg-green-600" style={{ fontSize: "12px", lineHeight: "1" }}><Plus size={14} /> Add Task</button>}
+                    {canEdit && <button type="button" onClick={handlers.handleOpenAddTask} className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3.5 font-semibold text-white shadow-[0_5px_15px_rgba(22,163,74,0.18)] transition hover:bg-green-700 dark:bg-green-700 dark:text-white dark:hover:bg-green-600" style={{ fontSize: "12px", lineHeight: "1" }}><Plus size={14} /> Add Task</button>}
                 </div>
-
-                {/* Mobile Add Task */}
-                {canEdit && <button type="button" onClick={handlers.handleOpenAddTask} className="mt-2.5 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-green-500 px-3.5 font-semibold text-white shadow-[0_5px_15px_rgba(34,197,94,0.16)] transition hover:bg-green-600 lg:hidden" style={{ fontSize: "12px", lineHeight: "1" }}><Plus size={14} /> Add Task</button>}
 
                 {/* Tasks / empty state */}
                 <div className="mt-3">

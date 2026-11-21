@@ -90,7 +90,7 @@ function TagPicker({ selectedIds = EMPTY_SELECTION, onToggle, projectId = null, 
                                     placeholder="e.g. Research" onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); handleSave(); } }}
                                     className="h-9 min-w-0 flex-1 rounded-lg border border-white/80 bg-white/70 px-2.5 text-xs text-slate-700 outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100/60 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-200" />
                                 <button type="button" disabled={!tagName.trim() || saving} onClick={handleSave}
-                                    className="h-9 shrink-0 rounded-lg bg-green-500 px-3 text-xs font-semibold text-white disabled:opacity-50">
+                                    className="h-9 shrink-0 rounded-lg bg-green-600 px-3 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50 dark:bg-green-700 dark:text-white dark:hover:bg-green-600">
                                     {saving ? "Saving..." : editingId ? "Save" : "Create"}
                                 </button>
                             </div>
