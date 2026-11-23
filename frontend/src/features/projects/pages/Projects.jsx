@@ -165,11 +165,11 @@ function Projects() {
                     </div>
 
                     {loading ? (
-                        <div className="flex min-h-28 w-full max-w-[380px] items-center justify-center rounded-2xl border border-white/60 bg-white/30 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.02] sm:min-h-40">
+                        <div className="flex min-h-28 w-full items-center justify-center rounded-2xl border border-white/60 bg-white/30 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.02] sm:min-h-40">
                             <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-green-500 dark:border-slate-700 dark:border-t-green-400" />
                         </div>
                     ) : error ? (
-                        <div className="w-full max-w-[380px] rounded-2xl border border-red-100 bg-red-50/60 p-4 text-center dark:border-red-950 dark:bg-red-950/20 sm:p-6">
+                        <div className="w-full rounded-2xl border border-red-100 bg-red-50/60 p-4 text-center dark:border-red-950 dark:bg-red-950/20 sm:p-6">
                             <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
                             <button
                                 type="button"
@@ -187,7 +187,7 @@ function Projects() {
                             searching={Boolean(searchTerm.trim())}
                         />
                     ) : searchTerm.trim() || membershipFilter !== "all" ? (
-                        <div className="flex min-h-28 w-full max-w-[380px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 bg-white/20 px-6 text-center backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.02] sm:min-h-40">
+                        <div className="flex min-h-28 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 bg-white/20 px-6 text-center backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.02] sm:min-h-40">
                             <Search size={18} className="text-slate-300 dark:text-slate-600 sm:h-5 sm:w-5" />
                             <h3 className="mt-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
                                 No matching projects
@@ -207,7 +207,7 @@ function Projects() {
                         <button
                             type="button"
                             onClick={() => setIsCreateOpen(true)}
-                            className="group flex min-h-32 w-full max-w-[380px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/90 bg-white/20 px-5 text-center backdrop-blur-xl transition hover:border-green-200 hover:bg-green-50/30 dark:border-white/10 dark:bg-white/[0.02] dark:hover:border-green-900/60 dark:hover:bg-green-950/10 sm:min-h-44 sm:px-6"
+                            className="group flex min-h-32 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/90 bg-white/20 px-5 text-center backdrop-blur-xl transition hover:border-green-200 hover:bg-green-50/30 dark:border-white/10 dark:bg-white/[0.02] dark:hover:border-green-900/60 dark:hover:bg-green-950/10 sm:min-h-44 sm:px-6"
                         >
                             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-50 text-green-500 dark:bg-green-950/40 dark:text-green-400 sm:h-11 sm:w-11">
                                 <FolderKanban size={18} className="sm:h-5 sm:w-5" />

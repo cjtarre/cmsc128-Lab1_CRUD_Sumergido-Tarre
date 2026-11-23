@@ -19,6 +19,15 @@ describe("useMobileTaskFilters", () => {
         expect(result.current.isOpen).toBe(false);
     });
 
+    it("stays open while a nested filter dropdown is opened", () => {
+        const { result } = renderHook(() => useMobileTaskFilters());
+
+        act(() => result.current.setIsOpen(true));
+        act(() => window.dispatchEvent(new CustomEvent("takda:dropdown-open", { detail: { id: "nested-filter" } })));
+
+        expect(result.current.isOpen).toBe(true);
+    });
+
     it("closes on Escape", () => {
         const { result } = renderHook(() => useMobileTaskFilters());
 

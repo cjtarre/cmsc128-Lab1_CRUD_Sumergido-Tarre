@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { PROJECT_ICON_OPTIONS, PROJECT_ACCENT_OPTIONS } from "../../constants/projectOptions";
 
@@ -40,21 +41,32 @@ function EditProject({ isOpen, project, onClose, onSubmit }) {
         }
     };
 
-    return (
+    const hasInput = (
+        projectName !== (project.project_name || "")
+        || icon !== (project.icon || "folder")
+        || accent !== (project.accent || "green")
+    );
+
+    const handleOutsideClick = (event) => {
+        if (event.target === event.currentTarget && !saving && !hasInput) onClose();
+    };
+
+    return createPortal(
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/30 p-4 backdrop-blur-sm"
-            onMouseDown={(event) => {
-                if (event.target === event.currentTarget && !saving) onClose();
-            }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-950/30 p-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-project-heading"
+            onMouseDown={handleOutsideClick}
         >
             {/* Internal scrolling keeps the centered dialog usable on short screens. */}
             <form
                 onSubmit={handleSubmit}
-                className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-white/70 bg-white/90 p-5 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/95"
+                className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-white/70 bg-white/90 p-5 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/95 sm:max-h-[calc(100dvh-3rem)] sm:-translate-y-3"
             >
                 <div className="flex items-start justify-between gap-4">
                     <div>
-                        <h2 className="text-base font-semibold text-slate-800 dark:text-white">
+                        <h2 id="edit-project-heading" className="text-base font-semibold text-slate-800 dark:text-white">
                             Edit Project
                         </h2>
                         <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
@@ -168,7 +180,8 @@ function EditProject({ isOpen, project, onClose, onSubmit }) {
                     </button>
                 </div>
             </form>
-        </div>
+        </div>,
+        document.body
     );
 }
 

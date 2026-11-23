@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import TaskRow from "../../src/features/tasks/components/table/TaskRow";
@@ -66,6 +66,29 @@ describe("TaskRow notification highlight", () => {
 
         expect(container.firstChild.className).not.toContain("bg-green-50/80");
     });
+
+    it.each([false, true])(
+        "selects a status by pointer in %s task rows without closing before click",
+        (collaborative) => {
+            const onStatusChange = vi.fn();
+            render(<TaskRow {...props} collaborative={collaborative} onStatusChange={onStatusChange} />);
+
+            fireEvent.click(screen.getByRole("button", { name: "Change status for Target task" }));
+
+            // Only one portal should exist, regardless of desktop/mobile markup.
+            const menus = screen.getAllByRole("listbox", { name: "Status for Target task" });
+            expect(menus).toHaveLength(1);
+
+            const option = within(menus[0]).getByRole("option", { name: "In Progress" });
+            fireEvent.pointerDown(option);
+            fireEvent.mouseDown(option);
+            fireEvent.click(option);
+
+            expect(onStatusChange).toHaveBeenCalledOnce();
+            expect(onStatusChange).toHaveBeenCalledWith(STATUS.IN_PROGRESS);
+            expect(screen.queryByRole("listbox", { name: "Status for Target task" })).toBeNull();
+        }
+    );
 
     it("still renders the targeted task normally", () => {
         render(<TaskRow {...props} highlighted />);

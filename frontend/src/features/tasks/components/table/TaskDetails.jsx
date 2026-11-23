@@ -1,5 +1,6 @@
 import { CalendarDays, UserRound, X, Pencil, Trash2 } from "lucide-react";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 import taskStyles, { getTagInlineStyle } from "../../styles/taskStyles";
 import { STATUS, PRIORITY, priorityLabels, statusLabels } from "../../constants/taskOptions";
@@ -48,9 +49,17 @@ function TaskDetails({ task, onClose, onEdit, onDelete, collaborative = false })
         <span className="mt-1.5 block text-xs text-slate-400 dark:text-slate-500">None</span>
     );
 
-    return (
-        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/20 px-3 pb-4 pt-20 backdrop-blur-sm dark:bg-black/55 sm:px-4 sm:pb-5 sm:pt-20" role="dialog" aria-modal="true" aria-labelledby="task-details-title">
-            <div className="mx-auto w-full max-w-lg overflow-hidden rounded-2xl border border-white/70 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/40">
+    return createPortal(
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-900/20 px-3 py-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm dark:bg-black/55 sm:px-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="task-details-title"
+            onMouseDown={(event) => {
+                if (event.target === event.currentTarget) onClose();
+            }}
+        >
+            <div className="mx-auto max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/70 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/40 sm:max-h-[calc(100dvh-3rem)] sm:-translate-y-3">
 
                 {/* Header */}
                 <div className="flex items-start justify-between border-b border-white/60 bg-white/25 px-5 py-3.5 dark:border-white/10 dark:bg-white/[0.02]">
@@ -163,7 +172,8 @@ function TaskDetails({ task, onClose, onEdit, onDelete, collaborative = false })
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

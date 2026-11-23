@@ -21,7 +21,6 @@ import About from "../pages/About";
 import LandingPage from "../pages/LandingPage";
 import NotFound from "../pages/NotFound";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
-import Settings from "../pages/Settings";
 import PageTransition from "../shared/components/effects/PageTransition";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -44,7 +43,7 @@ function AppRoutes() {
     return (
         <Routes>
             <Route element={<PublicPageLayout />}>
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/" element={isAuthenticated ? <Navigate to="/my-tasks" replace /> : <LandingPage />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/login" element={isAuthenticated ? <Navigate to="/my-tasks" replace /> : <Login />} />
@@ -71,8 +70,9 @@ function AppRoutes() {
                 <Route path="/projects/:projectId/settings" element={<ProjectSettings />} />
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/focus" element={<FocusMode />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
+                <Route path="/account" element={<Profile />} />
+                <Route path="/profile" element={<Navigate to="/account" replace />} />
+                <Route path="/settings" element={<Navigate to="/account" replace />} />
                 <Route path="/notifications" element={<Notifications />} />
             </Route>
         </Routes>

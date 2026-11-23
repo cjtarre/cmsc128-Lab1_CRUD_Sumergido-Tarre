@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { motion, useReducedMotion } from "motion/react";
+import { MailPlus, Trash2 } from "lucide-react";
 
 import { handleOpenNotification } from "../handlers/notificationHandlers";
 import { getNotificationDetails } from "../utils/notificationUtils";
@@ -14,36 +16,64 @@ function NotificationMessage({ details }) {
     return <>There is a new update in one of your projects.</>;
 }
 
-function NotificationItem({ notification, onRead, onClose }) {
+function NotificationItem({ notification, onRead, onUnread, onRemove, onClose }) {
     const navigate = useNavigate();
+    const prefersReducedMotion = useReducedMotion();
     const details = getNotificationDetails(notification);
     const { icon: Icon, projectId, time } = details;
 
     return (
-        <button type="button"
-            onClick={() => handleOpenNotification({ notification, canOpen: details.canOpen, projectId, onRead, onClose, navigate })}
-            className={`flex w-full min-w-0 items-start gap-2.5 px-3 py-3 text-left transition dark:hover:bg-white/[0.03] sm:gap-3 sm:px-5 ${details.canOpen ? "hover:bg-green-50/40" : "cursor-default"} ${notification.read_at ? "" : "bg-green-50/25 dark:bg-green-950/10"}`}>
-            <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${details.iconClass}`}>
-                <Icon size={15} />
-            </div>
-
-            <div className="min-w-0 flex-1">
-                <div className="flex min-w-0 items-start gap-2">
-                    <p className="min-w-0 flex-1 break-words text-xs font-semibold text-slate-700 dark:text-slate-200">{details.title}</p>
-
-                    <div className="flex shrink-0 items-center gap-2">
-                        {time && <span className="whitespace-nowrap text-[10px] font-normal text-slate-400 dark:text-slate-500">{time}</span>}
-                        {!notification.read_at && <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />}
-                    </div>
+        <motion.div
+            animate={{ y: 0, transition: { duration: 0 } }}
+            whileHover={prefersReducedMotion || !details.canOpen ? undefined : {
+                y: -2,
+                transition: { duration: 0.08, ease: "easeOut" },
+            }}
+            className={`group relative flex w-full min-w-0 items-start gap-2.5 px-3 py-3 transition dark:hover:bg-white/[0.03] sm:gap-3 sm:px-5 ${details.canOpen ? "hover:bg-green-50/40" : ""} ${notification.read_at ? "" : "bg-green-50/25 dark:bg-green-950/10"}`}>
+            <button
+                type="button"
+                onClick={() => handleOpenNotification({ notification, canOpen: details.canOpen, projectId, onRead, onClose, navigate })}
+                className={`flex min-w-0 flex-1 items-start gap-2.5 text-left sm:gap-3 ${details.canOpen ? "" : "cursor-default"}`}
+            >
+                <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${details.iconClass}`}>
+                    <Icon size={15} />
                 </div>
 
-                <p className="mt-0.5 break-words text-xs leading-5 text-slate-500 dark:text-slate-400">
-                    <NotificationMessage details={details} />
-                </p>
+                <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-start gap-2">
+                        <p className="min-w-0 flex-1 break-words text-xs font-semibold text-slate-700 dark:text-slate-200">{details.title}</p>
 
-                {details.action && <p className="mt-1 text-[10px] text-green-600 dark:text-green-400">{details.action}</p>}
+                        <div className="flex shrink-0 items-center gap-2">
+                            {time && <span className="whitespace-nowrap text-[10px] font-normal text-slate-400 dark:text-slate-500">{time}</span>}
+                            {!notification.read_at && <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />}
+                        </div>
+                    </div>
+
+                    <p className="mt-0.5 break-words text-xs leading-5 text-slate-500 dark:text-slate-400">
+                        <NotificationMessage details={details} />
+                    </p>
+
+                    {details.action && <p className="mt-1 text-[10px] text-green-600 dark:text-green-400">{details.action}</p>}
+                </div>
+            </button>
+
+            <div className="flex shrink-0 items-center gap-1">
+                {notification.read_at && onUnread && (
+                    <button type="button" onClick={() => onUnread(notification.id)} aria-label="Mark notification as unread"
+                        title="Mark unread"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-green-600 dark:text-slate-500 dark:hover:bg-white/[0.06] dark:hover:text-green-400">
+                        <MailPlus size={14} />
+                    </button>
+                )}
+                {onRemove && (
+                    <button type="button" onClick={() => onRemove(notification.id)} aria-label="Dismiss notification"
+                        title="Dismiss"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500 dark:text-slate-500 dark:hover:bg-red-950/30 dark:hover:text-red-400">
+                        <Trash2 size={14} />
+                    </button>
+                )}
             </div>
-        </button>
+        </motion.div>
     );
 }
 

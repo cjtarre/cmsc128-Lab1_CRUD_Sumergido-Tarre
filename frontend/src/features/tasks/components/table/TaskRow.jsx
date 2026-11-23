@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { createPortal } from "react-dom";
 import { CalendarDays, Check, ChevronDown, UserRound } from "lucide-react";
 
@@ -6,6 +7,7 @@ import ActionButtons from "./ActionButtons";
 import taskStyles, { getTagInlineStyle, getTaskGridColumns } from "../../styles/taskStyles";
 import { formatDueDate } from "../../../../shared/utils/dateUtils";
 import { STATUS, PRIORITY, priorityLabels, STATUS_OPTIONS } from "../../constants/taskOptions";
+import { useExclusiveDropdown } from "../../../../shared/hooks/useExclusiveDropdown";
 
 const statusOptions = STATUS_OPTIONS.map(([value, label]) => ({ value, label: label || value }));
 
@@ -14,7 +16,9 @@ function TaskRow({
     dueDate = "", dueTime = "", tags = [], assignee = null, collaborative = false, highlighted = false,
     onToggleComplete, onStatusChange, onEdit, onDelete, onView,
 }) {
+    const prefersReducedMotion = useReducedMotion();
     const [isStatusOpen, setIsStatusOpen] = useState(false);
+    useExclusiveDropdown(isStatusOpen, setIsStatusOpen);
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
     const [showHighlight, setShowHighlight] = useState(false);
     const rowRef = useRef(null), statusButtonRef = useRef(null), statusMenuRef = useRef(null);
@@ -76,6 +80,9 @@ function TaskRow({
     const statusMenu = isStatusOpen && onStatusChange && createPortal(
         <div
             ref={statusMenuRef}
+            data-dropdown-popup="true"
+            role="listbox"
+            aria-label={`Status for ${title}`}
             style={{ position: "fixed", top: menuPosition.top, left: menuPosition.left }}
             className="z-[9999] min-w-[120px] overflow-hidden rounded-lg border border-white/70 bg-white/95 p-1 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95"
         >
@@ -83,6 +90,8 @@ function TaskRow({
                 <button
                     key={option.value}
                     type="button"
+                    role="option"
+                    aria-selected={option.value === status}
                     onClick={(event) => { event.stopPropagation(); onStatusChange(option.value); setIsStatusOpen(false); }}
                     className={`block w-full rounded-md px-2 py-1.5 text-left font-medium transition ${
                         option.value === status
@@ -99,9 +108,15 @@ function TaskRow({
     );
 
     return (
-        <div
+        <motion.div
             ref={rowRef}
-            className={`group relative grid min-w-0 grid-cols-1 gap-2 px-3 py-3 transition-all duration-300 sm:px-4 sm:py-4 sm:items-center sm:gap-3 ${gridColumns} ${
+            animate={{ y: 0, transition: { duration: 0 } }}
+            whileHover={prefersReducedMotion ? undefined : {
+                y: -2,
+                transition: { duration: 0.12, ease: [0.22, 1, 0.36, 1] },
+            }}
+            whileTap={prefersReducedMotion ? undefined : { scale: 0.995 }}
+            className={`group relative grid min-w-0 grid-cols-1 gap-2 px-3 py-3 transition-[background-color,box-shadow] duration-300 sm:px-4 sm:py-4 sm:items-center sm:gap-3 motion-reduce:transform-none ${gridColumns} ${
                 showHighlight
                     ? "bg-green-50/80 shadow-[inset_3px_0_0_rgb(34,197,94)] dark:bg-green-950/25"
                     : "hover:bg-green-50/25 dark:hover:bg-white/[0.025]"
@@ -249,7 +264,6 @@ function TaskRow({
                     <span className="truncate">{currentStatus.label}</span>
                     {onStatusChange && <ChevronDown size={8} strokeWidth={2} className={`transition-transform ${isStatusOpen ? "rotate-180" : ""}`} />}
                 </button>
-                {statusMenu}
             </div>
 
             {/* Priority - desktop */}
@@ -317,8 +331,6 @@ function TaskRow({
                     {onStatusChange && <ChevronDown size={9} strokeWidth={2} className={`transition-transform ${isStatusOpen ? "rotate-180" : ""}`} />}
                 </button>
 
-                {statusMenu}
-
                 <div
                     className={`ml-2 flex min-w-0 flex-1 items-center gap-1 ${isCompleted ? "text-slate-300 dark:text-slate-600" : "text-slate-500 dark:text-slate-400"}`}
                     style={{ fontSize: "9px", lineHeight: "1" }}
@@ -338,7 +350,8 @@ function TaskRow({
             <div className="hidden shrink-0 items-center justify-end sm:sticky sm:right-4 sm:z-10 sm:flex sm:bg-gradient-to-l sm:from-white/95 sm:via-white/90 sm:to-transparent sm:pl-4 sm:opacity-0 sm:pointer-events-none sm:transition-all sm:duration-150 sm:group-hover:pointer-events-auto sm:group-hover:opacity-100 dark:sm:from-slate-900/95 dark:sm:via-slate-900/90">
                 {(onEdit || onDelete) && <ActionButtons onEdit={onEdit} onDelete={onDelete} />}
             </div>
-        </div>
+            {statusMenu}
+        </motion.div>
     );
 }
 

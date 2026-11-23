@@ -1,10 +1,12 @@
 import { createContext, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { authService } from "../services/authService";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+    const queryClient = useQueryClient();
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
 
@@ -30,6 +32,7 @@ export function AuthProvider({ children }) {
 
     const login = async (identifier, password) => {
         const data = await authService.login(identifier, password);
+        queryClient.clear();
         localStorage.setItem("accessToken", data.session.access_token);
         localStorage.setItem("refreshToken", data.session.refresh_token);
         setUser(data.user);
@@ -46,9 +49,13 @@ export function AuthProvider({ children }) {
     };
 
     const updateEmail = async (email) => {
-        const data = await authService.updateEmail(email);
-        if (data.user) setUser(data.user);
-        return data;
+        return authService.updateEmail(email);
+    };
+
+    const refreshUser = async () => {
+        const { user: currentUser } = await authService.getCurrentUser();
+        setUser(currentUser);
+        return currentUser;
     };
 
     const updatePassword = async (password) => authService.updatePassword(password);
@@ -59,6 +66,7 @@ export function AuthProvider({ children }) {
         try {
             await authService.logout(refreshToken);
         } finally {
+            queryClient.clear();
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
             setUser(null);
@@ -66,7 +74,7 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, authLoading, isAuthenticated: !!user, login, signup, logout, updateProfile, updateEmail, updatePassword }}>
+        <AuthContext.Provider value={{ user, authLoading, isAuthenticated: !!user, login, signup, logout, updateProfile, updateEmail, refreshUser, updatePassword }}>
             {children}
         </AuthContext.Provider>
     );

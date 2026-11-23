@@ -10,7 +10,7 @@ function EmptyState({
 }) {
     if (compact) {
         return (
-            <div role="status" className="relative flex min-h-[164px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-white/70 bg-white/35 px-5 py-6 text-center shadow-[0_8px_28px_rgba(15,23,42,0.025)] backdrop-blur-md dark:border-white/10 dark:bg-white/[0.025] sm:min-h-[184px]">
+            <div role="status" className="relative flex min-h-[164px] w-full flex-col items-center justify-center overflow-hidden border-y border-dashed border-slate-200/70 bg-white/20 px-5 py-6 text-center backdrop-blur-md dark:border-white/10 dark:bg-white/[0.015] sm:min-h-[184px]">
                 <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/60 text-slate-400 dark:bg-white/[0.05] dark:text-slate-400">
                     <SearchX size={18} strokeWidth={1.8} />
                 </span>

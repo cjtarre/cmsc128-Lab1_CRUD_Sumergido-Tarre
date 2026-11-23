@@ -1,14 +1,22 @@
-import { Check, Mail, X } from "lucide-react";
+import { Check, Mail, MailPlus, Trash2, X } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 
 import { useInviteResponse } from "../hooks/useInviteResponse";
 import { getInviteNotificationMeta } from "../utils/inviteNotificationUtils";
 
-function InviteNotification({ notification, onRead, onRefresh, onClose }) {
+function InviteNotification({ notification, onRead, onUnread, onRemove, onRefresh, onClose }) {
     const { responding, respond, open } = useInviteResponse(notification, onRead, onRefresh, onClose);
+    const prefersReducedMotion = useReducedMotion();
     const { actor, projectId, projectName, role, status, pending, accepted, time } = getInviteNotificationMeta(notification);
 
     return (
-        <div onClick={open}
+        <motion.div
+            onClick={open}
+            animate={{ y: 0, transition: { duration: 0 } }}
+            whileHover={prefersReducedMotion || !accepted ? undefined : {
+                y: -2,
+                transition: { duration: 0.08, ease: "easeOut" },
+            }}
             className={`flex items-start gap-3 px-4 py-3 transition dark:hover:bg-white/[0.03] sm:px-5 ${accepted ? "cursor-pointer hover:bg-green-50/40" : ""} ${notification.read_at ? "" : "bg-green-50/25 dark:bg-green-950/10"}`}>
             <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-500 dark:bg-green-950/50 dark:text-green-400">
                 <Mail size={15} />
@@ -21,6 +29,20 @@ function InviteNotification({ notification, onRead, onRefresh, onClose }) {
                     <div className="flex shrink-0 items-center gap-2">
                         {time && <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500">{time}</span>}
                         {!notification.read_at && <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />}
+                        {notification.read_at && onUnread && (
+                            <button type="button" onClick={(event) => { event.stopPropagation(); onUnread(notification.id); }}
+                                aria-label="Mark notification as unread" title="Mark unread"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-green-600 dark:text-slate-500 dark:hover:bg-white/[0.06] dark:hover:text-green-400">
+                                <MailPlus size={14} />
+                            </button>
+                        )}
+                        {onRemove && (
+                            <button type="button" onClick={(event) => { event.stopPropagation(); onRemove(notification.id); }}
+                                aria-label="Dismiss notification" title="Dismiss"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500 dark:text-slate-500 dark:hover:bg-red-950/30 dark:hover:text-red-400">
+                                <Trash2 size={14} />
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -57,7 +79,7 @@ function InviteNotification({ notification, onRead, onRefresh, onClose }) {
                     </>
                 )}
             </div>
-        </div>
+        </motion.div>
     );
 }
 

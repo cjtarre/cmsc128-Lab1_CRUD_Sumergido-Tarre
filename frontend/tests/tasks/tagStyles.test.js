@@ -50,4 +50,17 @@ describe("tag color readability", () => {
     it("uses a safe fallback for invalid stored colors", () => {
         expect(getTagInlineStyle({ color: "not-a-hex" }).color).toMatch(/^#[0-9a-f]{6}$/i);
     });
+
+    it("uses darker chip backgrounds and light text in dark mode", () => {
+        document.documentElement.classList.add("dark");
+        try {
+            for (const color of ["#ffffff", "#fde68a", "#3b82f6", "#000000"]) {
+                const style = getTagInlineStyle({ color }, true);
+                expect(luminance(style.backgroundColor)).toBeLessThan(0.25);
+                expect(contrast(style.color, style.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+            }
+        } finally {
+            document.documentElement.classList.remove("dark");
+        }
+    });
 });

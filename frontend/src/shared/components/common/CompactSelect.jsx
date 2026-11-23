@@ -1,5 +1,6 @@
 import { Children, isValidElement, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useExclusiveDropdown } from "../../hooks/useExclusiveDropdown";
 import { Check } from "lucide-react";
 
 // CompactSelect takes <option> children and preserves the event shape of a native select.
@@ -20,6 +21,7 @@ function CompactSelect({
     const selected = options[selectedIndex];
     const selectedOptionValue = selected?.value;
     const [open, setOpen] = useState(false);
+    useExclusiveDropdown(open, setOpen);
     const [position, setPosition] = useState(null);
     const menuPositioned = position !== null;
     const triggerRef = useRef(null);

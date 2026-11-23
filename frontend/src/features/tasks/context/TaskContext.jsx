@@ -1,8 +1,11 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { taskService } from "../services/taskService";
 import { tagService } from "../services/tagService";
 import { convertApiTask } from "../utils/convertApiTask";
+import { queryKeys } from "../../../shared/utils/queryKeys";
+import { useSyncedQueryState } from "../../../shared/hooks/useSyncedQueryState";
 
 const TaskContext = createContext(null);
 
@@ -31,6 +34,7 @@ function convertTask(task) {
         } else if (due >= startOfTomorrow) {
             category = "upcoming";
         }
+
     }
 
     return {
@@ -47,40 +51,30 @@ function convertTask(task) {
     };
 }
 
-export function TaskProvider({ children }) {
-    const [tasks, setTasks] = useState([]);
-    const [searchTerm, setSearchTerm] = useState("");
+const convertTasks = (items) => items.map(convertTask);
 
-    const [availableTags, setAvailableTags] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+export function TaskProvider({ children }) {
+    const queryClient = useQueryClient();
+    const tasksQuery = useQuery({
+        queryKey: queryKeys.defaultTasks,
+        queryFn: () => taskService.getTasks(null, "default"),
+    });
+    const tagsQuery = useQuery({
+        queryKey: queryKeys.tags("default"),
+        queryFn: () => tagService.getTags({ defaultProject: true }),
+    });
+    const [tasks, setTasks] = useSyncedQueryState(tasksQuery.data, convertTasks);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [availableTags, setAvailableTags] = useSyncedQueryState(tagsQuery.data);
+    const loading = tasksQuery.isLoading || tagsQuery.isLoading;
+    const error = tasksQuery.isError || tagsQuery.isError ? "Unable to load tasks." : null;
 
     const loadInitialData = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            const [fetchedTasks, fetchedTags] = await Promise.all([
-                taskService.getTasks(null, "default"),
-                tagService.getTags({ defaultProject: true }),
-            ]);
-
-            const convertedTasks = fetchedTasks.map(convertTask);
-
-            setTasks(convertedTasks);
-            setAvailableTags(fetchedTags);
-        } catch (error) {
-            console.error("Error loading tasks:", error);
-            setError("Unable to load tasks.");
-        } finally {
-            setLoading(false);
-        }
+        await Promise.all([
+            queryClient.invalidateQueries({ queryKey: queryKeys.defaultTasks }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.tags("default") }),
+        ]);
     };
-
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        loadInitialData();
-    }, []);
 
     return (
         <TaskContext.Provider

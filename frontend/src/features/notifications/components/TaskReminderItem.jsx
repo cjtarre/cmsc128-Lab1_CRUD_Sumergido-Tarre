@@ -1,10 +1,20 @@
 import { CalendarClock, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion, useReducedMotion } from "motion/react";
 
 function TaskReminderItem({ notification }) {
+    const prefersReducedMotion = useReducedMotion();
     const isOverdue = notification.type === "overdue";
 
     return (
+        <motion.div
+            animate={{ y: 0, transition: { duration: 0 } }}
+            whileHover={prefersReducedMotion ? undefined : {
+                y: -2,
+                transition: { duration: 0.08, ease: "easeOut" },
+            }}
+            className="motion-reduce:transform-none"
+        >
         <Link to={`/my-tasks?task=${notification.id}`}
             className="flex min-w-0 items-start gap-2.5 px-3 py-3 transition hover:bg-green-50/50 dark:hover:bg-white/[0.04] sm:gap-3 sm:px-5 sm:py-4">
             <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${isOverdue ? "bg-red-50 text-red-500 dark:bg-red-950/50 dark:text-red-400" : "bg-green-50 text-green-500 dark:bg-green-950/50 dark:text-green-400"}`}>
@@ -25,6 +35,7 @@ function TaskReminderItem({ notification }) {
                 </p>
             </div>
         </Link>
+        </motion.div>
     );
 }
 

@@ -15,6 +15,7 @@ const filters = [
 function TaskFilter({ value, onChange }) {
     const containerRef = useRef(null);
     const buttonRefs = useRef([]);
+    const [compact, setCompact] = useState(true);
     const [indicator, setIndicator] = useState({ left: 0, width: 0 });
     const { open, ref: menuRef, toggle, close } = useDropdown();
     const triggerRef = useRef(null);
@@ -72,14 +73,35 @@ function TaskFilter({ value, onChange }) {
         updateIndicator();
         window.addEventListener("resize", updateIndicator);
         return () => window.removeEventListener("resize", updateIndicator);
-    }, [value]);
+    }, [value, compact]);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const updateCompact = (width) => {
+            // The five category labels need roughly 360px with their spacing.
+            // Below that width, show the compact dropdown instead.
+            setCompact(width < 360);
+        };
+
+        updateCompact(container.getBoundingClientRect().width);
+
+        if (typeof ResizeObserver === "undefined") return;
+        const observer = new ResizeObserver((entries) => {
+            const entry = entries[0];
+            if (entry) updateCompact(entry.contentRect.width);
+        });
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, []);
 
     const isOverdue = value === "overdue";
 
     return (
-        <>
+        <div ref={containerRef} className="w-full min-w-0">
             {/* Mobile / Tablet: a custom menu avoids browser-styled option lists. */}
-            <div ref={menuRef} data-takda-task-filter="true" className="relative z-[120] xl:hidden">
+            {compact && <div ref={menuRef} data-takda-task-filter="true" className="relative z-[999] w-full">
                 <button
                     ref={triggerRef}
                     type="button"
@@ -101,7 +123,7 @@ function TaskFilter({ value, onChange }) {
                         role="listbox"
                         aria-label="Task views"
                         onKeyDown={handleMenuKeyDown}
-                        className="absolute inset-x-0 top-full z-[130] mt-1.5 max-h-64 overflow-y-auto rounded-xl border border-white/80 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.13)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/30"
+                        className="absolute inset-x-0 top-full z-[9999] mt-1.5 max-h-64 overflow-y-auto rounded-xl border border-white/80 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.13)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/30"
                     >
                         {filters.map((filter, index) => {
                             const selected = value === filter.value;
@@ -123,10 +145,10 @@ function TaskFilter({ value, onChange }) {
                         })}
                     </div>
                 )}
-            </div>
+            </div>}
 
             {/* Desktop */}
-            <div ref={containerRef} className="relative hidden w-full items-center gap-6 overflow-x-auto rounded-xl px-4 pt-2.5 xl:flex">
+            {!compact && <nav className="relative flex w-full items-center border-b border-slate-200/60 px-1 dark:border-white/10" aria-label="Task categories">
                 {filters.map((filter, index) => {
                     const active = value === filter.value;
                     const overdue = filter.value === "overdue";
@@ -137,7 +159,7 @@ function TaskFilter({ value, onChange }) {
                             ref={(el) => (buttonRefs.current[index] = el)}
                             type="button"
                             onClick={() => onChange(filter.value)}
-                            className={`relative shrink-0 pb-2.5 text-[11px] font-medium transition-colors ${
+                            className={`relative flex min-w-0 flex-1 items-center justify-center px-1.5 py-2 font-medium transition-colors ${
                                 active
                                     ? overdue
                                         ? "text-red-500 dark:text-red-400"
@@ -146,15 +168,16 @@ function TaskFilter({ value, onChange }) {
                                         ? "text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400"
                                         : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                             }`}
+                            style={{ fontSize: "12px", lineHeight: "1" }}
                         >
-                            {filter.label}
+                            <span className="whitespace-nowrap">{filter.label}</span>
                         </button>
                     );
                 })}
 
-                <span className={`absolute bottom-0 h-0.5 rounded-full transition-all duration-300 ${isOverdue ? "bg-red-500" : "bg-green-500"}`} style={indicator} />
-            </div>
-        </>
+                <span className={`pointer-events-none absolute bottom-[-1px] h-0.5 rounded-full transition-all duration-300 ${isOverdue ? "bg-red-500" : "bg-green-500"}`} style={indicator} />
+            </nav>}
+        </div>
     );
 }
 

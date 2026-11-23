@@ -1,45 +1,78 @@
-import { Bell, CalendarDays, CheckSquare, FolderKanban, User } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { CalendarDays, CheckSquare, FolderKanban } from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
+import { motion, useReducedMotion } from "motion/react";
 
-import { useNotifications } from "../../../features/notifications/context/NotificationContext";
 
 const links = [
     { to: "/my-tasks", label: "Tasks", icon: CheckSquare },
     { to: "/projects", label: "Projects", icon: FolderKanban },
     { to: "/calendar", label: "Calendar", icon: CalendarDays },
-    { to: "/notifications", label: "Alerts", icon: Bell },
-    { to: "/profile", label: "Profile", icon: User },
 ];
 
 function MobileNavbar() {
-    const { unreadCount } = useNotifications();
+    const { pathname } = useLocation();
+    const reduceMotion = useReducedMotion();
+
+    const activeIndex = links.findIndex(({ to }) =>
+        to === "/my-tasks"
+            ? pathname === "/my-tasks"
+            : pathname.startsWith(to)
+    );
 
     return (
-        <nav className="sticky bottom-3 left-3 right-3 z-40 rounded-2xl border border-white/70 bg-white/75 px-2 py-1.5 shadow-[0_10px_35px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/75 dark:shadow-black/30 xl:hidden">
-            <div className="mx-auto flex max-w-md items-center justify-around gap-1">
+        <nav
+            aria-label="Mobile navigation"
+            className="pointer-events-auto relative z-10 mx-auto w-[calc(100%_-_2rem)] max-w-md rounded-[22px] border border-white/75 bg-white/80 px-1.5 py-1.5 shadow-[0_14px_38px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/80 dark:shadow-[0_14px_38px_rgba(0,0,0,0.38)] xl:hidden"
+        >
+            <div className="relative mx-auto flex max-w-md items-stretch justify-around gap-0.5">
+                {activeIndex >= 0 && (
+                    <motion.div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute bottom-0 top-0 rounded-2xl bg-green-100/80 shadow-[0_4px_14px_rgba(34,197,94,0.10)] dark:bg-green-950/55"
+                        initial={false}
+                        animate={{ left: `${activeIndex * (100 / links.length)}%` }}
+                        transition={
+                            reduceMotion
+                                ? { duration: 0 }
+                                : { duration: 0.18, ease: [0.22, 1, 0.36, 1] }
+                        }
+                        style={{ width: "33.3333%" }}
+                    />
+                )}
+
                 {links.map(({ to, label, icon: Icon }) => (
                     <NavLink
                         key={to}
                         to={to}
                         className={({ isActive }) =>
-                            `relative flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl py-2.5 text-[10px] font-medium transition ${
+                            `relative z-10 flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-1 py-2 text-[9px] font-medium transition-colors duration-100 ${
                                 isActive
-                                    ? "bg-green-100/70 text-green-600 shadow-sm dark:bg-green-950/50 dark:text-green-400"
-                                    : "text-slate-400 hover:bg-white/60 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-white/[0.05] dark:hover:text-slate-300"
+                                    ? "text-green-600 dark:text-green-400"
+                                    : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                             }`
                         }
                     >
                         {({ isActive }) => (
                             <>
-                                <span className="relative">
-                                    <Icon size={19} strokeWidth={isActive ? 2.5 : 2} />
+                                <motion.span
+                                    className="relative"
+                                    initial={false}
+                                    animate={
+                                        reduceMotion
+                                            ? { y: 0, scale: 1 }
+                                            : isActive
+                                                ? { y: -1, scale: 1.04 }
+                                                : { y: 0, scale: 1 }
+                                    }
+                                    transition={{ duration: reduceMotion ? 0 : 0.12, ease: "easeOut" }}
+                                >
+                                    <Icon
+                                        size={18}
+                                        strokeWidth={isActive ? 2.5 : 2}
+                                        aria-hidden="true"
+                                    />
 
-                                    {to === "/notifications" && unreadCount > 0 && (
-                                        <span className="absolute -right-2.5 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[8px] font-bold leading-none text-white">
-                                            {unreadCount > 9 ? "9+" : unreadCount}
-                                        </span>
-                                    )}
-                                </span>
+                                </motion.span>
 
                                 <span className="max-w-full truncate">{label}</span>
                             </>

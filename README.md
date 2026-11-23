@@ -135,6 +135,7 @@ Where the CRUD and authentication features affected the same application flow, t
 | | Lucide React | Provides interface icons |
 | | Sonner | Provides toast notifications and user feedback |
 | | Motion | Provides interface transitions and animations |
+| | TanStack Query | Caches API results, deduplicates reads, and invalidates related data after mutations |
 | **Backend** | Node.js | Runs the server-side JavaScript application |
 | | Express.js | Handles API routes and HTTP requests |
 | | `@supabase/supabase-js` | Provides the JavaScript client for communicating with Supabase |
@@ -228,6 +229,37 @@ The backend uses two Supabase clients depending on the type of operation:
 - **Anon-key client** (`config/supabaseClient.js`) — Uses `SUPABASE_ANON_KEY`, with `SUPABASE_KEY` supported as a fallback. It handles user-scoped Supabase Authentication operations such as login, session refresh, logout, password recovery, and email or password changes.
 
 - **Service-role client** (`config/supabaseAdmin.js`) — Handles authorized server-side database operations involving tasks, projects, memberships, invitations, notifications, tags, profiles, and related records. Because the service-role key has elevated privileges, it is kept exclusively on the backend.
+
+---
+
+## Data Query and Cache Behavior
+
+The frontend uses **TanStack Query** as a shared read cache. Cached resources include projects, project details, tasks, tags, members, invitations, activities, and notifications. Query data is kept for 30 seconds, garbage-collected after 5 minutes, and is not refetched merely because the browser window regains focus.
+
+- Project and workspace pages reuse cached data during normal navigation.
+- Mutations update affected query entries locally or invalidate only their related query keys.
+- Logout clears the frontend query cache so another user's data is never reused.
+- `/api` responses use `Cache-Control: private, no-store`; application data is not stored in shared HTTP caches.
+- Supabase/PostgreSQL remains the source of truth. TanStack Query reduces duplicate API calls, but backend mutations and explicit invalidations still determine refresh correctness.
+
+Data reads use dedicated endpoints and project/task scoping. For example, workspace and settings pages use `GET /api/projects/:project_id` instead of downloading and searching the complete project list.
+
+Recommended database indexes for the main read paths are:
+
+```sql
+CREATE INDEX IF NOT EXISTS idx_project_user_user_project
+    ON project_user (user_id, project_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_project_deleted_created
+    ON tasks (project_id, deleted_at, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tasks_project_assignee_deleted
+    ON tasks (project_id, assignee_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read_created
+    ON notifications (user_id, read_at, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_project_activity_project_created
+    ON project_activity (project_id, created_at DESC);
+```
+
+Add these through the Supabase SQL editor or migrations when applying them to a production database.
 
 ---
 
@@ -376,7 +408,7 @@ Verify the frontend production build:
 npm run build
 ```
 
-The automated tests cover authentication, task CRUD, project collaboration, membership and role access control, invitations, notifications, services, hooks, handlers, validation, utilities, and shared frontend functionality.
+The automated tests use Vitest. Backend tests cover controllers and authorization utilities; frontend tests cover authentication, protected routing, services, hooks, components, profile interactions, task and project workflows, notifications, and validation utilities. API and Supabase calls are mocked, so valid Supabase credentials are not required to run the test suites.
 
 ---
 

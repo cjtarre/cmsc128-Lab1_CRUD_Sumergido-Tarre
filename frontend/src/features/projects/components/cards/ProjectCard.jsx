@@ -1,5 +1,5 @@
 import { Crown, MoreVertical, Pencil, Trash2 } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 
 import { useDropdown } from "../../../../shared/hooks/useDropdown";
@@ -8,6 +8,7 @@ import { PROJECT_ACCENTS, PROJECT_ICONS } from "../../constants/projectOptions";
 
 function ProjectCard({ project, onEdit, onDelete }) {
     const navigate = useNavigate();
+    const prefersReducedMotion = useReducedMotion();
     const { open: isMenuOpen, ref: menuRef, toggle: toggleMenu, close: closeMenu } = useDropdown();
 
     const members = project.members || [];
@@ -37,9 +38,13 @@ function ProjectCard({ project, onEdit, onDelete }) {
             tabIndex={0}
             onClick={() => navigate(`/projects/${project.id}`)}
             onKeyDown={(event) => event.key === "Enter" && navigate(`/projects/${project.id}`)}
+            animate={{ y: 0 }}
+            whileHover={prefersReducedMotion ? undefined : {
+                y: -4,
+                transition: { duration: 0.1, ease: "easeOut" },
+            }}
             whileTap={{ scale: 0.985 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="group relative flex min-h-[112px] w-full cursor-pointer flex-col rounded-2xl border border-white/70 bg-white/55 p-3 text-left shadow-[0_8px_28px_rgba(15,23,42,0.04)] backdrop-blur-xl transition-colors hover:border-green-200/80 hover:bg-white/75 dark:border-white/[0.08] dark:bg-white/[0.035] dark:hover:border-green-900/60 dark:hover:bg-white/[0.055] sm:min-h-[155px] sm:p-4"
+            className="group relative flex min-h-[112px] w-full cursor-pointer flex-col rounded-2xl border border-white/70 bg-white/55 p-3 text-left shadow-[0_8px_28px_rgba(15,23,42,0.04)] backdrop-blur-xl transition-[color,background-color,border-color,box-shadow] hover:border-green-200/80 hover:bg-white/75 hover:shadow-[0_12px_32px_rgba(15,23,42,0.10)] dark:border-white/[0.08] dark:bg-white/[0.035] dark:hover:border-green-900/60 dark:hover:bg-white/[0.055] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.24)] sm:min-h-[155px] sm:p-4 motion-reduce:transform-none"
         >
             {/* Project identity. */}
             <div className="flex w-full items-start gap-2.5 sm:gap-3">

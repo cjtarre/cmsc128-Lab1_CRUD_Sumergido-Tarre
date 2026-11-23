@@ -34,7 +34,7 @@ function FocusTimerSettings({ durations, onSave }) {
                 <MoreVertical size={18} aria-hidden="true" />
             </button>
             {open && (
-                <form id={panelId} onSubmit={submit}
+                <form id={panelId} data-dropdown-popup="true" onSubmit={submit}
                     className="absolute top-full right-0 z-20 mt-2 w-60 max-w-[calc(100vw_-_3.5rem)] rounded-2xl border border-white/90 bg-white/95 p-4 shadow-xl backdrop-blur-xl dark:border-white/15 dark:bg-slate-900/95">
                     <p className="text-sm font-semibold">Timer settings</p>
                     <div className="mt-3 grid grid-cols-2 gap-2">

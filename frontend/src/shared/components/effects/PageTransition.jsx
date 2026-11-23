@@ -7,7 +7,7 @@ function PageTransition({ children }) {
         <motion.div
             initial={reduceMotion ? false : { opacity: 0.92 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: reduceMotion ? 0 : 0.16, ease: "easeOut" }}
+            transition={{ duration: reduceMotion ? 0 : 0.1, ease: "easeOut" }}
         >
             {children}
         </motion.div>

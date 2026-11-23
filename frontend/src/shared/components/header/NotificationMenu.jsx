@@ -8,16 +8,18 @@ import TaskReminderItem from "../../../features/notifications/components/TaskRem
 import { useNotifications } from "../../../features/notifications/context/NotificationContext";
 import { getTaskNotifications } from "../../../features/notifications/utils/notificationUtils";
 import { useTaskData } from "../../../features/tasks/context/TaskContext";
+import { useExclusiveDropdown } from "../../hooks/useExclusiveDropdown";
 
 function NotificationMenu() {
     const { tasks, loading: tasksLoading } = useTaskData();
     const { notifications, unreadCount, loading: notificationsLoading, refreshNotifications, markRead, markAllRead } = useNotifications();
 
     const [open, setOpen] = useState(false);
+    useExclusiveDropdown(open, setOpen);
     const [markingAllRead, setMarkingAllRead] = useState(false);
 
     const reminders = useMemo(() => getTaskNotifications(tasks), [tasks]);
-    const persistentPreview = notifications.slice(0, 4);
+    const persistentPreview = notifications.filter((notification) => !notification.read_at).slice(0, 4);
     const reminderPreview = reminders.slice(0, Math.max(0, 4 - persistentPreview.length));
     const loading = tasksLoading || notificationsLoading;
 
@@ -50,7 +52,7 @@ function NotificationMenu() {
                     <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
 
                     {/* Viewport-bound on mobile; bell-anchored on larger screens. */}
-                    <div className="fixed left-2 right-2 top-[58px] z-50 flex max-h-[calc(100dvh-70px)] flex-col overflow-hidden rounded-xl border border-white/70 bg-white/95 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-none sm:w-80">
+                    <div data-dropdown-popup="true" className="fixed left-2 right-2 top-[58px] z-50 flex max-h-[calc(100dvh-70px)] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-slate-900 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:h-auto sm:max-h-none sm:w-80">
                         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100/80 px-3 py-2.5 dark:border-white/10 sm:px-4 sm:py-3">
                             <p className="min-w-0 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">Notifications</p>
 
@@ -86,8 +88,8 @@ function NotificationMenu() {
                                 </div>
                             ) : (
                                 <div className="flex h-28 flex-col items-center justify-center px-4 text-center">
-                                    <p className="text-sm font-medium text-slate-600 dark:text-slate-300">You're all caught up</p>
-                                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">No notifications right now.</p>
+                                    <p className="text-sm font-medium text-slate-600 dark:text-slate-300">You're up to date</p>
+                                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">No unread notifications right now.</p>
                                 </div>
                             )}
                         </div>

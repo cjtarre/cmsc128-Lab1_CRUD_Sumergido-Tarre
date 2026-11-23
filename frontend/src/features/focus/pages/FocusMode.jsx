@@ -57,7 +57,7 @@ function FocusDashboard({ userId, initialPlaylistId }) {
             aria-labelledby="focus-title"
             onCancel={(event) => event.preventDefault()}
             className={locked
-                ? "fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-6xl overflow-auto rounded-3xl border border-white/70 bg-emerald-50/90 p-4 text-slate-900 shadow-2xl backdrop-blur-2xl backdrop:bg-slate-950/75 dark:border-white/10 dark:bg-slate-950/90 dark:text-white sm:p-7"
+                ? "fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-6xl overflow-auto rounded-3xl border border-white/70 bg-emerald-50/90 p-4 text-slate-900 shadow-2xl backdrop-blur-2xl backdrop:bg-slate-950/75 dark:border-white/10 dark:bg-slate-950/90 dark:text-white sm:max-h-[calc(100dvh_-_3rem)] sm:-translate-y-3 sm:p-7"
                 : "static mx-auto w-full max-w-6xl bg-transparent pb-10 text-slate-900 dark:text-white"}
         >
             <header className={locked ? "sr-only" : "mb-5"}>
@@ -69,15 +69,20 @@ function FocusDashboard({ userId, initialPlaylistId }) {
                 : ""}`}>
                 <section aria-labelledby="focus-phase"
                     className={`${glassCard} @container flex min-w-0 flex-col gap-4 ${showSpotify ? "md:col-start-2 md:row-start-1" : ""}`}>
-                    <div className="relative z-10 flex min-h-9 flex-wrap items-center justify-between gap-2">
-                        <h2 id="focus-phase" className="flex items-center gap-2 text-sm font-semibold">
+                    <div className="relative z-10 flex min-h-9 flex-nowrap items-center justify-between gap-1.5 sm:gap-2">
+                        <h2 id="focus-phase" className="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm font-semibold">
                             <Target size={16} aria-hidden="true" /> {phase === "focus" ? "Focus timer" : "Break timer"}
                         </h2>
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex shrink-0 flex-nowrap items-center gap-1.5 sm:gap-2">
                             <button type="button" onClick={toggleSpotify} aria-expanded={showSpotify}
+                                aria-pressed={showSpotify} aria-label={showSpotify ? "Hide Spotify" : "Show Spotify"}
+                                title={showSpotify ? "Hide Spotify" : "Show Spotify"}
                                 style={focusControlStyle}
-                                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/75 bg-white/50 px-2.5 text-xs font-medium text-slate-700 hover:bg-white/80 focus-visible:outline-2 focus-visible:outline-green-700 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-200 dark:hover:bg-white/10">
-                                <Music2 size={15} aria-hidden="true" /> {showSpotify ? "Hide Spotify" : "Show Spotify"}
+                                className={`inline-flex size-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border px-0 text-xs font-medium focus-visible:outline-2 focus-visible:outline-green-700 sm:w-auto sm:px-2.5 ${showSpotify
+                                    ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-700 dark:bg-green-950/45 dark:text-green-300 dark:hover:bg-green-950/70"
+                                    : "border-white/75 bg-white/50 text-slate-700 hover:bg-white/80 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-200 dark:hover:bg-white/10"}`}>
+                                <Music2 size={15} aria-hidden="true" />
+                                <span className="hidden sm:inline">{showSpotify ? "Hide Spotify" : "Show Spotify"}</span>
                             </button>
                             {canFloat && (
                                 <button type="button" onClick={openFloating} style={focusControlStyle}

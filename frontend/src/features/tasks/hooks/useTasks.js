@@ -52,7 +52,12 @@ function useTasks(tasks, setTasks, projectId = null) {
         const task = getTask(id);
         if (!task) return;
 
-        const updated = await taskService.updateTask(id, { ...toApiTask(task, false), status });
+        // A status change must not re-submit the existing assignment. The assignee
+        // may have left the project, and only an explicit reassignment should be
+        // checked against current project membership by the API.
+        const payload = toApiTask(task, false);
+        delete payload.assignee_id;
+        const updated = await taskService.updateTask(id, { ...payload, status });
         setTasks((prev) => prev.map((item) => item.id === id ? convertApiTask(updated) : item));
     };
 

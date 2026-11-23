@@ -1,4 +1,5 @@
 import { FolderPlus, X } from "lucide-react";
+import { createPortal } from "react-dom";
 
 import { useBodyScrollLock } from "../../../../shared/hooks/useBodyScrollLock";
 import { useCreateProject } from "../../hooks/useCreateProject";
@@ -10,14 +11,24 @@ function CreateProject({ isOpen, onClose, onSubmit }) {
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/20 px-4 pb-6 pt-24 backdrop-blur-sm dark:bg-black/55">
-            <div className="w-full max-w-md overflow-hidden rounded-2xl border border-white/70 bg-white/85 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/85">
+    const handleOutsideClick = (event) => {
+        if (event.target === event.currentTarget && !submitting && projectName === "") onClose();
+    };
+
+    return createPortal(
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-900/20 px-4 py-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm dark:bg-black/55"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-project-heading"
+            onMouseDown={handleOutsideClick}
+        >
+            <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/70 bg-white/85 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/85 sm:max-h-[calc(100dvh-3rem)] sm:-translate-y-3">
                 <div className="flex items-start justify-between border-b border-white/60 px-5 py-4 dark:border-white/10">
                     <div className="flex items-center gap-3">
                         <div className="rounded-xl bg-green-100 p-2 text-green-600 dark:bg-green-950/60 dark:text-green-400"><FolderPlus size={19} /></div>
                         <div>
-                            <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">New Project</h2>
+                            <h2 id="create-project-heading" className="text-base font-semibold text-slate-800 dark:text-slate-100">New Project</h2>
                             <p className="text-xs text-slate-400 dark:text-slate-500">Create a collaborative workspace.</p>
                         </div>
                     </div>
@@ -53,7 +64,8 @@ function CreateProject({ isOpen, onClose, onSubmit }) {
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

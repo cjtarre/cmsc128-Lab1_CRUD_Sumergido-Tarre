@@ -6,6 +6,7 @@ import { useContext } from "react";
 
 import { AuthContext, AuthProvider } from "../../src/features/auth/context/AuthContext";
 import { authService } from "../../src/features/auth/services/authService";
+import { createQueryWrapper } from "../queryTestUtils";
 
 vi.mock("../../src/features/auth/services/authService", () => ({
     authService: {
@@ -35,7 +36,9 @@ function TestConsumer() {
 }
 
 describe("AuthProvider", () => {
+    let QueryWrapper;
     beforeEach(() => {
+        QueryWrapper = createQueryWrapper();
         vi.clearAllMocks();
         localStorage.clear();
         authContext = null;
@@ -44,7 +47,7 @@ describe("AuthProvider", () => {
     afterEach(cleanup);
 
     it("starts unauthenticated when no access token exists", async () => {
-        render(<AuthProvider><TestConsumer /></AuthProvider>);
+        render(<QueryWrapper><AuthProvider><TestConsumer /></AuthProvider></QueryWrapper>);
 
         await waitFor(() => expect(screen.getByTestId("loading").textContent).toBe("ready"));
 
@@ -59,7 +62,7 @@ describe("AuthProvider", () => {
             user: { id: "user-1", email: "user@example.com", username: "test.user", display_name: "Test User" },
         });
 
-        render(<AuthProvider><TestConsumer /></AuthProvider>);
+        render(<QueryWrapper><AuthProvider><TestConsumer /></AuthProvider></QueryWrapper>);
 
         await waitFor(() => expect(screen.getByTestId("authenticated").textContent).toBe("yes"));
 
@@ -72,7 +75,7 @@ describe("AuthProvider", () => {
         localStorage.setItem("refreshToken", "refresh-token");
         authService.getCurrentUser.mockRejectedValue(new Error("Invalid session"));
 
-        render(<AuthProvider><TestConsumer /></AuthProvider>);
+        render(<QueryWrapper><AuthProvider><TestConsumer /></AuthProvider></QueryWrapper>);
 
         await waitFor(() => expect(screen.getByTestId("loading").textContent).toBe("ready"));
 
@@ -89,7 +92,7 @@ describe("AuthProvider", () => {
 
         authService.login.mockResolvedValue(response);
 
-        render(<AuthProvider><TestConsumer /></AuthProvider>);
+        render(<QueryWrapper><AuthProvider><TestConsumer /></AuthProvider></QueryWrapper>);
         await waitFor(() => expect(screen.getByTestId("loading").textContent).toBe("ready"));
 
         await act(async () => { await authContext.login("test.user", "Password1!"); });
@@ -105,7 +108,7 @@ describe("AuthProvider", () => {
         localStorage.setItem("refreshToken", "refresh-token");
         authService.logout.mockResolvedValue({ message: "Logged out successfully." });
 
-        render(<AuthProvider><TestConsumer /></AuthProvider>);
+        render(<QueryWrapper><AuthProvider><TestConsumer /></AuthProvider></QueryWrapper>);
         await waitFor(() => expect(screen.getByTestId("loading").textContent).toBe("ready"));
 
         await act(async () => { await authContext.logout(); });
@@ -125,7 +128,7 @@ describe("AuthProvider", () => {
         });
         authService.logout.mockRejectedValue(new Error("Logout failed"));
 
-        render(<AuthProvider><TestConsumer /></AuthProvider>);
+        render(<QueryWrapper><AuthProvider><TestConsumer /></AuthProvider></QueryWrapper>);
         await waitFor(() => expect(screen.getByTestId("authenticated").textContent).toBe("yes"));
 
         await expect(authContext.logout()).rejects.toThrow("Logout failed");
@@ -141,7 +144,7 @@ describe("AuthProvider", () => {
 
         authService.updateProfile.mockResolvedValue({ user: updatedUser });
 
-        render(<AuthProvider><TestConsumer /></AuthProvider>);
+        render(<QueryWrapper><AuthProvider><TestConsumer /></AuthProvider></QueryWrapper>);
         await waitFor(() => expect(screen.getByTestId("loading").textContent).toBe("ready"));
 
         await act(async () => { await authContext.updateProfile(profile); });

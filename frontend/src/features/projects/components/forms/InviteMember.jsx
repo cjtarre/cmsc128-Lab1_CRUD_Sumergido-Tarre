@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, UserPlus, X } from "lucide-react";
 
 import CompactSelect from "../../../../shared/components/common/CompactSelect";
@@ -13,14 +14,29 @@ function InviteMember({ isOpen, onClose, onSubmit }) {
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-900/20 px-4 pb-6 pt-24 backdrop-blur-sm dark:bg-black/55">
-            <div className="w-full max-w-sm rounded-2xl border border-white/75 bg-white/90 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.14)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/90">
+    const handleOutsideClick = (event) => {
+        if (
+            event.target === event.currentTarget
+            && !submitting
+            && identifier === ""
+            && role === PROJECT_ROLE.VIEWER
+        ) onClose();
+    };
+
+    return createPortal(
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-900/20 px-4 py-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm dark:bg-black/55"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="invite-member-heading"
+            onMouseDown={handleOutsideClick}
+        >
+            <div className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl border border-white/75 bg-white/90 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.14)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/90 sm:-translate-y-3">
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400"><UserPlus size={16} /></div>
                         <div>
-                            <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Invite Member</h2>
+                            <h2 id="invite-member-heading" className="text-sm font-semibold text-slate-800 dark:text-slate-100">Invite Member</h2>
                             <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">Invite someone by username or email.</p>
                         </div>
                     </div>
@@ -62,7 +78,8 @@ function InviteMember({ isOpen, onClose, onSubmit }) {
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

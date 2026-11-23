@@ -4,6 +4,7 @@ const { requireAuth } = require('../controllers/authController');
 const { requireProjectRole } = require('../utils/projectAccess');
 const inviteRateLimiter = require('../middleware/inviteRateLimiter');
 const {
+    getProject,
     getAllProjects,
     createProject,
     updateProject,
@@ -29,6 +30,7 @@ const {
 //
 // CRUD route endpoints                                                                  // samples
 router.get('/', requireAuth, getAllProjects);                                               // GET      http://localhost:5000/api/projects  (?deleted=true for deleted projects)
+router.get('/:project_id', requireAuth, requireProjectRole('viewer'), getProject);           // GET      http://localhost:5000/api/projects/123
 router.post('/', requireAuth, createProject);                                               // POST     http://localhost:5000/api/projects                { project_name }
 router.put('/:project_id', requireAuth, requireProjectRole('owner'), updateProject);        // PUT      http://localhost:5000/api/projects/123            { project_name }
 router.delete('/:project_id', requireAuth, requireProjectRole('owner'), deleteProject);     // DELETE   http://localhost:5000/api/projects/123

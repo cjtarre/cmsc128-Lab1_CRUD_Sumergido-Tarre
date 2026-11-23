@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useBodyScrollLock } from "../../../../shared/hooks/useBodyScrollLock";
 import { useIsMobile } from "../../../../shared/hooks/useIsMobile";
 import { ChevronDown, X } from "lucide-react";
@@ -61,6 +62,20 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
         onClose();
     };
 
+    const hasInput = (
+        formData.title !== ""
+        || formData.description !== ""
+        || formData.dueDate !== ""
+        || formData.dueTime !== ""
+        || formData.priority !== PRIORITY.NONE
+        || formData.tags.length > 0
+        || formData.assigneeId !== ""
+    );
+
+    const handleOutsideClick = (event) => {
+        if (event.target === event.currentTarget && !submitting && !hasInput) handleClose();
+    };
+
     const inputClass = (field) =>
         `${field === "description" ? "h-[88px]" : "h-8 sm:h-auto"} w-full rounded-lg border bg-white/65 px-2.5 text-slate-700 shadow-sm backdrop-blur-md placeholder:text-slate-400 outline-none transition sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm dark:bg-white/[0.05] dark:text-slate-200 dark:placeholder:text-slate-500 ${
             errors[field]
@@ -91,10 +106,12 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
         </div>
     );
 
-    return (
-        <div className="fixed inset-x-0 bottom-[68px] top-[60px] z-[9999] flex items-start justify-center overflow-hidden bg-slate-900/20 px-2 py-2 backdrop-blur-sm dark:bg-black/55 sm:inset-0 sm:overflow-y-auto sm:px-4 sm:pb-5 sm:pt-20"
+    return createPortal(
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-900/20 px-2 py-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm dark:bg-black/55 sm:px-4"
+            onMouseDown={handleOutsideClick}
             role="dialog" aria-modal="true" aria-labelledby="add-task-heading">
-            <div className="mx-auto flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/70 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/40 sm:max-h-[calc(100dvh-6.25rem)]">
+            <div className="mx-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/70 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/40 sm:max-h-[calc(100dvh-3rem)] sm:-translate-y-3">
                 <div className="flex shrink-0 items-center justify-between border-b border-white/60 bg-white/25 px-3.5 py-2 dark:border-white/10 dark:bg-white/[0.02] sm:items-start sm:px-5 sm:py-3.5">
                     <div className="min-w-0">
                         <h2 id="add-task-heading" className="text-sm font-semibold text-slate-800 dark:text-slate-100 sm:text-lg">Add Task</h2>
@@ -200,14 +217,15 @@ function AddTask({ isOpen, onClose, onSubmit, initialDueDate = "", collaborative
                         </button>
 
                         <button type="submit" disabled={submitting}
-                            className="h-7 rounded-lg bg-green-500 px-3 font-semibold text-white shadow-[0_6px_18px_rgba(34,197,94,0.18)] transition hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300/60 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-green-400 sm:h-auto sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm"
+                            className="h-7 rounded-lg bg-green-600 px-3 font-semibold text-white shadow-[0_6px_18px_rgba(22,163,74,0.18)] transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300/60 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-green-700 dark:text-white dark:hover:bg-green-600 sm:h-auto sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm"
                             style={isMobile ? { fontSize: "10px", lineHeight: "1" } : undefined}>
                             {submitting ? "Adding..." : "Add Task"}
                         </button>
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

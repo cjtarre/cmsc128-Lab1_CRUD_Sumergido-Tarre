@@ -59,6 +59,21 @@ afterEach(() => {
     vi.resetAllMocks();
 });
 
+it("keeps the Focus timer title and icon-only Spotify toggle on one mobile row", () => {
+    openFocus();
+    const spotify = screen.getByRole("button", { name: "Show Spotify" });
+    const heading = screen.getByRole("heading", { name: "Focus timer" });
+    expect(heading.parentElement.className).toContain("flex-nowrap");
+    expect(spotify.parentElement.className).toContain("flex-nowrap");
+    expect(spotify.className).toContain("size-9");
+    expect(spotify.className).toContain("sm:w-auto");
+    expect(spotify.querySelector("span").className).toContain("hidden sm:inline");
+    expect(spotify.getAttribute("aria-pressed")).toBe("false");
+
+    fireEvent.click(spotify);
+    expect(screen.getByRole("button", { name: "Hide Spotify" }).getAttribute("aria-pressed")).toBe("true");
+});
+
 it("starts with the timer only and remembers each account's Spotify setting", async () => {
     const firstVisit = openFocus();
     expect(screen.getByRole("timer", { name: "Time remaining" })).toBeTruthy();

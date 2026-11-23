@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Check, ChevronDown, Mail, X } from "lucide-react";
 
 import { getDisplayName } from "../../../../shared/utils/userUtils";
@@ -7,6 +8,7 @@ import { filterProjectInvitations } from "../../utils/projectUtils";
 // Display and respond to pending project invitations.
 function ProjectInvitations({ invites, respondingInviteId, onRespond, searchTerm = "" }) {
     const [showAll, setShowAll] = useState(false);
+    const prefersReducedMotion = useReducedMotion();
     if (!invites.length) return null;
 
     const searching = Boolean(searchTerm.trim());
@@ -34,8 +36,15 @@ function ProjectInvitations({ invites, respondingInviteId, onRespond, searchTerm
                     const responding = respondingInviteId === invite.id;
 
                     return (
-                        <div key={invite.id}
-                            className="rounded-2xl border border-green-100/80 bg-white/50 p-4 shadow-[0_8px_30px_rgba(15,23,42,0.035)] backdrop-blur-xl dark:border-green-900/30 dark:bg-white/[0.025]">
+                        <motion.div
+                            key={invite.id}
+                            animate={{ y: 0, transition: { duration: 0 } }}
+                            whileHover={prefersReducedMotion ? undefined : {
+                                y: -4,
+                                transition: { duration: 0.1, ease: "easeOut" },
+                            }}
+                            whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
+                            className="rounded-2xl border border-green-100/80 bg-white/50 p-4 shadow-[0_8px_30px_rgba(15,23,42,0.035)] backdrop-blur-xl transition-[box-shadow,border-color] hover:shadow-[0_12px_32px_rgba(15,23,42,0.09)] motion-reduce:transform-none dark:border-green-900/30 dark:bg-white/[0.025] dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.22)]">
                             <div className="flex items-start gap-3">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-500 dark:bg-green-950/40 dark:text-green-400">
                                     <Mail size={16} />
@@ -69,7 +78,7 @@ function ProjectInvitations({ invites, respondingInviteId, onRespond, searchTerm
                                     {responding ? "Responding..." : "Accept"}
                                 </button>
                             </div>
-                        </div>
+                        </motion.div>
                     );
                 })}
             </div>

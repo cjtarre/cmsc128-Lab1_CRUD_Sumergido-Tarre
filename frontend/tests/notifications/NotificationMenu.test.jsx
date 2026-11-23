@@ -208,6 +208,44 @@ describe("NotificationMenu", () => {
 
         fireEvent.click(screen.getByLabelText("Open notifications"));
 
-        expect(screen.getByText("You're all caught up")).toBeTruthy();
+        expect(screen.getByText("You're up to date")).toBeTruthy();
+        expect(screen.getByText("No unread notifications right now.")).toBeTruthy();
+    });
+
+    it("hides already-read persistent notifications from the dropdown", () => {
+        useNotifications.mockReturnValue({
+            notifications: [
+                {
+                    id: 30,
+                    type: "task_assigned",
+                    read_at: new Date().toISOString(),
+                    data: {
+                        task_id: 7,
+                        project_id: 9,
+                        task_name: "Already read task",
+                    },
+                    actor: {
+                        username: "gabrielle",
+                        display_name: "Gabrielle",
+                    },
+                },
+            ],
+            unreadCount: 0,
+            loading: false,
+            markRead: vi.fn(),
+            markAllRead: vi.fn(),
+            refresh: vi.fn(),
+        });
+
+        render(
+            <MemoryRouter>
+                <NotificationMenu />
+            </MemoryRouter>
+        );
+
+        fireEvent.click(screen.getByLabelText("Open notifications"));
+
+        expect(screen.queryByText("Already read task")).toBeNull();
+        expect(screen.getByText("You're up to date")).toBeTruthy();
     });
 });

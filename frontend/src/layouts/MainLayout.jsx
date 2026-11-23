@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import TaskCompanion from "../features/companion/TaskCompanion";
 import { useAuth } from "../features/auth/hooks/useAuth";
+import { useProjectAccessSync } from "../features/projects/hooks/useProjectAccessSync";
 import PageTransition from "../shared/components/effects/PageTransition";
 import Header from "../shared/components/header/Header";
 import MobileNavbar from "../shared/components/navigation/MobileNavBar";
@@ -12,6 +13,7 @@ const getCompanionEnabledKey = (userId) => `takda-companion-enabled:${userId}`;
 function MainLayout() {
     const { user } = useAuth();
     const { pathname } = useLocation();
+    useProjectAccessSync();
 
     const [companionEnabled, setCompanionEnabled] = useState(
         () => localStorage.getItem(getCompanionEnabledKey(user.id)) !== "false"
@@ -60,14 +62,14 @@ function MainLayout() {
                     <Navbar />
                 </div>
 
-                <main key={pathname} className="min-w-0 flex-1 overflow-y-auto p-5 lg:p-6">
+                <main key={pathname} className="min-w-0 flex-1 overflow-y-auto p-5 pb-28 lg:p-6 lg:pb-6">
                     <PageTransition>
                         <Outlet />
                     </PageTransition>
                 </main>
             </div>
 
-            <div id="mobile-navbar" className="relative z-30 xl:hidden">
+            <div id="mobile-navbar" className="pointer-events-none fixed inset-x-0 bottom-0 z-10 pb-[max(12px,env(safe-area-inset-bottom))] xl:hidden">
                 <MobileNavbar />
             </div>
 

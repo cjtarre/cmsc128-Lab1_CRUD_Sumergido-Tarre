@@ -40,7 +40,7 @@ function SelectedDayPanel({
                     </div>
 
                     {!readOnly && onAddTask && (
-                        <button type="button" onClick={onAddTask} aria-label="Add task" title="Add task" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-green-500 text-white shadow-[0_5px_15px_rgba(34,197,94,0.2)] transition hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300/50 dark:hover:bg-green-400">
+                        <button type="button" onClick={onAddTask} aria-label="Add task" title="Add task" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-green-600 text-white shadow-[0_5px_15px_rgba(22,163,74,0.2)] transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300/50 dark:bg-green-700 dark:text-white dark:hover:bg-green-600">
                             <Plus size={15} />
                         </button>
                     )}

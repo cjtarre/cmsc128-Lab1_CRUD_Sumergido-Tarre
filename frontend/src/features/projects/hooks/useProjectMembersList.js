@@ -1,27 +1,14 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { projectService } from "../services/projectService";
+import { queryKeys } from "../../../shared/utils/queryKeys";
 
 // Load project members for task assignment and filtering.
 export function useProjectMembersList(projectId) {
-    const [members, setMembers] = useState([]);
-
-    useEffect(() => {
-        let active = true;
-
-        const loadMembers = async () => {
-            try {
-                const data = await projectService.getMembers(projectId);
-                if (active) setMembers(data || []);
-            } catch (error) {
-                console.error("Error fetching project members:", error);
-                if (active) setMembers([]);
-            }
-        };
-
-        loadMembers();
-        return () => { active = false; };
-    }, [projectId]);
-
-    return members;
+    const membersQuery = useQuery({
+        queryKey: queryKeys.members(projectId),
+        queryFn: () => projectService.getMembers(projectId),
+        enabled: Boolean(projectId),
+    });
+    return Array.isArray(membersQuery.data) ? membersQuery.data : [];
 }

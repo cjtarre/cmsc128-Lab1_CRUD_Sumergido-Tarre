@@ -1,14 +1,16 @@
-import { LogOut, Settings, User } from "lucide-react";
+import { ListMusic, LogOut, Settings } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import ConfirmDialog from "../common/ConfirmDialog";
 import { useAuth } from "../../../features/auth/hooks/useAuth";
 import { getDisplayName, getInitials } from "../../utils/userUtils";
+import { useExclusiveDropdown } from "../../hooks/useExclusiveDropdown";
 
 function ProfileMenu() {
     const { user, logout } = useAuth();
     const [open, setOpen] = useState(false);
+    useExclusiveDropdown(open, setOpen);
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
     const displayName = getDisplayName(user);
@@ -49,7 +51,7 @@ function ProfileMenu() {
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
 
-                    <div className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-white/70 bg-white/90 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/90">
+                    <div data-dropdown-popup="true" className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-slate-900">
                         <div className="flex items-center gap-3 border-b border-slate-100/70 px-4 py-3 dark:border-white/10">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 text-xs font-semibold tracking-wide text-green-700 dark:bg-green-950 dark:text-green-300">
                                 {initials}
@@ -67,12 +69,11 @@ function ProfileMenu() {
                         </div>
 
                         <div className="p-1.5">
-                            <Link to="/profile" onClick={() => setOpen(false)} className={itemClass}>
-                                <User size={16} /> Profile
+                            <Link to="/account" onClick={() => setOpen(false)} className={itemClass}>
+                                <Settings size={16} /> Account
                             </Link>
-
-                            <Link to="/settings" onClick={() => setOpen(false)} className={itemClass}>
-                                <Settings size={16} /> Settings
+                            <Link to="/focus" onClick={() => setOpen(false)} className={itemClass}>
+                                <ListMusic size={16} /> Focus Mode
                             </Link>
                         </div>
 

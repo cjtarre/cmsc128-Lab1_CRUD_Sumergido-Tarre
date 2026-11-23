@@ -1,41 +1,33 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useContext } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useAuth } from "../../auth/hooks/useAuth";
 import { notificationService } from "../services/notificationService";
+import { queryKeys } from "../../../shared/utils/queryKeys";
+import { INVITATION_SYNC_INTERVAL_MS } from "../../../shared/constants/notificationSync";
 
 const NotificationContext = createContext(null);
 
 export function NotificationProvider({ children }) {
     const { user } = useAuth();
-    const [notifications, setNotifications] = useState([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
+    const notificationsQuery = useQuery({
+        queryKey: queryKeys.notifications(user?.id),
+        queryFn: notificationService.getNotifications,
+        enabled: Boolean(user?.id),
+        staleTime: 15 * 1000,
+        // Background data refresh; no page reload or loading-state flash.
+        refetchInterval: INVITATION_SYNC_INTERVAL_MS,
+        refetchOnWindowFocus: "always",
+        refetchOnReconnect: "always",
+    });
+    const data = notificationsQuery.data;
+    const notifications = Array.isArray(data?.notifications) ? data.notifications : [];
+    const unreadCount = Number(data?.unread_count) || 0;
+    const loading = notificationsQuery.isLoading;
 
-    // Sync notifications with the server.
-    const refreshNotifications = useCallback(async () => {
-        if (!user?.id) {
-            setNotifications([]);
-            setUnreadCount(0);
-            setLoading(false);
-            return;
-        }
-
-        try {
-            setLoading(true);
-            const data = await notificationService.getNotifications();
-            setNotifications(Array.isArray(data?.notifications) ? data.notifications : []);
-            setUnreadCount(Number(data?.unread_count) || 0);
-        } catch (error) {
-            console.error("Error loading notifications:", error);
-        } finally {
-            setLoading(false);
-        }
-    }, [user?.id]);
-
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        refreshNotifications();
-    }, [refreshNotifications]);
+    const refreshNotifications = () =>
+        queryClient.invalidateQueries({ queryKey: queryKeys.notifications(user?.id) });
 
     // Mark one notification as read immediately, then sync with the server.
     const markRead = async (notificationId) => {
@@ -43,8 +35,13 @@ export function NotificationProvider({ children }) {
         if (!notification || notification.read_at) return;
 
         const readAt = new Date().toISOString();
-        setNotifications((current) => current.map((item) => item.id === notificationId ? { ...item, read_at: readAt } : item));
-        setUnreadCount((current) => Math.max(0, current - 1));
+        queryClient.setQueryData(queryKeys.notifications(user?.id), (current) => current ? {
+            ...current,
+            notifications: current.notifications.map((item) =>
+                item.id === notificationId ? { ...item, read_at: readAt } : item
+            ),
+            unread_count: Math.max(0, Number(current.unread_count) - 1),
+        } : current);
 
         try {
             await notificationService.markRead(notificationId);
@@ -59,8 +56,11 @@ export function NotificationProvider({ children }) {
         if (!unreadCount) return;
 
         const readAt = new Date().toISOString();
-        setNotifications((current) => current.map((item) => ({ ...item, read_at: item.read_at || readAt })));
-        setUnreadCount(0);
+        queryClient.setQueryData(queryKeys.notifications(user?.id), (current) => current ? {
+            ...current,
+            notifications: current.notifications.map((item) => ({ ...item, read_at: item.read_at || readAt })),
+            unread_count: 0,
+        } : current);
 
         try {
             await notificationService.markAllRead();
@@ -70,13 +70,38 @@ export function NotificationProvider({ children }) {
         }
     };
 
+    const markUnread = async (notificationId) => {
+        const notification = notifications.find((item) => item.id === notificationId);
+        if (!notification || !notification.read_at) return;
+
+        queryClient.setQueryData(queryKeys.notifications(user?.id), (current) => current ? {
+            ...current,
+            notifications: current.notifications.map((item) =>
+                item.id === notificationId ? { ...item, read_at: null } : item
+            ),
+            unread_count: Number(current.unread_count) + 1,
+        } : current);
+
+        try {
+            await notificationService.markUnread(notificationId);
+        } catch (error) {
+            console.error("Error marking notification as unread:", error);
+            refreshNotifications();
+        }
+    };
+
     // Remove a notification immediately, then sync the deletion with the server.
     const removeNotification = async (notificationId) => {
         const notification = notifications.find((item) => item.id === notificationId);
         if (!notification) return;
 
-        setNotifications((current) => current.filter((item) => item.id !== notificationId));
-        if (!notification.read_at) setUnreadCount((current) => Math.max(0, current - 1));
+        queryClient.setQueryData(queryKeys.notifications(user?.id), (current) => current ? {
+            ...current,
+            notifications: current.notifications.filter((item) => item.id !== notificationId),
+            unread_count: notification.read_at
+                ? Number(current.unread_count)
+                : Math.max(0, Number(current.unread_count) - 1),
+        } : current);
 
         try {
             await notificationService.deleteNotification(notificationId);
@@ -89,7 +114,7 @@ export function NotificationProvider({ children }) {
 
     const value = {
         notifications, unreadCount, loading,
-        refreshNotifications, markRead, markAllRead, removeNotification,
+        refreshNotifications, markRead, markAllRead, markUnread, removeNotification,
     };
 
     return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;

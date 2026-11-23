@@ -4,27 +4,12 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { useMediaQuery } from "../../../../shared/hooks/useMediaQuery";
 import ProjectCard from "./ProjectCard";
-import { PROJECT_BATCH_SIZE, PROJECT_STACK_DEPTH, PROJECT_STACK_DELAY, PROJECT_DESKTOP_BREAKPOINT } from "../../constants/projectOptions";
+import { PROJECT_BATCH_SIZE, PROJECT_DESKTOP_BREAKPOINT } from "../../constants/projectOptions";
 
 
 function ProjectGrid({ projects, onEdit, onDelete, searching = false }) {
     const isDesktop = useMediaQuery(PROJECT_DESKTOP_BREAKPOINT);
-    const [expanded, setExpanded] = useState(false);
     const [visibleCount, setVisibleCount] = useState(PROJECT_BATCH_SIZE);
-
-    // Mobile briefly stacks the first cards, then opens them downward.
-    useEffect(() => {
-        if (isDesktop || searching) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setExpanded(true);
-            return;
-        }
-
-        setExpanded(false);
-
-        const timer = setTimeout(() => setExpanded(true), PROJECT_STACK_DELAY);
-        return () => clearTimeout(timer);
-    }, [projects.length, searching, isDesktop]);
 
     // Reset batching after leaving search.
     useEffect(() => {
@@ -51,20 +36,7 @@ function ProjectGrid({ projects, onEdit, onDelete, searching = false }) {
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[repeat(auto-fill,minmax(300px,380px))] sm:gap-3">
                 <AnimatePresence initial>
                     {visibleProjects.map((project, index) => {
-                        const isInitialBatch = index < PROJECT_BATCH_SIZE;
-
-                        const stackIndex = Math.min(
-                            index,
-                            PROJECT_STACK_DEPTH - 1
-                        );
-
-                        const isMobileStacked =
-                            !isDesktop &&
-                            !searching &&
-                            !expanded &&
-                            isInitialBatch;
-
-                        // Desktop enters horizontally; mobile enters vertically.
+                        // Desktop enters horizontally; mobile enters upward with a short stagger.
                         const initialPosition = isDesktop
                             ? { opacity: 0, x: -24, y: 0 }
                             : { opacity: 0, x: 0, y: -16 };
@@ -76,23 +48,8 @@ function ProjectGrid({ projects, onEdit, onDelete, searching = false }) {
                                 initial={initialPosition}
                                 animate={{
                                     opacity: 1,
-                                    x: isMobileStacked
-                                        ? stackIndex * 3
-                                        : 0,
+                                    x: 0,
                                     y: 0,
-                                    rotate:
-                                        isMobileStacked && stackIndex > 0
-                                            ? stackIndex % 2
-                                                ? 0.7
-                                                : -0.5
-                                            : 0,
-                                    scale: isMobileStacked
-                                        ? 1 - stackIndex * 0.018
-                                        : 1,
-                                    marginTop:
-                                        isMobileStacked && index > 0
-                                            ? -102
-                                            : 0,
                                 }}
                                 exit={
                                     isDesktop
@@ -101,55 +58,25 @@ function ProjectGrid({ projects, onEdit, onDelete, searching = false }) {
                                 }
                                 transition={{
                                     opacity: {
-                                        duration: 0.2,
-                                        delay: index * 0.055,
+                                        duration: 0.12,
+                                        delay: index * 0.025,
                                     },
                                     x: {
-                                        type: "spring",
-                                        stiffness: 240,
-                                        damping: 25,
+                                        duration: 0.12,
+                                        ease: [0.22, 1, 0.36, 1],
                                         delay: isDesktop
-                                            ? index * 0.055
+                                            ? index * 0.025
                                             : 0,
                                     },
                                     y: {
-                                        type: "spring",
-                                        stiffness: 240,
-                                        damping: 25,
-                                        delay: !isDesktop
-                                            ? index * 0.055
-                                            : 0,
-                                    },
-                                    marginTop: {
-                                        type: "spring",
-                                        stiffness: 210,
-                                        damping: 24,
-                                        delay:
-                                            !isDesktop &&
-                                            expanded &&
-                                            isInitialBatch
-                                                ? Math.min(
-                                                    index,
-                                                    PROJECT_STACK_DEPTH
-                                                ) * 0.06
-                                                : 0,
-                                    },
-                                    rotate: {
-                                        duration: 0.25,
-                                    },
-                                    scale: {
-                                        duration: 0.25,
+                                        duration: 0.12,
+                                        ease: [0.22, 1, 0.36, 1],
+                                        delay: !isDesktop ? index * 0.035 : 0,
                                     },
                                     layout: {
-                                        type: "spring",
-                                        stiffness: 240,
-                                        damping: 28,
+                                        duration: 0.12,
+                                        ease: [0.22, 1, 0.36, 1],
                                     },
-                                }}
-                                style={{
-                                    zIndex: isMobileStacked
-                                        ? visibleProjects.length - index
-                                        : 1,
                                 }}
                             >
                                 <ProjectCard

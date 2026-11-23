@@ -24,7 +24,7 @@ function ProjectWorkspaceContent({
         case "calendar":
             return <ProjectCalendar projectId={projectId} tasks={tasks} setTasks={setTasks} canEdit={canEdit} />;
 
-        case "members":
+        case "settings":
             return <ProjectMembers project={project} />;
 
         default:

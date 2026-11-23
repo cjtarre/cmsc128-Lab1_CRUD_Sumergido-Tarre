@@ -3,6 +3,8 @@ import { Check, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { PRIORITY_OPTIONS, STATUS_OPTIONS } from "../../constants/taskOptions";
 import { useTaskData } from "../../context/TaskContext";
+import { useExclusiveDropdown } from "../../../../shared/hooks/useExclusiveDropdown";
+import TaskTagSortSelect from "./TaskTagSortSelect";
 
 function FilterGroup({ label, items, selected, onChange }) {
     return (
@@ -36,9 +38,10 @@ function FilterGroups({ availableTags, priorityFilter, statusFilter, tagFilter, 
     );
 }
 
-function TaskFilterPanel({ priorityFilter, onPriorityFilterChange, statusFilter, onStatusFilterChange, tagFilter, onTagFilterChange }) {
+function TaskFilterPanel({ priorityFilter, onPriorityFilterChange, statusFilter, onStatusFilterChange, tagFilter, onTagFilterChange, activeSort, onSortChange }) {
     const { availableTags, searchTerm, setSearchTerm } = useTaskData();
     const [filterOpen, setFilterOpen] = useState(false);
+    useExclusiveDropdown(filterOpen, setFilterOpen);
 
     const filterCount = priorityFilter.length + statusFilter.length + tagFilter.length;
 
@@ -51,7 +54,7 @@ function TaskFilterPanel({ priorityFilter, onPriorityFilterChange, statusFilter,
     const groups = { availableTags, priorityFilter, statusFilter, tagFilter, onPriorityFilterChange, onStatusFilterChange, onTagFilterChange };
 
     return (
-        <div className={`relative flex h-[48px] min-w-0 items-center gap-1.5 rounded-2xl border border-white/70 bg-white/55 p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/55 dark:shadow-black/20 ${filterOpen ? "z-[100]" : "z-10"}`}>
+        <div className={`relative flex h-[48px] min-w-0 items-center gap-1.5 rounded-2xl border border-white/70 bg-white/55 p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/55 dark:shadow-black/20 ${filterOpen ? "z-[300]" : "z-10"}`}>
             <div className="relative min-w-0 flex-1">
                 <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                 <input type="search" value={searchTerm || ""} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search tasks..." aria-label="Search tasks" className="h-9 w-full rounded-xl border border-transparent bg-white/45 py-1.5 pl-9 pr-3 text-[11px] text-slate-700 outline-none transition placeholder:text-slate-400 hover:bg-white/65 focus:border-green-200 focus:bg-white/80 focus:ring-2 focus:ring-green-100/50 dark:bg-white/[0.035] dark:text-slate-200 dark:placeholder:text-slate-500 dark:hover:bg-white/[0.055] dark:focus:border-green-800 dark:focus:bg-white/[0.06] dark:focus:ring-green-900/30"
@@ -61,12 +64,12 @@ function TaskFilterPanel({ priorityFilter, onPriorityFilterChange, statusFilter,
             <button type="button" onClick={() => setFilterOpen((prev) => !prev)} aria-expanded={filterOpen} aria-label="Filter tasks" className={`relative flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-2.5 text-[10px] font-medium transition ${filterOpen || filterCount > 0 ? "bg-green-50/90 text-green-600 dark:bg-green-950/50 dark:text-green-400" : "bg-white/45 text-slate-500 hover:bg-white/75 dark:bg-white/[0.035] dark:text-slate-400 dark:hover:bg-white/[0.06]"}`}
                 style={{ appearance: "none", fontFamily: "inherit", fontSize: "10px", lineHeight: "1.2" }}>
                 <SlidersHorizontal size={13} />
-                <span className="hidden 2xl:inline">Filters</span>
+                <span>Filters</span>
                 {filterCount > 0 && <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-green-500 px-1 text-[9px] font-semibold text-white">{filterCount}</span>}
             </button>
 
             {filterOpen && (
-                <div className="absolute right-0 top-[calc(100%+8px)] z-[110] w-[320px] max-w-[calc(100vw-24px)] overflow-hidden rounded-xl border border-white/80 bg-white/95 shadow-[0_18px_50px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/40">
+                <div data-dropdown-popup="true" className="absolute right-0 top-[calc(100%+8px)] z-[110] w-[320px] max-w-[calc(100vw-24px)] rounded-xl border border-white/80 bg-white/95 shadow-[0_18px_50px_rgba(15,23,42,0.16)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/40">
                     <div className="flex items-center justify-between border-b border-slate-100/70 px-4 py-3 dark:border-white/10">
                         <div>
                             <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-200">Filters</p>
@@ -79,7 +82,13 @@ function TaskFilterPanel({ priorityFilter, onPriorityFilterChange, statusFilter,
                         </div>
                     </div>
 
-                    <div className="px-4 py-2"><FilterGroups {...groups} /></div>
+                    <div className="px-4 py-2">
+                        <FilterGroups {...groups} />
+                        <div className="border-t border-slate-200/60 pt-3 dark:border-white/[0.08]">
+                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Sort</p>
+                            <TaskTagSortSelect activeSort={activeSort} onSortChange={onSortChange} className="w-full" nested />
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

@@ -21,6 +21,35 @@ describe("TaskDateTimePicker", () => {
         expect(onChange).toHaveBeenCalledWith({ target: { name: "dueTime", value: "19:07" } });
     });
 
+    it("keeps the date popup open through pointerdown so day selection can complete", () => {
+        const onChange = vi.fn();
+        render(<TaskDateTimePicker type="date" name="dueDate" value="" onChange={onChange} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Due Date" }));
+        const today = within(screen.getByRole("dialog", { name: "Choose due date" })).getByRole("button", { name: "Today" });
+        fireEvent.pointerDown(today);
+        expect(screen.getByRole("dialog", { name: "Choose due date" })).toBeTruthy();
+        fireEvent.click(today);
+
+        expect(onChange).toHaveBeenCalledWith({
+            target: { name: "dueDate", value: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) },
+        });
+    });
+
+    it("allows selecting a time using a real pointerdown and click sequence", () => {
+        const onChange = vi.fn();
+        render(<TaskDateTimePicker type="time" name="dueTime" value="19:07" onChange={onChange} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Due Time" }));
+        const popup = screen.getByRole("dialog", { name: "Choose due time" });
+        const setTime = within(popup).getByRole("button", { name: "Set time" });
+        fireEvent.pointerDown(setTime);
+        expect(screen.getByRole("dialog", { name: "Choose due time" })).toBeTruthy();
+        fireEvent.click(setTime);
+
+        expect(onChange).toHaveBeenCalledWith({ target: { name: "dueTime", value: "19:07" } });
+    });
+
     it("does not open when disabled", () => {
         render(<TaskDateTimePicker type="time" name="dueTime" value="" disabled onChange={vi.fn()} />);
         fireEvent.click(screen.getByRole("button", { name: "Due Time" }));

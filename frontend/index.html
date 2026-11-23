@@ -4,6 +4,23 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f3f9f5" />
+    <script>
+      (() => {
+        try {
+          const theme = localStorage.getItem("takdaTheme") || "light";
+          const dark = theme === "dark";
+          document.documentElement.classList.toggle("dark", dark);
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+          document.querySelector('meta[name="theme-color"]')?.setAttribute(
+            "content",
+            dark ? "#020617" : "#f3f9f5"
+          );
+        } catch {
+          document.documentElement.classList.remove("dark");
+        }
+      })();
+    </script>
     <title>Takda</title>
   </head>
   <body>

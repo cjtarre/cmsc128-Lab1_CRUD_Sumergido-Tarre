@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 // Manage the mobile task-filter popup.
 export function useMobileTaskFilters() {
     const [isOpen, setIsOpen] = useState(false);
+    // Keep the outer panel open when a nested filter dropdown opens.
+    // Only the inner selects belong to the exclusive-dropdown group.
     const ref = useRef(null);
 
     useEffect(() => {

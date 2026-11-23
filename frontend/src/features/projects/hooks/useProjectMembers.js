@@ -1,41 +1,46 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { inviteService } from "../services/inviteService";
 import { projectService } from "../services/projectService";
 import { getDisplayName } from "../../../shared/utils/userUtils";
+import { queryKeys } from "../../../shared/utils/queryKeys";
+import { INVITATION_SYNC_INTERVAL_MS } from "../../../shared/constants/notificationSync";
+import { useSyncedQueryState } from "../../../shared/hooks/useSyncedQueryState";
 
 // Manage project members, invitations, and related API actions.
 export function useProjectMembers(project, isOwner) {
-    const [members, setMembers] = useState([]);
-    const [invites, setInvites] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
+    const membersQuery = useQuery({
+        queryKey: queryKeys.members(project.id),
+        queryFn: () => projectService.getMembers(project.id),
+        enabled: Boolean(project?.id),
+        // Keep the owner's member list current when invitees accept elsewhere.
+        refetchInterval: INVITATION_SYNC_INTERVAL_MS,
+        refetchOnWindowFocus: "always",
+    });
+    const invitesQuery = useQuery({
+        queryKey: queryKeys.projectInvites(project.id),
+        queryFn: () => inviteService.getProjectInvites(project.id),
+        enabled: Boolean(project?.id && isOwner),
+        refetchInterval: INVITATION_SYNC_INTERVAL_MS,
+        refetchOnWindowFocus: "always",
+    });
+    const [members, setMembers] = useSyncedQueryState(membersQuery.data);
+    const [invites, setInvites] = useSyncedQueryState(invitesQuery.data);
+    const loading = membersQuery.isLoading || (isOwner && invitesQuery.isLoading);
     const [removingMember, setRemovingMember] = useState(false);
     const [leavingProject, setLeavingProject] = useState(false);
 
-    const loadMembers = useCallback(async () => {
-        try {
-            setLoading(true);
-
-            const membersData = await projectService.getMembers(project.id);
-            setMembers(Array.isArray(membersData) ? membersData : []);
-
-            if (isOwner) {
-                const invitesData = await inviteService.getProjectInvites(project.id);
-                setInvites(Array.isArray(invitesData) ? invitesData : []);
-            }
-        } catch (error) {
-            console.error("Error loading project members:", error);
-            toast.error(error.response?.data?.error || "Unable to load project members.");
-        } finally {
-            setLoading(false);
-        }
-    }, [project.id, isOwner]);
-
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        loadMembers();
-    }, [loadMembers]);
+    const loadMembers = async () => {
+        await Promise.all([
+            queryClient.invalidateQueries({ queryKey: queryKeys.members(project.id) }),
+            isOwner
+                ? queryClient.invalidateQueries({ queryKey: queryKeys.projectInvites(project.id) })
+                : Promise.resolve(),
+        ]);
+    };
 
     const inviteMember = async (identifier, role) => {
         try {
@@ -53,7 +58,12 @@ export function useProjectMembers(project, isOwner) {
     const changeRole = async (userId, role) => {
         try {
             await projectService.changeMemberRole(project.id, userId, role);
-            setMembers((current) => current.map((member) => member.user_id === userId ? { ...member, role } : member));
+            setMembers((current) => current.map((member) =>
+                member.user_id === userId ? { ...member, role } : member
+            ));
+            queryClient.setQueryData(queryKeys.members(project.id), (current = []) =>
+                current.map((member) => member.user_id === userId ? { ...member, role } : member)
+            );
             toast.success("Member role updated.");
         } catch (error) {
             console.error("Error changing member role:", error);
@@ -67,7 +77,9 @@ export function useProjectMembers(project, isOwner) {
         try {
             setRemovingMember(true);
             await projectService.removeMember(project.id, member.user_id);
-            setMembers((current) => current.filter((item) => item.user_id !== member.user_id));
+            queryClient.setQueryData(queryKeys.members(project.id), (current = []) =>
+                current.filter((item) => item.user_id !== member.user_id)
+            );
             toast.success(`${getDisplayName(member, "Member")} removed.`);
             return true;
         } catch (error) {
@@ -100,6 +112,9 @@ export function useProjectMembers(project, isOwner) {
         try {
             await inviteService.cancelInvite(project.id, inviteId);
             setInvites((current) => current.filter((invite) => invite.id !== inviteId));
+            queryClient.setQueryData(queryKeys.projectInvites(project.id), (current = []) =>
+                current.filter((invite) => invite.id !== inviteId)
+            );
             toast.success("Invitation cancelled.");
         } catch (error) {
             console.error("Error cancelling invitation:", error);
