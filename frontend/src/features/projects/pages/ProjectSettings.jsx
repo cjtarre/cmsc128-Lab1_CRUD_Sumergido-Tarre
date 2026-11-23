@@ -1,12 +1,13 @@
 import { Link, useParams } from "react-router-dom";
 
 import ProjectUnavailable from "../../../pages/ProjectUnavailable";
+import AccessDenied from "../../../pages/AccessDenied";
 import ProjectMembers from "../components/members/ProjectMembers";
 import { useProjectSettings } from "../hooks/useProjectSettings";
 
 function ProjectSettings() {
     const { projectId } = useParams();
-    const { project, loading, projectUnavailable } = useProjectSettings(projectId);
+    const { project, loading, projectUnavailable, accessRevoked } = useProjectSettings(projectId);
 
     // Project settings loading state.
     if (loading) {
@@ -15,6 +16,10 @@ function ProjectSettings() {
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-green-500 dark:border-slate-700 dark:border-t-green-400" />
             </div>
         );
+    }
+
+    if (accessRevoked) {
+        return <AccessDenied title="Project access removed" message="You no longer have access to this project." />;
     }
 
     if (projectUnavailable || !project) return <ProjectUnavailable />;

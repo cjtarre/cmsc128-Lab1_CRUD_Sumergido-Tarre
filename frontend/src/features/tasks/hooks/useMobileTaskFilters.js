@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { useExclusiveDropdown } from "../../../shared/hooks/useExclusiveDropdown";
 
 // Manage the mobile task-filter popup.
 export function useMobileTaskFilters() {
     const [isOpen, setIsOpen] = useState(false);
-    useExclusiveDropdown(isOpen, setIsOpen);
+    // Keep the outer panel open when a nested filter dropdown opens.
+    // Only the inner selects belong to the exclusive-dropdown group.
     const ref = useRef(null);
 
     useEffect(() => {

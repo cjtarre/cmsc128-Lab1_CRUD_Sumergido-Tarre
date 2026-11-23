@@ -3,6 +3,8 @@ import {
     TASK_SORT_MODES,
     DUEDATE_SORT_MODES,
     TASK_SORT_CYCLE,
+    TAG_SORT_MODES,
+    sortTasksByTagColumn,
     getNextSort,
     sortCompletedLast,
     sortTasksByTaskColumn,
@@ -106,6 +108,26 @@ describe("taskUtils", () => {
 
         expect(sortTasksByDueDateColumn(tasks, DUEDATE_SORT_MODES.CRE_ASC).map((task) => task.id)).toEqual([2, 1]);
         expect(sortTasksByDueDateColumn(tasks, DUEDATE_SORT_MODES.CRE_DESC).map((task) => task.id)).toEqual([1, 2]);
+    });
+
+    it("sorts by tag name in both directions, including multi-tag and untagged tasks", () => {
+        const tasks = [
+            { id: 1, title: "Z task", status: active, tags: [{ tag_id: 10, tag_name: "Zebra" }, { tag_id: 5, tag_name: "Alpha" }] },
+            { id: 2, title: "B task", status: active, tags: [{ tag_id: 7, tag_name: "Beta" }] },
+            { id: 3, title: "No tag", status: active, tags: [] },
+            { id: 4, title: "Finished", status: STATUS.COMPLETED, tags: [{ tag_id: 8, tag_name: "Aardvark" }] },
+        ];
+        expect(sortTasksByTagColumn(tasks, TAG_SORT_MODES.ASC).map(({ id }) => id)).toEqual([1, 2, 3, 4]);
+        expect(sortTasksByTagColumn(tasks, TAG_SORT_MODES.DESC).map(({ id }) => id)).toEqual([2, 1, 3, 4]);
+        expect(tasks.map(({ id }) => id)).toEqual([1, 2, 3, 4]);
+    });
+
+    it("breaks tied tag names by title and supports primitive tags", () => {
+        const tasks = [
+            { id: 2, title: "Zulu", status: active, tags: ["school"] },
+            { id: 1, title: "Alpha", status: active, tags: ["School"] },
+        ];
+        expect(sortTasksByTagColumn(tasks, TAG_SORT_MODES.ASC).map(({ id }) => id)).toEqual([1, 2]);
     });
 
     it("does not mutate the original array", () => {

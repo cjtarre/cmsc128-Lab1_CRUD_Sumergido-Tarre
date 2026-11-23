@@ -15,6 +15,11 @@ export const DUEDATE_SORT_MODES = {
     CRE_DESC: "cre_desc",
 };
 
+export const TAG_SORT_MODES = {
+    ASC: "tag_asc",
+    DESC: "tag_desc",
+};
+
 export const TASK_SORT_CYCLE = Object.values(TASK_SORT_MODES);
 export const DUEDATE_SORT_CYCLE = Object.values(DUEDATE_SORT_MODES);
 
@@ -99,5 +104,34 @@ export function sortTasksByDueDateColumn(tasks, mode) {
         if (!Number.isFinite(dateB)) return -1;
 
         return mode === DUEDATE_SORT_MODES.DUE_DESC ? dateB - dateA : dateA - dateB;
+    });
+}
+
+// For multi-tag tasks, use the first tag alphabetically as the sort key.
+// Keep tasks without tags after tagged tasks in either direction.
+function getTaskTagSortKey(task) {
+    const names = (task.tags || [])
+        .map((tag) => typeof tag === "object" && tag !== null
+            ? String(tag.tag_name || tag.name || tag.tag_id || "").trim()
+            : String(tag ?? "").trim())
+        .filter(Boolean);
+
+    return names.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))[0] || "";
+}
+
+// Sort on the client after filtering; do not modify the original task array.
+export function sortTasksByTagColumn(tasks, mode) {
+    return [...tasks].sort((a, b) => {
+        const completedOrder = compareCompletedLast(a, b);
+        if (completedOrder) return completedOrder;
+
+        const tagA = getTaskTagSortKey(a);
+        const tagB = getTaskTagSortKey(b);
+        if (!tagA) return tagB ? 1 : (a.title || "").localeCompare(b.title || "");
+        if (!tagB) return -1;
+
+        const tagOrder = tagA.localeCompare(tagB, undefined, { sensitivity: "base" });
+        if (tagOrder) return mode === TAG_SORT_MODES.DESC ? -tagOrder : tagOrder;
+        return (a.title || "").localeCompare(b.title || "");
     });
 }

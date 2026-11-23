@@ -49,9 +49,13 @@ export function AuthProvider({ children }) {
     };
 
     const updateEmail = async (email) => {
-        const data = await authService.updateEmail(email);
-        if (data.user) setUser(data.user);
-        return data;
+        return authService.updateEmail(email);
+    };
+
+    const refreshUser = async () => {
+        const { user: currentUser } = await authService.getCurrentUser();
+        setUser(currentUser);
+        return currentUser;
     };
 
     const updatePassword = async (password) => authService.updatePassword(password);
@@ -70,7 +74,7 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, authLoading, isAuthenticated: !!user, login, signup, logout, updateProfile, updateEmail, updatePassword }}>
+        <AuthContext.Provider value={{ user, authLoading, isAuthenticated: !!user, login, signup, logout, updateProfile, updateEmail, refreshUser, updatePassword }}>
             {children}
         </AuthContext.Provider>
     );

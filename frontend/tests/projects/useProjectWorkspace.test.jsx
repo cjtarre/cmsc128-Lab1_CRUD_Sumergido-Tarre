@@ -1,4 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { queryKeys } from "../../src/shared/utils/queryKeys";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useProjectWorkspace } from "../../src/features/projects/hooks/useProjectWorkspace";
@@ -67,6 +69,20 @@ describe("useProjectWorkspace", () => {
 
         await waitFor(() => expect(result.current.loading).toBe(false));
         expect(result.current.projectUnavailable).toBe(true);
+    });
+
+    it("shows access revoked after membership disappears without a page refresh", async () => {
+        const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+        const queryWrapper = ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+        const { result } = renderHook(() => useProjectWorkspace(5), { wrapper: queryWrapper });
+        await waitFor(() => expect(result.current.project?.id).toBe(5));
+
+        projectService.getProject.mockRejectedValue({ response: { status: 404 } });
+        await act(async () => {
+            await client.invalidateQueries({ queryKey: queryKeys.project(5) });
+        });
+        await waitFor(() => expect(result.current.accessRevoked).toBe(true));
+        expect(result.current.projectUnavailable).toBe(false);
     });
 
     it("handles a 403 response", async () => {

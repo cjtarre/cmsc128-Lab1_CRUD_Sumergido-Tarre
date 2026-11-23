@@ -2,6 +2,9 @@
 
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { INVITATION_SYNC_INTERVAL_MS } from "../../src/shared/constants/notificationSync";
+import { queryKeys } from "../../src/shared/utils/queryKeys";
 
 import { useProjects } from "../../src/features/projects/hooks/useProjects";
 import { createQueryWrapper } from "../queryTestUtils";
@@ -78,6 +81,29 @@ describe("useProjects", () => {
         expect(result.current.deletedProjects).toEqual([{ id: 2, project_name: "Deleted" }]);
         expect(result.current.invites).toEqual([{ id: 3 }]);
         expect(result.current.error).toBe("");
+    });
+
+    it("keeps pending invitations current without refreshing the Projects page", async () => {
+        const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+        const syncWrapper = ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+        const { result } = renderHook(() => useProjects(), { wrapper: syncWrapper });
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        const query = client.getQueryCache().find({ queryKey: ["invites", "my"] });
+        expect(query.options.refetchInterval).toBe(INVITATION_SYNC_INTERVAL_MS);
+        expect(query.options.refetchOnWindowFocus).toBe("always");
+        expect(query.options.refetchOnReconnect).toBe("always");
+    });
+
+    it("keeps the project list current when membership is removed", async () => {
+        const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+        const syncWrapper = ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+        renderHook(() => useProjects(), { wrapper: syncWrapper });
+        await waitFor(() => expect(projectService.getProjects).toHaveBeenCalled());
+
+        const query = client.getQueryCache().find({ queryKey: queryKeys.projects });
+        expect(query.options.refetchInterval).toBe(INVITATION_SYNC_INTERVAL_MS);
+        expect(query.options.refetchOnWindowFocus).toBe("always");
     });
 
     it("falls back to empty arrays for invalid API collections", async () => {

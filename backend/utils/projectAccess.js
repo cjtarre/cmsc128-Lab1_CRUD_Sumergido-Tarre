@@ -49,7 +49,6 @@ const getDefaultProjectId = async (userId) => {
 
 // Tags attached to a task must be global presets (project_id null) or belong to
 // the task's own project. Returns an error message, or null if all tags are valid.
-// note: tag creation right now is not implemented
 const validateTagIdsForProject = async (tagIds, projectId) => {
     if (!Array.isArray(tagIds) || tagIds.some((id) => parseId(id) === null)) {
         return "tag_ids must be an array of tag ids";

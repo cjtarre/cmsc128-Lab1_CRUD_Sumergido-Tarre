@@ -5,6 +5,7 @@ import { convertApiTask } from "../../tasks/hooks/useTasks";
 import { taskService } from "../../tasks/services/taskService";
 import { projectService } from "../services/projectService";
 import { queryKeys } from "../../../shared/utils/queryKeys";
+import { INVITATION_SYNC_INTERVAL_MS } from "../../../shared/constants/notificationSync";
 import { useSyncedQueryState } from "../../../shared/hooks/useSyncedQueryState";
 
 const convertProjectTasks = (items) => items.map(convertApiTask);
@@ -17,6 +18,10 @@ export function useProjectWorkspace(projectId) {
         queryKey: queryKeys.project(projectId),
         queryFn: () => projectService.getProject(projectId),
         retry: false,
+        // Detect revoked access while the member remains in the workspace.
+        refetchInterval: INVITATION_SYNC_INTERVAL_MS,
+        refetchOnWindowFocus: "always",
+        refetchOnReconnect: "always",
     });
     const tasksQuery = useQuery({
         queryKey: queryKeys.projectTasks(projectId),
@@ -41,8 +46,12 @@ export function useProjectWorkspace(projectId) {
         || (projectQuery.isError || tasksQuery.isError || activitiesQuery.isError
             ? "Unable to load this project."
             : "");
-    const projectUnavailable = projectQuery.error?.response?.status === 404 || Boolean(project?.is_default);
-    const accessDenied = projectQuery.error?.response?.status === 403;
+    const projectStatus = projectQuery.error?.response?.status;
+    // A 404 after a successful load means the current session lost access.
+    // A never-accessible or nonexistent project still shows the generic unavailable page.
+    const accessRevoked = Boolean(projectQuery.data) && (projectStatus === 404 || projectStatus === 403);
+    const projectUnavailable = (projectStatus === 404 && !accessRevoked) || Boolean(project?.is_default);
+    const accessDenied = projectStatus === 403 && !accessRevoked;
 
     // Refresh only the activity feed.
     const loadActivities = useCallback(async () => {
@@ -59,6 +68,6 @@ export function useProjectWorkspace(projectId) {
     return {
         project, tasks, setTasks, activities,
         loading, refreshingActivity, error,
-        projectUnavailable, accessDenied, loadActivities,
+        projectUnavailable, accessDenied, accessRevoked, loadActivities,
     };
 }

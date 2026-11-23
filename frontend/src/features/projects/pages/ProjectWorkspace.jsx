@@ -16,7 +16,7 @@ function ProjectWorkspace() {
     const reduceMotion = useReducedMotion();
     const {
         project, tasks, setTasks, activities, loading, refreshingActivity,
-        error, projectUnavailable, accessDenied, loadActivities,
+        error, projectUnavailable, accessDenied, accessRevoked, loadActivities,
     } = useProjectWorkspace(projectId);
 
     const canEdit = canEditProject(project?.role);
@@ -50,6 +50,18 @@ function ProjectWorkspace() {
             <div className="flex min-h-[60vh] items-center justify-center">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-green-500 dark:border-slate-700 dark:border-t-green-400" />
             </div>
+        );
+    }
+
+    // A previously accessible project was removed from this session.
+    if (accessRevoked) {
+        return (
+            <AccessDenied
+                title="Project access removed"
+                message="You no longer have access to this project."
+                backTo="/projects"
+                backLabel="Back to Projects"
+            />
         );
     }
 

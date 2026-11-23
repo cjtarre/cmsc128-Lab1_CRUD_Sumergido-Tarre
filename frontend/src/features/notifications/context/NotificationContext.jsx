@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { notificationService } from "../services/notificationService";
 import { queryKeys } from "../../../shared/utils/queryKeys";
+import { INVITATION_SYNC_INTERVAL_MS } from "../../../shared/constants/notificationSync";
 
 const NotificationContext = createContext(null);
 
@@ -15,6 +16,10 @@ export function NotificationProvider({ children }) {
         queryFn: notificationService.getNotifications,
         enabled: Boolean(user?.id),
         staleTime: 15 * 1000,
+        // Background data refresh; no page reload or loading-state flash.
+        refetchInterval: INVITATION_SYNC_INTERVAL_MS,
+        refetchOnWindowFocus: "always",
+        refetchOnReconnect: "always",
     });
     const data = notificationsQuery.data;
     const notifications = Array.isArray(data?.notifications) ? data.notifications : [];

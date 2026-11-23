@@ -1,41 +1,83 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
 import { useExclusiveDropdown } from "../../../../shared/hooks/useExclusiveDropdown";
 
-// Small, accessible project dropdown with a consistently styled popup.
+// Small, accessible project dropdown with a viewport-positioned popup.
 function ProjectSelect({ label, value, defaultValue, options, onChange, Icon, wide = false }) {
     const [open, setOpen] = useState(false);
     useExclusiveDropdown(open, setOpen);
     const rootRef = useRef(null);
     const triggerRef = useRef(null);
+    const popupRef = useRef(null);
     const optionRefs = useRef([]);
     const listId = useId();
+    const [popupPosition, setPopupPosition] = useState(null);
     const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
     const selected = options[selectedIndex];
     const active = value !== defaultValue;
 
+    const updatePopupPosition = useCallback(() => {
+        const trigger = triggerRef.current;
+        if (!trigger) return;
+        const rect = trigger.getBoundingClientRect();
+        const width = Math.min(176, Math.max(100, window.innerWidth - 16));
+        const desiredHeight = Math.min(options.length * 34 + 12, 216);
+        const spaceBelow = window.innerHeight - rect.bottom - 12;
+        const spaceAbove = rect.top - 12;
+        const showAbove = spaceBelow < desiredHeight && spaceAbove > spaceBelow;
+        const available = Math.max(64, showAbove ? spaceAbove : spaceBelow);
+        const height = Math.min(desiredHeight, available);
+
+        setPopupPosition({
+            position: "fixed",
+            left: Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)),
+            top: showAbove ? Math.max(8, rect.top - height - 6) : Math.max(8, rect.bottom + 6),
+            width,
+            maxHeight: height,
+        });
+    }, [options.length]);
+
+    useLayoutEffect(() => {
+        if (!open) return;
+        updatePopupPosition();
+        window.addEventListener("resize", updatePopupPosition);
+        window.addEventListener("scroll", updatePopupPosition, true);
+        return () => {
+            window.removeEventListener("resize", updatePopupPosition);
+            window.removeEventListener("scroll", updatePopupPosition, true);
+        };
+    }, [open, updatePopupPosition]);
+
+    const popupReady = popupPosition !== null;
+    useEffect(() => {
+        if (!open || !popupReady) return;
+        optionRefs.current[selectedIndex]?.focus();
+    }, [open, popupReady, selectedIndex]);
+
     useEffect(() => {
         if (!open) return;
 
-        optionRefs.current[selectedIndex]?.focus();
-
         const onOutside = (event) => {
-            if (!rootRef.current?.contains(event.target)) setOpen(false);
+            if (!rootRef.current?.contains(event.target) && !popupRef.current?.contains(event.target)) setOpen(false);
         };
-        const onEscape = (event) => {
-            if (event.key !== "Escape") return;
-            event.preventDefault();
-            setOpen(false);
-            triggerRef.current?.focus();
+        const onKeyDown = (event) => {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                setOpen(false);
+                triggerRef.current?.focus();
+            } else if (event.key === "Tab") {
+                setOpen(false);
+            }
         };
 
         document.addEventListener("pointerdown", onOutside);
-        document.addEventListener("keydown", onEscape);
+        document.addEventListener("keydown", onKeyDown);
         return () => {
             document.removeEventListener("pointerdown", onOutside);
-            document.removeEventListener("keydown", onEscape);
+            document.removeEventListener("keydown", onKeyDown);
         };
-    }, [open, selectedIndex]);
+    }, [open]);
 
     const selectOption = (nextValue) => {
         onChange(nextValue);
@@ -44,10 +86,6 @@ function ProjectSelect({ label, value, defaultValue, options, onChange, Icon, wi
     };
 
     const onOptionsKeyDown = (event) => {
-        if (event.key === "Tab") {
-            setOpen(false);
-            return;
-        }
         if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
         event.preventDefault();
         const focusedIndex = optionRefs.current.findIndex((element) => element === document.activeElement);
@@ -59,14 +97,42 @@ function ProjectSelect({ label, value, defaultValue, options, onChange, Icon, wi
         optionRefs.current[nextIndex]?.focus();
     };
 
-    return (
+    const popup = open && popupPosition && (
         <div
-            ref={rootRef}
-            className="relative shrink-0"
-            onBlur={(event) => {
-                if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
-            }}
+            ref={popupRef}
+            id={listId}
+            role="listbox"
+            aria-label={label}
+            onKeyDown={onOptionsKeyDown}
+            style={popupPosition}
+            data-dropdown-popup="true"
+            className="z-[10001] overflow-y-auto overscroll-contain rounded-2xl border border-white/85 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/30"
         >
+            {options.map((option, index) => (
+                <button
+                    key={option.value}
+                    ref={(element) => { optionRefs.current[index] = element; }}
+                    type="button"
+                    role="option"
+                    aria-selected={option.value === value}
+                    tabIndex={-1}
+                    onClick={() => selectOption(option.value)}
+                    className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-green-300 ${
+                        option.value === value
+                            ? "bg-green-50/90 text-green-700 dark:bg-green-950/50 dark:text-green-300"
+                            : "text-slate-600 hover:bg-slate-100/80 dark:text-slate-300 dark:hover:bg-white/[0.07]"
+                    }`}
+                    style={{ appearance: "none", WebkitAppearance: "none", fontFamily: "inherit", fontSize: "10px", lineHeight: "1.15" }}
+                >
+                    <span className="whitespace-nowrap">{option.label}</span>
+                    {option.value === value && <Check size={13} aria-hidden="true" className="shrink-0 text-green-500" />}
+                </button>
+            ))}
+        </div>
+    );
+
+    return (
+        <div ref={rootRef} className="relative shrink-0">
             <button
                 ref={triggerRef}
                 type="button"
@@ -92,37 +158,7 @@ function ProjectSelect({ label, value, defaultValue, options, onChange, Icon, wi
                 <span className="min-w-0 flex-1 truncate text-left">{selected?.label}</span>
                 <ChevronDown size={12} aria-hidden="true" className={`shrink-0 text-slate-400 transition-transform duration-150 dark:text-slate-500 ${open ? "rotate-180" : ""}`} />
             </button>
-
-            {open && (
-                <div
-                    id={listId}
-                    role="listbox"
-                    aria-label={label}
-                    onKeyDown={onOptionsKeyDown}
-                    className="absolute right-0 top-full z-[80] mt-2 min-w-[152px] max-w-[calc(100vw-2rem)] rounded-2xl border border-white/85 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/30"
-                >
-                    {options.map((option, index) => (
-                        <button
-                            key={option.value}
-                            ref={(element) => { optionRefs.current[index] = element; }}
-                            type="button"
-                            role="option"
-                            aria-selected={option.value === value}
-                            tabIndex={-1}
-                            onClick={() => selectOption(option.value)}
-                            className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-green-300 ${
-                                option.value === value
-                                    ? "bg-green-50/90 text-green-700 dark:bg-green-950/50 dark:text-green-300"
-                                    : "text-slate-600 hover:bg-slate-100/80 dark:text-slate-300 dark:hover:bg-white/[0.07]"
-                            }`}
-                            style={{ appearance: "none", WebkitAppearance: "none", fontFamily: "inherit", fontSize: "10px", lineHeight: "1.15" }}
-                        >
-                            <span className="whitespace-nowrap">{option.label}</span>
-                            {option.value === value && <Check size={13} aria-hidden="true" className="shrink-0 text-green-500" />}
-                        </button>
-                    ))}
-                </div>
-            )}
+            {popup && createPortal(popup, document.body)}
         </div>
     );
 }

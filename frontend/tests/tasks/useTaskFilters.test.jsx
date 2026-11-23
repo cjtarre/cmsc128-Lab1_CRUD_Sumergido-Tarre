@@ -42,6 +42,19 @@ describe("useTaskFilters", () => {
         expect(result.current.displayedTasks.map((task) => task.id)).toEqual([1]);
     });
 
+    it("maps dropdown events to the corresponding filter state", () => {
+        const { result } = renderHook(() => useTaskFilters(tasks));
+
+        act(() => {
+            result.current.filterChangeHandlers.assignee({ target: { value: "10" } });
+            result.current.filterChangeHandlers.priority({ target: { value: "high" } });
+        });
+
+        expect(result.current.filters).toEqual({ assignee: "10", status: "", priority: "high", tag: "" });
+        expect(result.current.activeFilterCount).toBe(2);
+        expect(result.current.displayedTasks.map((task) => task.id)).toEqual([1]);
+    });
+
     it("collects task tags", () => {
         const { result } = renderHook(() => useTaskFilters(tasks));
         expect(result.current.tags).toEqual([{ id: "1", name: "School" }]);
@@ -74,6 +87,25 @@ describe("useTaskFilters", () => {
 
         act(() => result.current.handleSortTask());
         expect(result.current.activeSort).toEqual({ column: "task", mode: "title_desc" });
+    });
+
+    it("sorts project tasks by tag through the toolbar and resets to due date", () => {
+        const taggedTasks = [
+            { id: 1, title: "Alpha", status: "pending", dueDate: "20/10/2026", tags: [{ tag_id: 1, tag_name: "Zebra" }] },
+            { id: 2, title: "Beta", status: "pending", dueDate: "19/10/2026", tags: [{ tag_id: 2, tag_name: "Alpha" }] },
+            { id: 3, title: "Untagged", status: "pending", dueDate: "18/10/2026", tags: [] },
+        ];
+        const { result } = renderHook(() => useTaskFilters(taggedTasks));
+        act(() => result.current.handleSortTag("tag_asc"));
+        expect(result.current.displayedTasks.map(({ id }) => id)).toEqual([2, 1, 3]);
+        expect(result.current.activeSort).toEqual({ column: "tag", mode: "tag_asc" });
+
+        act(() => result.current.handleSortTag("tag_desc"));
+        expect(result.current.displayedTasks.map(({ id }) => id)).toEqual([1, 2, 3]);
+
+        act(() => result.current.handleSortTag(""));
+        expect(result.current.activeSort).toEqual({ column: "dueDate", mode: "due_asc" });
+        expect(result.current.displayedTasks.map(({ id }) => id)).toEqual([3, 2, 1]);
     });
 
     it("cycles due-date sorting", () => {

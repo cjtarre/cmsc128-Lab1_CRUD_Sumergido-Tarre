@@ -1,5 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { INVITATION_SYNC_INTERVAL_MS } from "../../src/shared/constants/notificationSync";
 
 import { useProjectMembers } from "../../src/features/projects/hooks/useProjectMembers";
 import { createQueryWrapper } from "../queryTestUtils";
@@ -49,6 +51,19 @@ describe("useProjectMembers", () => {
         expect(result.current.members).toHaveLength(2);
         expect(result.current.invites).toEqual([{ id: 8 }]);
         expect(inviteService.getProjectInvites).toHaveBeenCalledWith(10);
+    });
+
+    it("refreshes owner invitation and member lists when another account responds", async () => {
+        const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+        const syncWrapper = ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+        const { result } = renderHook(() => useProjectMembers({ id: 10 }, true), { wrapper: syncWrapper });
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        const members = client.getQueryCache().find({ queryKey: ["projects", "members", "10"] });
+        const invitations = client.getQueryCache().find({ queryKey: ["projects", "invites", "10"] });
+        expect(members.options.refetchInterval).toBe(INVITATION_SYNC_INTERVAL_MS);
+        expect(invitations.options.refetchInterval).toBe(INVITATION_SYNC_INTERVAL_MS);
+        expect(invitations.options.refetchOnWindowFocus).toBe("always");
     });
 
     it("does not load invitations for a non-owner", async () => {

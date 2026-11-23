@@ -6,6 +6,7 @@ import { inviteService } from "../services/inviteService";
 import { projectService } from "../services/projectService";
 import { getDisplayName } from "../../../shared/utils/userUtils";
 import { queryKeys } from "../../../shared/utils/queryKeys";
+import { INVITATION_SYNC_INTERVAL_MS } from "../../../shared/constants/notificationSync";
 import { useSyncedQueryState } from "../../../shared/hooks/useSyncedQueryState";
 
 // Manage project members, invitations, and related API actions.
@@ -15,11 +16,16 @@ export function useProjectMembers(project, isOwner) {
         queryKey: queryKeys.members(project.id),
         queryFn: () => projectService.getMembers(project.id),
         enabled: Boolean(project?.id),
+        // Keep the owner's member list current when invitees accept elsewhere.
+        refetchInterval: INVITATION_SYNC_INTERVAL_MS,
+        refetchOnWindowFocus: "always",
     });
     const invitesQuery = useQuery({
         queryKey: queryKeys.projectInvites(project.id),
         queryFn: () => inviteService.getProjectInvites(project.id),
         enabled: Boolean(project?.id && isOwner),
+        refetchInterval: INVITATION_SYNC_INTERVAL_MS,
+        refetchOnWindowFocus: "always",
     });
     const [members, setMembers] = useSyncedQueryState(membersQuery.data);
     const [invites, setInvites] = useSyncedQueryState(invitesQuery.data);

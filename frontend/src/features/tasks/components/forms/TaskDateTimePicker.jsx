@@ -225,7 +225,7 @@ function TaskDateTimePicker({
                 {isDate ? <CalendarDays size={13} className="shrink-0 text-slate-400 dark:text-slate-500" /> : <Clock3 size={13} className="shrink-0 text-slate-400 dark:text-slate-500" />}
             </button>
             {open && createPortal(
-                <div id={listId} ref={popupRef} role="dialog" aria-label={isDate ? "Choose due date" : "Choose due time"}
+                <div id={listId} ref={popupRef} role="dialog" data-dropdown-popup="true" aria-label={isDate ? "Choose due date" : "Choose due time"}
                     className="fixed z-[10020] overflow-y-auto rounded-2xl border border-white/80 bg-white/95 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.18)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/40"
                     style={position || { top: 0, left: 0, width: 280, maxHeight: 340, visibility: "hidden" }}>
                     {isDate ? pickDate : pickTime}

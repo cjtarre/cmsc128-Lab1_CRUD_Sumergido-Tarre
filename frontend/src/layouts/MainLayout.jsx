@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import TaskCompanion from "../features/companion/TaskCompanion";
 import { useAuth } from "../features/auth/hooks/useAuth";
+import { useProjectAccessSync } from "../features/projects/hooks/useProjectAccessSync";
 import PageTransition from "../shared/components/effects/PageTransition";
 import Header from "../shared/components/header/Header";
 import MobileNavbar from "../shared/components/navigation/MobileNavBar";
@@ -12,6 +13,7 @@ const getCompanionEnabledKey = (userId) => `takda-companion-enabled:${userId}`;
 function MainLayout() {
     const { user } = useAuth();
     const { pathname } = useLocation();
+    useProjectAccessSync();
 
     const [companionEnabled, setCompanionEnabled] = useState(
         () => localStorage.getItem(getCompanionEnabledKey(user.id)) !== "false"

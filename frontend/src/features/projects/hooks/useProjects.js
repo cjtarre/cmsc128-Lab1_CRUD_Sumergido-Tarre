@@ -6,6 +6,7 @@ import { useNotifications } from "../../notifications/context/NotificationContex
 import { inviteService } from "../services/inviteService";
 import { projectService } from "../services/projectService";
 import { queryKeys } from "../../../shared/utils/queryKeys";
+import { INVITATION_SYNC_INTERVAL_MS } from "../../../shared/constants/notificationSync";
 import { useSyncedQueryState } from "../../../shared/hooks/useSyncedQueryState";
 
 // Manage project lists, invitations, and project actions.
@@ -15,6 +16,10 @@ export function useProjects() {
     const projectsQuery = useQuery({
         queryKey: queryKeys.projects,
         queryFn: projectService.getProjects,
+        // A revoked membership must disappear from the project list automatically.
+        refetchInterval: INVITATION_SYNC_INTERVAL_MS,
+        refetchOnWindowFocus: "always",
+        refetchOnReconnect: "always",
     });
     const deletedProjectsQuery = useQuery({
         queryKey: queryKeys.deletedProjects,
@@ -23,6 +28,10 @@ export function useProjects() {
     const invitesQuery = useQuery({
         queryKey: queryKeys.myInvites,
         queryFn: inviteService.getMyInvites,
+        // Reflect invitations sent by another signed-in user without a page refresh.
+        refetchInterval: INVITATION_SYNC_INTERVAL_MS,
+        refetchOnWindowFocus: "always",
+        refetchOnReconnect: "always",
     });
     const [projects, setProjects] = useSyncedQueryState(projectsQuery.data);
     const [deletedProjects, setDeletedProjects] = useSyncedQueryState(deletedProjectsQuery.data);

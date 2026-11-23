@@ -7,7 +7,7 @@ function DeleteTask({ task, onConfirm, onCancel }) {
             title="Delete task?"
             message={
                 task
-                    ? `Are you sure you want to delete "${task.title}"? This action cannot be undone.`
+                    ? `Are you sure you want to delete "${task.title}"? You can undo this for a few seconds after deletion.`
                     : ""
             }
             confirmText="Delete"

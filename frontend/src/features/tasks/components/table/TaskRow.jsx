@@ -80,6 +80,9 @@ function TaskRow({
     const statusMenu = isStatusOpen && onStatusChange && createPortal(
         <div
             ref={statusMenuRef}
+            data-dropdown-popup="true"
+            role="listbox"
+            aria-label={`Status for ${title}`}
             style={{ position: "fixed", top: menuPosition.top, left: menuPosition.left }}
             className="z-[9999] min-w-[120px] overflow-hidden rounded-lg border border-white/70 bg-white/95 p-1 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95"
         >
@@ -87,6 +90,8 @@ function TaskRow({
                 <button
                     key={option.value}
                     type="button"
+                    role="option"
+                    aria-selected={option.value === status}
                     onClick={(event) => { event.stopPropagation(); onStatusChange(option.value); setIsStatusOpen(false); }}
                     className={`block w-full rounded-md px-2 py-1.5 text-left font-medium transition ${
                         option.value === status
@@ -259,7 +264,6 @@ function TaskRow({
                     <span className="truncate">{currentStatus.label}</span>
                     {onStatusChange && <ChevronDown size={8} strokeWidth={2} className={`transition-transform ${isStatusOpen ? "rotate-180" : ""}`} />}
                 </button>
-                {statusMenu}
             </div>
 
             {/* Priority - desktop */}
@@ -327,8 +331,6 @@ function TaskRow({
                     {onStatusChange && <ChevronDown size={9} strokeWidth={2} className={`transition-transform ${isStatusOpen ? "rotate-180" : ""}`} />}
                 </button>
 
-                {statusMenu}
-
                 <div
                     className={`ml-2 flex min-w-0 flex-1 items-center gap-1 ${isCompleted ? "text-slate-300 dark:text-slate-600" : "text-slate-500 dark:text-slate-400"}`}
                     style={{ fontSize: "9px", lineHeight: "1" }}
@@ -348,6 +350,7 @@ function TaskRow({
             <div className="hidden shrink-0 items-center justify-end sm:sticky sm:right-4 sm:z-10 sm:flex sm:bg-gradient-to-l sm:from-white/95 sm:via-white/90 sm:to-transparent sm:pl-4 sm:opacity-0 sm:pointer-events-none sm:transition-all sm:duration-150 sm:group-hover:pointer-events-auto sm:group-hover:opacity-100 dark:sm:from-slate-900/95 dark:sm:via-slate-900/90">
                 {(onEdit || onDelete) && <ActionButtons onEdit={onEdit} onDelete={onDelete} />}
             </div>
+            {statusMenu}
         </motion.div>
     );
 }

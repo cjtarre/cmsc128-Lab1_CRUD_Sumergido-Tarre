@@ -9,7 +9,7 @@ import { DISPLAY_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH, USERNAME_MAX_LENGTH, USER
 import { useTheme } from "../../../shared/context/ThemeContext";
 
 function Profile() {
-    const { user, authLoading, logout, updateProfile, updateEmail, updatePassword } = useAuth();
+    const { user, authLoading, logout, updateProfile, updateEmail, refreshUser, updatePassword } = useAuth();
     const { theme, setTheme } = useTheme();
 
     const [displayName, setDisplayName] = useState("");
@@ -18,6 +18,8 @@ function Profile() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [savingProfile, setSavingProfile] = useState(false);
+    const [pendingEmail, setPendingEmail] = useState("");
+    const [checkingEmail, setCheckingEmail] = useState(false);
     const [savingPassword, setSavingPassword] = useState(false);
     const [securityOpen, setSecurityOpen] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
@@ -33,6 +35,7 @@ function Profile() {
     const savedUsername = user?.username?.trim() || "";
     const currentDisplayName = getDisplayName(user);
     const currentEmail = user?.email || "";
+    const pendingEmailKey = user?.id ? `takda-pending-email:${user.id}` : null;
     const initials = getInitials(currentDisplayName);
 
     useEffect(() => {
@@ -41,6 +44,65 @@ function Profile() {
         setUsername(savedUsername);
         setEmail(currentEmail);
     }, [savedDisplayName, savedUsername, currentEmail]);
+
+    useEffect(() => {
+        // Reload pending requests after a page refresh or a restored login.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPendingEmail(pendingEmailKey ? localStorage.getItem(pendingEmailKey) || "" : "");
+    }, [pendingEmailKey]);
+
+    useEffect(() => {
+        // The authoritative account email is now the requested address.
+        if (!pendingEmailKey || !pendingEmail || currentEmail.toLowerCase() !== pendingEmail.toLowerCase()) return;
+        localStorage.removeItem(pendingEmailKey);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPendingEmail("");
+    }, [currentEmail, pendingEmail, pendingEmailKey]);
+
+    const handleCheckEmailStatus = async () => {
+        if (!pendingEmail || checkingEmail) return;
+        setCheckingEmail(true);
+        try {
+            const updatedUser = await refreshUser();
+            if (updatedUser.email?.toLowerCase() === pendingEmail.toLowerCase()) {
+                if (pendingEmailKey) localStorage.removeItem(pendingEmailKey);
+                setPendingEmail("");
+                toast.success("Your new email address is confirmed.");
+            } else {
+                toast.info("Email change is still pending. Check the required confirmation emails.");
+            }
+        } catch {
+            toast.error("Could not check email status. Please try again.");
+        } finally {
+            setCheckingEmail(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!pendingEmail || !pendingEmailKey) return undefined;
+
+        // A confirmation link may open in another tab. Recheck when the user
+        // returns instead of requiring a manual page refresh.
+        const checkOnReturn = async () => {
+            try {
+                const updatedUser = await refreshUser();
+                if (updatedUser.email?.toLowerCase() === pendingEmail.toLowerCase()) {
+                    localStorage.removeItem(pendingEmailKey);
+                    setPendingEmail("");
+                }
+            } catch {
+                // A temporary network error is not evidence of confirmation.
+            }
+        };
+        window.addEventListener("focus", checkOnReturn);
+        return () => window.removeEventListener("focus", checkOnReturn);
+    }, [pendingEmail, pendingEmailKey, refreshUser]);
+
+    const handleDismissEmailNotice = () => {
+        if (pendingEmailKey) localStorage.removeItem(pendingEmailKey);
+        setPendingEmail("");
+        toast.info("Notice dismissed. This does not cancel the email change request.");
+    };
 
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
@@ -74,8 +136,11 @@ function Profile() {
             }
 
             if (emailChanged) {
-                const data = await updateEmail(newEmail);
-                toast.success(data.message || "Check your new email to confirm the change.");
+                await updateEmail(newEmail);
+                if (pendingEmailKey) localStorage.setItem(pendingEmailKey, newEmail);
+                setPendingEmail(newEmail);
+                setEmail(currentEmail);
+                toast.info("Email change requested. Please confirm the required emails.");
             } else {
                 toast.success("Profile updated successfully!");
             }
@@ -163,6 +228,38 @@ function Profile() {
                 </div>
             </section>
 
+            {pendingEmail && (
+                <section aria-label="Pending email change" role="status"
+                    className="rounded-2xl border border-amber-200/70 bg-amber-50/70 px-5 py-4 dark:border-amber-900/50 dark:bg-amber-950/20 sm:px-6">
+                    <div className="flex items-start gap-3">
+                        <Mail size={17} className="mt-0.5 shrink-0 text-amber-700 dark:text-amber-400" />
+                        <div className="min-w-0 flex-1 space-y-2">
+                            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Email change pending</p>
+                            <p className="break-words text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                                You requested to change your email to <strong>{pendingEmail}</strong>.
+                                Your current email remains <strong>{currentEmail}</strong> until the change is confirmed.
+                                Check both your old and new inboxes if Supabase requires two confirmations.
+                            </p>
+                            <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                                This notice stays until confirmation is detected or you dismiss it. If the email links expire, request a new change.
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <button type="button" onClick={handleCheckEmailStatus} disabled={checkingEmail}
+                                    className="rounded-lg border border-amber-300/70 bg-white/80 font-medium text-slate-700 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "auto", minWidth: 0, minHeight: 0, padding: "5px 9px", fontSize: "11px", lineHeight: "1.2" }}>
+                                    {checkingEmail ? "Checking..." : "Check confirmation status"}
+                                </button>
+                                <button type="button" onClick={handleDismissEmailNotice} disabled={checkingEmail}
+                                    className="rounded-lg font-medium text-slate-500 transition hover:text-slate-700 disabled:opacity-60 dark:text-slate-400 dark:hover:text-slate-200"
+                                    style={{ display: "inline-flex", alignItems: "center", width: "auto", minHeight: 0, padding: "5px 6px", fontSize: "11px", lineHeight: "1.2" }}>
+                                    Dismiss notice
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            )}
+
             {/* Account information */}
             <section className="overflow-hidden rounded-2xl border border-white/70 bg-white/85 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85 dark:shadow-black/20">
                 <button
@@ -242,7 +339,7 @@ function Profile() {
                             </div>
 
                             <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                                Changing your email may require confirmation from your new email address.
+                                Changing your email may require confirmation from both your old and new email addresses.
                             </p>
                         </div>
 

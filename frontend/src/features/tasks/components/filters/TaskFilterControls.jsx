@@ -1,7 +1,8 @@
 import { PRIORITY, STATUS } from "../../constants/taskOptions";
 import TaskFilterSelect from "./TaskFilterSelect";
+import TaskTagSortSelect from "./TaskTagSortSelect";
 
-function TaskFilterControls({ members, tags, filters, onChange }) {
+function TaskFilterControls({ members, tags, filters, onChange, activeSort, onSortChange }) {
     return (
         <>
             <TaskFilterSelect value={filters.assignee} onChange={onChange.assignee} className="w-full lg:w-[120px]">
@@ -29,6 +30,8 @@ function TaskFilterControls({ members, tags, filters, onChange }) {
                 <option value="">Tag</option>
                 {tags.map((tag) => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
             </TaskFilterSelect>
+
+            <TaskTagSortSelect activeSort={activeSort} onSortChange={onSortChange} />
         </>
     );
 }

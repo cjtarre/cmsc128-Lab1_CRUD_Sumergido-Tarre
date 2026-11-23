@@ -4,7 +4,7 @@ import { useExclusiveDropdown } from "../../../../shared/hooks/useExclusiveDropd
 
 // A compact custom filter menu. Its onChange matches the native select event
 // shape so existing Project List filter handlers do not need to change.
-function TaskFilterSelect({ value, onChange, children, className = "" }) {
+function TaskFilterSelect({ value, onChange, children, className = "", ariaLabel, nested = false }) {
     const options = Children.toArray(children)
         .filter((child) => isValidElement(child) && child.type === "option")
         .map((child) => ({ value: String(child.props.value ?? ""), label: child.props.children }));
@@ -13,7 +13,7 @@ function TaskFilterSelect({ value, onChange, children, className = "" }) {
     const selected = options[selectedIndex];
     const selectedOptionValue = selected?.value;
     const [open, setOpen] = useState(false);
-    useExclusiveDropdown(open, setOpen);
+    useExclusiveDropdown(nested ? false : open, setOpen);
     const [above, setAbove] = useState(false);
     const wrapperRef = useRef(null);
     const triggerRef = useRef(null);
@@ -75,7 +75,7 @@ function TaskFilterSelect({ value, onChange, children, className = "" }) {
 
     return (
         <div ref={wrapperRef} className={`relative min-w-0 shrink-0 ${open ? "z-[999]" : ""} ${className}`}>
-            <button ref={triggerRef} type="button" aria-label={`Filter by ${options[0]?.label || "value"}`}
+            <button ref={triggerRef} type="button" aria-label={ariaLabel || `Filter by ${options[0]?.label || "value"}`}
                 aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listId : undefined}
                 onClick={toggle}
                 className="flex h-8 w-full items-center justify-between gap-1.5 rounded-xl border border-white/80 bg-white/55 px-2.5 text-left font-medium text-slate-500 outline-none transition hover:bg-white/75 focus-visible:ring-2 focus-visible:ring-green-100/70 dark:border-white/10 dark:bg-white/[0.035] dark:text-slate-400 dark:hover:bg-white/[0.06] dark:focus-visible:ring-green-900/30"
@@ -84,7 +84,7 @@ function TaskFilterSelect({ value, onChange, children, className = "" }) {
                 <ChevronDown size={12} aria-hidden="true" className={`shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
             </button>
             {open && (
-                <div id={listId} role="listbox" aria-label={`Choose ${options[0]?.label || "filter"}`}
+                <div id={listId} role="listbox" aria-label={ariaLabel ? `${ariaLabel} options` : `Choose ${options[0]?.label || "filter"}`}
                     onKeyDown={onOptionsKeyDown}
                     className={`absolute right-0 z-[9999] max-h-56 w-max min-w-full max-w-[min(240px,85vw)] overflow-y-auto overscroll-contain rounded-xl border border-white/80 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/30 ${above ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}>
                     {options.map((option, index) => {

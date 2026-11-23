@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { projectService } from "../services/projectService";
 import { queryKeys } from "../../../shared/utils/queryKeys";
+import { INVITATION_SYNC_INTERVAL_MS } from "../../../shared/constants/notificationSync";
 
 // Manage project settings data and mutations.
 export function useProjectSettings(projectId) {
@@ -14,6 +15,10 @@ export function useProjectSettings(projectId) {
         queryKey: queryKeys.project(projectId),
         queryFn: () => projectService.getProject(projectId),
         retry: false,
+        // Access can change while the Project Settings page remains open.
+        refetchInterval: INVITATION_SYNC_INTERVAL_MS,
+        refetchOnWindowFocus: "always",
+        refetchOnReconnect: "always",
     });
     const [projectOverride, setProjectOverride] = useState(null);
     const project = projectOverride?.projectId === projectId
@@ -21,7 +26,9 @@ export function useProjectSettings(projectId) {
         : projectQuery.data || null;
     const loading = projectQuery.isLoading;
     const [deleting, setDeleting] = useState(false);
-    const projectUnavailable = projectQuery.error?.response?.status === 404 || Boolean(project?.is_default);
+    const projectStatus = projectQuery.error?.response?.status;
+    const accessRevoked = Boolean(projectQuery.data) && (projectStatus === 404 || projectStatus === 403);
+    const projectUnavailable = (projectStatus === 404 && !accessRevoked) || Boolean(project?.is_default);
 
     // Update the project and sync local state.
     const updateProject = async (projectData) => {
@@ -64,5 +71,5 @@ export function useProjectSettings(projectId) {
         }
     };
 
-    return { project, loading, deleting, projectUnavailable, updateProject, deleteProject };
+    return { project, loading, deleting, projectUnavailable, accessRevoked, updateProject, deleteProject };
 }

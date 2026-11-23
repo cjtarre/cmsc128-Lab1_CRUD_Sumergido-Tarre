@@ -136,6 +136,49 @@ describe("useTasks", () => {
         expect(tasks[0].status).toBe(STATUS.COMPLETED);
     });
 
+    it("does not resend an existing assignee when only the status changes", async () => {
+        const previousAssigneeId = "7e5dc3a2-9938-43e0-a111-b2f40c3cb541";
+        let tasks = [{
+            id: 95,
+            title: "Project task",
+            description: "Keep this description",
+            priority: PRIORITY.HIGH,
+            status: STATUS.NOT_STARTED,
+            dueDate: "",
+            dueTime: "",
+            assigneeId: previousAssigneeId,
+            tags: [{ tag_id: 4, tag_name: "Shared" }],
+        }];
+        const setTasks = (update) => { tasks = typeof update === "function" ? update(tasks) : update; };
+
+        taskService.updateTask.mockResolvedValue({
+            task_id: 95,
+            task_name: "Project task",
+            task_info: "Keep this description",
+            priority_level: PRIORITY.HIGH,
+            status: STATUS.IN_PROGRESS,
+            due_date: null,
+            assignee_id: previousAssigneeId,
+            task_tag: [{ tags: { tag_id: 4, tag_name: "Shared" } }],
+        });
+
+        const { updateTaskStatus } = useTasks(tasks, setTasks, 7);
+        await updateTaskStatus(95, STATUS.IN_PROGRESS);
+
+        // The backend must validate an assignee only when it is being changed.
+        // Status-only updates must not resend an old assignment or replace tags.
+        expect(taskService.updateTask).toHaveBeenCalledWith(95, {
+            task_name: "Project task",
+            task_info: "Keep this description",
+            priority_level: PRIORITY.HIGH,
+            status: STATUS.IN_PROGRESS,
+            due_date: null,
+        });
+        expect(tasks[0].status).toBe(STATUS.IN_PROGRESS);
+        expect(tasks[0].assigneeId).toBe(previousAssigneeId);
+        expect(tasks[0].tags).toEqual([{ tag_id: 4, tag_name: "Shared" }]);
+    });
+
     it("does not update the status of a task that does not exist", async () => {
         let tasks = [{ id: 1, title: "Task A", status: STATUS.NOT_STARTED }];
         const setTasks = (update) => { tasks = typeof update === "function" ? update(tasks) : update; };

@@ -7,7 +7,7 @@ import { useTaskData } from "../context/TaskContext";
 import { createTaskHandlers } from "../handlers/taskHandlers";
 import emptyState from "../../../shared/constants/emptyState";
 import { filterTasks } from "../utils/taskFilters";
-import { sortTasksByTaskColumn, sortTasksByDueDateColumn, DUEDATE_SORT_MODES, TASK_SORT_CYCLE, DUEDATE_SORT_CYCLE, getNextSort } from "../utils/taskUtils";
+import { sortTasksByTaskColumn, sortTasksByTagColumn, sortTasksByDueDateColumn, TAG_SORT_MODES, DUEDATE_SORT_MODES, TASK_SORT_CYCLE, DUEDATE_SORT_CYCLE, getNextSort } from "../utils/taskUtils";
 
 import Pagination from "../../../shared/components/common/Pagination";
 import EmptyState from "../../../shared/components/common/EmptyState";
@@ -44,9 +44,14 @@ function MyTasks() {
 
     const handleSortTask = () => setActiveSort((previous) => getNextSort(previous, "task", TASK_SORT_CYCLE));
     const handleSortDueDate = () => setActiveSort((previous) => getNextSort(previous, "dueDate", DUEDATE_SORT_CYCLE));
+    const handleSortTag = (mode) => setActiveSort(mode === TAG_SORT_MODES.ASC || mode === TAG_SORT_MODES.DESC
+        ? { column: "tag", mode }
+        : { column: "dueDate", mode: DUEDATE_SORT_MODES.DUE_ASC });
 
     const filteredTasks = filterTasks(tasks, filter, searchTerm, priorityFilter, statusFilter, tagFilter);
-    const sortedTasks = activeSort.column === "task" ? sortTasksByTaskColumn(filteredTasks, activeSort.mode) : sortTasksByDueDateColumn(filteredTasks, activeSort.mode);
+    const sortedTasks = activeSort.column === "tag" ? sortTasksByTagColumn(filteredTasks, activeSort.mode)
+        : activeSort.column === "task" ? sortTasksByTaskColumn(filteredTasks, activeSort.mode)
+            : sortTasksByDueDateColumn(filteredTasks, activeSort.mode);
     const totalPages = Math.ceil(sortedTasks.length / tasksPerPage);
     const displayedTasks = filter === "all" ? sortedTasks : sortedTasks.slice((currentPage - 1) * tasksPerPage, currentPage * tasksPerPage);
 
@@ -103,6 +108,8 @@ function MyTasks() {
                     onPriorityFilterChange={setPriorityFilter}
                     onStatusFilterChange={setStatusFilter}
                     onTagFilterChange={setTagFilter}
+                    activeSort={activeSort}
+                    onSortChange={handleSortTag}
                 />
             </div>
 
