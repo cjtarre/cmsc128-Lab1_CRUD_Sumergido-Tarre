@@ -4,4 +4,9 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: { chunkSizeWarningLimit: 1000 },
+  test: {
+    environment: "jsdom",
+    css: { include: [/floatingFocus\.css\?raw$/] },
+  },
 });

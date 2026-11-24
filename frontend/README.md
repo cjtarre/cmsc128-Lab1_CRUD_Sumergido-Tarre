@@ -1,16 +1,132 @@
-# React + Vite
+# Takda Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The frontend of **Takda** is built with **React and Vite**. It provides the user interface for task management, authentication, account management, and other client-side features of the application.
 
-Currently, two official plugins are available:
+Vite is used as the frontend development and build tool, while React is used to build the application's components and user interface.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Frontend Technologies
 
-## React Compiler
+- React
+- Vite
+- React Router
+- Tailwind CSS
+- Lucide React
+- Sonner
+- ESLint
+- Vitest
+- React Testing Library
+- TanStack Query
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+The frontend currently supports:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- User registration, login, and logout
+- Persistent authentication sessions
+- Protected application routes
+- Password recovery and reset
+- Profile and account updates
+- Signup and form validation
+- Task creation, viewing, editing, and deletion
+- Task status updates and filtering
+- Task organization using tags
+- Dashboard and calendar views
+- Responsive layouts
+- Light and dark themes
+- Loading, success, error, and confirmation feedback
+
+The authentication forms also preserve appropriate non-sensitive information when moving between related authentication pages. Signup display name and email progress may be retained for the current browser session, while passwords and password confirmations are not stored in session storage.
+
+## API Caching
+
+The frontend uses TanStack Query to deduplicate requests and cache read results in memory. Projects, tasks, tags, members, invitations, project activities, and notifications have shared query keys. Data is considered fresh for 30 seconds, retained for up to 5 minutes, and background refetching is disabled on browser-window focus.
+
+Mutations update or invalidate only the resources that changed. Logout clears the query cache to prevent cross-account reuse. Cached data is not persisted to local storage or used as a fallback when the backend is unavailable.
+
+## Installation
+
+Install the frontend dependencies from the `frontend` directory:
+
+```bash
+npm install
+```
+
+## Development
+
+Start the Vite development server:
+
+```bash
+npm run dev
+```
+
+By default, the frontend is available at:
+
+```text
+http://localhost:5173/
+```
+
+Features that communicate with the API require the Takda backend to be running as well.
+
+## Testing
+
+Run the frontend test suite:
+
+```bash
+npm test
+```
+
+The frontend tests cover authentication behavior, protected routing, services, hooks, profile interactions, project workflows, task handlers, calendar and notification behavior, utilities, and form validation. API and Supabase calls are mocked, so frontend tests do not require a running backend or database.
+
+To run a focused test file while developing:
+
+```bash
+npx vitest run tests/profile/Profile.test.jsx
+```
+
+## ESLint
+
+The project uses ESLint to check the frontend source code.
+
+Run ESLint with:
+
+```bash
+npm run lint
+```
+
+## Production Build
+
+Create a production build with:
+
+```bash
+npm run build
+```
+
+Vite generates the production files in the `dist/` directory.
+
+## Project Structure
+
+```text
+frontend/
+├── src/
+│   ├── features/
+│   │   ├── auth/
+│   │   └── tasks/
+│   ├── layouts/
+│   ├── pages/
+│   └── shared/
+├── tests/
+├── package.json
+└── vite.config.js
+```
+
+The frontend is organized by application features, with shared components and utilities separated from feature-specific functionality.
+
+## React + Vite
+
+Takda uses the React + Vite setup for frontend development. Vite provides the development server, Hot Module Replacement (HMR), and production build process used by the project.
+
+## ESLint Configuration
+
+ESLint is configured for the current JavaScript and React codebase. The configuration is maintained as part of the frontend project and can be checked using the lint command described above.
+
+Any future changes to the linting configuration should remain consistent with the technologies and source files actually used by Takda.

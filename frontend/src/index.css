@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.5;
@@ -22,6 +24,77 @@ html {
   scrollbar-gutter: stable;
 }
 
+html.dark {
+  color-scheme: dark;
+  background: #020617;
+  color: #f8fafc;
+}
+
+html.dark body,
+html.dark #root {
+  background: #020617;
+}
+
+html.dark :is(input, textarea, select) {
+  color-scheme: dark;
+}
+
+html.dark :is(input, textarea, select) option {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Keep hover/focus surfaces dark even when a component predates a dark variant. */
+html.dark [class*="hover:bg-white"]:hover {
+  background-color: rgba(255, 255, 255, 0.055) !important;
+}
+
+html.dark [class*="hover:bg-slate-50"]:hover,
+html.dark [class*="hover:bg-slate-100"]:hover {
+  background-color: rgba(51, 65, 85, 0.48) !important;
+}
+
+html.dark [class*="hover:border-slate-"]:hover {
+  border-color: rgba(71, 85, 105, 0.72) !important;
+}
+
+@keyframes takda-modal-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes takda-modal-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Snappy overlay entry: applied to portalled and in-layout dialogs alike. */
+:where(.fixed:has([aria-modal="true"]), [aria-modal="true"]) {
+  animation: takda-modal-overlay-in 120ms ease-out both;
+}
+
+:where([aria-modal="true"] > div, [aria-modal="true"] > form) {
+  animation: takda-modal-panel-in 140ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-spin {
+  animation-duration: 650ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.fixed:has([aria-modal="true"]), [aria-modal="true"]) ,
+  :where([aria-modal="true"] > div, [aria-modal="true"] > form),
+  .animate-spin {
+    animation-duration: 1ms !important;
+  }
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -40,6 +113,211 @@ button {
 }
 
 a {
-  color: inherit;
   text-decoration: none;
+}
+
+@keyframes authIn {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+    display: none !important;
+    visibility: hidden;
+    pointer-events: none;
+}
+/* Responsive task-form typography.
+   These sizes follow the role of each element rather than a single global font size.
+   Scope the rules to Add/Edit Task only: the forms contain these stable field IDs.
+   :has() works in current Chromium, Firefox and Safari. */
+:where(.fixed:has(#add-task-dueDate), .fixed:has(#edit-task-dueDate)) {
+  --takda-form-heading: clamp(1.05rem, 0.98rem + 0.28vw, 1.25rem);
+  --takda-form-subtitle: clamp(0.625rem, 0.59rem + 0.14vw, 0.75rem);
+  --takda-form-label: clamp(0.69rem, 0.65rem + 0.2vw, 0.81rem);
+  --takda-form-field: clamp(0.79rem, 0.75rem + 0.2vw, 0.91rem);
+  --takda-form-secondary: clamp(0.72rem, 0.68rem + 0.2vw, 0.84rem);
+  --takda-form-primary-action: clamp(0.78rem, 0.74rem + 0.2vw, 0.9rem);
+  --takda-form-helper: clamp(0.6rem, 0.57rem + 0.12vw, 0.69rem);
+}
+
+/* Modal heading and explanatory text. */
+:where(.fixed:has(#add-task-dueDate), .fixed:has(#edit-task-dueDate)) h2 {
+  font-size: var(--takda-form-heading) !important;
+  line-height: 1.3 !important;
+}
+
+:where(.fixed:has(#add-task-dueDate), .fixed:has(#edit-task-dueDate)) h2 + p {
+  font-size: var(--takda-form-subtitle) !important;
+  line-height: 1.45 !important;
+}
+
+/* Field labels should be clear, but not as large as entered values. */
+:where(.fixed:has(#add-task-dueDate), .fixed:has(#edit-task-dueDate)) form label {
+  font-size: var(--takda-form-label) !important;
+  line-height: 1.35 !important;
+}
+
+/* Align text fields, custom selects and custom date/time buttons.
+   A limited !important is intentional: current controls set inline font sizes. */
+:where(.fixed:has(#add-task-dueDate), .fixed:has(#edit-task-dueDate)) form :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select, button[role="combobox"], button[aria-haspopup="dialog"]) {
+  font-size: var(--takda-form-field) !important;
+  line-height: 1.35 !important;
+}
+
+/* Tags and secondary form actions should not compete with form values. */
+:where(.fixed:has(#add-task-dueDate), .fixed:has(#edit-task-dueDate)) form button:not([role="combobox"]):not([aria-haspopup="dialog"]) {
+  font-size: var(--takda-form-secondary) !important;
+  line-height: 1.35 !important;
+}
+
+:where(.fixed:has(#add-task-dueDate), .fixed:has(#edit-task-dueDate)) form button[type="submit"] {
+  font-size: var(--takda-form-primary-action) !important;
+  line-height: 1.35 !important;
+}
+
+/* Character counters and small supporting notes. */
+:where(.fixed:has(#add-task-dueDate), .fixed:has(#edit-task-dueDate)) form :is(span, p)[class*="text-[8px]"],
+:where(.fixed:has(#add-task-dueDate), .fixed:has(#edit-task-dueDate)) form :is(span, p)[class*="text-[9px]"] {
+  font-size: var(--takda-form-helper) !important;
+}
+
+/* The custom menus are portalled to <body>, outside the modal DOM subtree. */
+[role="listbox"][class*="z-[10001]"] button[role="option"] {
+  font-size: clamp(0.7rem, 0.66rem + 0.16vw, 0.81rem) !important;
+  line-height: 1.35 !important;
+}
+
+[role="dialog"][aria-label="Choose due date"] :is(button, span),
+[role="dialog"][aria-label="Choose due time"] :is(button, span) {
+  font-size: clamp(0.69rem, 0.65rem + 0.12vw, 0.78rem) !important;
+  line-height: 1.35 !important;
+}
+
+/* Shared responsive typography for overlays and compact controls.
+   Keep a modest size range: large desktop viewports should not inflate modal
+   content, and labels remain distinct from values and supporting text. */
+:root {
+  --takda-ui-dialog-title: clamp(1.0625rem, 0.98rem + 0.32vw, 1.25rem);
+  --takda-ui-subtitle: clamp(0.625rem, 0.6rem + 0.12vw, 0.75rem);
+  --takda-ui-label: clamp(0.6875rem, 0.65rem + 0.19vw, 0.8125rem);
+  --takda-ui-control: clamp(0.78125rem, 0.745rem + 0.18vw, 0.90625rem);
+  --takda-ui-secondary: clamp(0.71875rem, 0.685rem + 0.15vw, 0.8125rem);
+  --takda-ui-helper: clamp(0.625rem, 0.595rem + 0.11vw, 0.6875rem);
+}
+
+/* Covers Invite Member, confirm dialogs and other heading-based modals,
+   including ones rendered through portals. The date/time popup has its own
+   smaller scale above and is deliberately excluded here. */
+:where(.fixed:has(h2), [role="dialog"]:not([aria-label="Choose due date"]):not([aria-label="Choose due time"])) h2 {
+  font-size: var(--takda-ui-dialog-title) !important;
+  line-height: 1.3 !important;
+}
+
+:where(.fixed:has(h2), [role="dialog"]:not([aria-label="Choose due date"]):not([aria-label="Choose due time"])) h2 + p {
+  font-size: var(--takda-ui-subtitle) !important;
+  line-height: 1.45 !important;
+}
+
+:where(.fixed:has(h2), [role="dialog"]:not([aria-label="Choose due date"]):not([aria-label="Choose due time"])) label {
+  font-size: var(--takda-ui-label) !important;
+  line-height: 1.35 !important;
+}
+
+:where(.fixed:has(h2), [role="dialog"]:not([aria-label="Choose due date"]):not([aria-label="Choose due time"])) :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select, button[role="combobox"], button[aria-haspopup="listbox"]) {
+  font-size: var(--takda-ui-control) !important;
+  line-height: 1.4 !important;
+  font-family: inherit;
+}
+
+:where(.fixed:has(h2), [role="dialog"]:not([aria-label="Choose due date"]):not([aria-label="Choose due time"])) :is(button[type="submit"], button[type="button"]:not([aria-label]):not([role="combobox"]):not([aria-haspopup])) {
+  font-size: var(--takda-ui-secondary) !important;
+  line-height: 1.4 !important;
+}
+
+/* Shared select triggers and the options they render, even when portalled
+   outside a modal. Do not attempt to restyle native browser option popups. */
+:where(button[role="combobox"], button[aria-haspopup="listbox"], select) {
+  font-size: var(--takda-ui-control) !important;
+  font-family: inherit;
+}
+
+:where([role="listbox"], [role="menu"]) :is([role="option"], [role="menuitem"]) {
+  font-size: var(--takda-ui-secondary) !important;
+  line-height: 1.4 !important;
+  font-family: inherit;
+}
+
+/* Stronger calendar selected-day hierarchy. The prior values moved the text
+   by less than a pixel at mid-width, making the change nearly invisible.
+   All selectors are scoped to the panel; date and task behavior is unchanged. */
+[data-takda-selected-day] h2 {
+  font-size: clamp(1rem, 0.93rem + 0.3vw, 1.1875rem) !important;
+  line-height: 1.3 !important;
+  font-weight: 650;
+}
+
+[data-takda-selected-day] h2 + p {
+  font-size: clamp(0.6875rem, 0.655rem + 0.16vw, 0.8125rem) !important;
+  line-height: 1.4 !important;
+}
+
+/* The activity count is a label, not another title. */
+[data-takda-selected-day] > div:last-child > p:first-child {
+  font-size: clamp(0.6875rem, 0.65rem + 0.14vw, 0.75rem) !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0.065em;
+}
+
+/* Task names should be easier to scan than time, badges or metadata. */
+[data-takda-selected-day] button > p[class*="truncate"] {
+  font-size: clamp(0.8125rem, 0.76rem + 0.25vw, 0.96875rem) !important;
+  line-height: 1.4 !important;
+  font-weight: 600;
+}
+
+/* Metadata grows gently, but remains smaller than task names. */
+[data-takda-selected-day] :is(p, span)[class*="text-[10px]"],
+[data-takda-selected-day] :is(p, span)[class*="text-[9px]"] {
+  font-size: clamp(0.6875rem, 0.653rem + 0.17vw, 0.75rem) !important;
+  line-height: 1.45 !important;
+}
+
+/* Expanded description and status rows need distinct reading sizes. */
+[data-takda-selected-day] p.whitespace-pre-wrap {
+  font-size: clamp(0.75rem, 0.705rem + 0.2vw, 0.875rem) !important;
+  line-height: 1.55 !important;
+}
+
+[data-takda-selected-day] div[class*="gap-x-4"][class*="flex-wrap"] {
+  font-size: clamp(0.6875rem, 0.653rem + 0.17vw, 0.75rem) !important;
+  line-height: 1.5 !important;
+}
+
+/* Keep priority badges small even after raising the rest of the text. */
+[data-takda-selected-day] span[class*="text-[8px]"] {
+  font-size: clamp(0.5625rem, 0.545rem + 0.1vw, 0.625rem) !important;
+  line-height: 1.25 !important;
+}
+
+/* Match the desktop task tabs by their existing underline indicator. This
+   avoids modifying TaskFilter.jsx, which already has local custom-menu edits. */
+@media (min-width: 1280px) {
+  :where(div[class~="xl:flex"][class~="overflow-x-auto"]):has(> span[class*="bottom-0"][class*="h-0.5"]) {
+    gap: clamp(0.625rem, 1vw, 1rem) !important;
+    padding-inline: clamp(0.5rem, 0.9vw, 0.875rem) !important;
+  }
+
+  :where(div[class~="xl:flex"][class~="overflow-x-auto"]):has(> span[class*="bottom-0"][class*="h-0.5"]) > button {
+    font-size: clamp(0.75rem, 0.72rem + 0.1vw, 0.8125rem) !important;
+    line-height: 1.35 !important;
+  }
 }

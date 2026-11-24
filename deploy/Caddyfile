@@ -1,0 +1,17 @@
+{$TAKDA_DOMAIN} {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+	}
+
+	@api path /api /api/*
+	handle @api {
+		reverse_proxy backend:5000 {
+			header_up -Forwarded
+		}
+	}
+
+	handle {
+		reverse_proxy frontend:80
+	}
+}

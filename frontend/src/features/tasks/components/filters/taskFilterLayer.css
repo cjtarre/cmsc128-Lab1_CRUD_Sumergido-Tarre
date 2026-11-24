@@ -1,0 +1,8 @@
+/* The glass wrapper around the mobile task view creates a stacking context.
+   Lift that wrapper above the adjacent search toolbar while its menu is open. */
+@media (max-width: 1279px) {
+    div:has(> [data-takda-task-filter="true"]) {
+        position: relative;
+        z-index: 60;
+    }
+}

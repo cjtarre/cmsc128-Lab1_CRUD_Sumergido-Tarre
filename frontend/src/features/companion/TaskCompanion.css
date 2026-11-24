@@ -1,0 +1,268 @@
+.task-companion {
+    --companion-size: 88px;
+    --companion-sprite-size: 80px;
+    --companion-stage-inset: 4px;
+
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 45;
+
+    width: var(--companion-size);
+    height: var(--companion-size);
+
+    pointer-events: none;
+    transition: none;
+    will-change: transform;
+}
+
+/* Physical travel */
+
+.task-companion--walking {
+    transition-property: transform;
+    transition-timing-function: linear;
+}
+
+/* Glass orb */
+
+.task-companion__pet {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+
+    width: var(--companion-size);
+    height: var(--companion-size);
+    padding: 0;
+
+    overflow: visible;
+    appearance: none;
+    -webkit-appearance: none;
+
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.08);
+
+    backdrop-filter: blur(10px) saturate(1.1);
+    -webkit-backdrop-filter: blur(10px) saturate(1.1);
+
+    box-shadow:
+        0 4px 14px rgba(15, 23, 42, 0.035),
+        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    pointer-events: auto;
+}
+
+/* Sprite stage */
+
+.task-companion__stage {
+    position: absolute;
+    left: var(--companion-stage-inset);
+    right: var(--companion-stage-inset);
+    bottom: var(--companion-stage-inset);
+
+    height: var(--companion-sprite-size);
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+
+    transform-origin: center bottom;
+    pointer-events: none;
+}
+
+.task-companion__sprite {
+    width: var(--companion-sprite-size);
+    height: var(--companion-sprite-size);
+
+    display: block;
+    object-fit: contain;
+    object-position: center bottom;
+
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* Interaction */
+
+.task-companion__pet:hover {
+    filter: brightness(1.03);
+}
+
+.task-companion__pet:focus-visible {
+    outline: 3px solid #22c55e;
+    outline-offset: 3px;
+}
+
+.task-companion--dragging {
+    transition: none;
+    z-index: 60;
+}
+
+.task-companion--dragging .task-companion__pet {
+    cursor: grabbing;
+    transform: scale(1.08) rotate(3deg);
+}
+
+/* Speech */
+
+.task-companion__message {
+    position: absolute;
+
+    left: 50%;
+    bottom: calc(100% + 8px);
+
+    transform: translateX(-50%);
+
+    width: max-content;
+    max-width: 11rem;
+
+    padding: 0.4rem 0.65rem;
+
+    border: 1px solid rgba(203, 213, 225, 0.9);
+    border-radius: 0.75rem;
+
+    background: rgba(255, 255, 255, 0.95);
+    color: #475569;
+
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+
+    pointer-events: none;
+}
+
+/* State animations */
+
+.task-companion--idle .task-companion__stage {
+    animation: companion-breathe 2.8s ease-in-out infinite;
+}
+
+.task-companion--walking .task-companion__stage {
+    animation: companion-walk 0.56s ease-in-out infinite alternate;
+}
+
+.task-companion--sleeping .task-companion__stage {
+    animation: companion-sleep 2.5s ease-in-out infinite;
+}
+
+.task-companion--celebrating .task-companion__stage {
+    animation: companion-celebrate 0.45s ease-in-out 4;
+}
+
+.task-companion--concerned .task-companion__stage {
+    animation: companion-concerned 0.45s ease-in-out 2;
+}
+
+.task-companion--reacting .task-companion__stage {
+    animation: companion-bounce 0.45s ease-in-out 2;
+}
+
+.task-companion--landing .task-companion__stage {
+    animation: companion-land 0.5s ease-out;
+}
+
+/* Animations */
+
+@keyframes companion-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.015); }
+}
+
+@keyframes companion-walk {
+    from { transform: translateY(0) rotate(-1deg); }
+    to { transform: translateY(-2px) rotate(1deg); }
+}
+
+@keyframes companion-sleep {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(0.97); }
+}
+
+@keyframes companion-celebrate {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+@keyframes companion-concerned {
+    0%, 100% { transform: rotate(0); }
+    35% { transform: rotate(-4deg); }
+    70% { transform: rotate(4deg); }
+}
+
+@keyframes companion-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+}
+
+@keyframes companion-land {
+    0% { transform: translateY(-8px); }
+    60% { transform: translateY(-2px) scale(0.97); }
+    100% { transform: translateY(0); }
+}
+
+/* Dark mode */
+
+.dark .task-companion__pet {
+    background: rgba(15, 23, 42, 0.18);
+    border-color: rgba(255, 255, 255, 0.14);
+
+    box-shadow:
+        0 6px 20px rgba(0, 0, 0, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.dark .task-companion__message {
+    background: rgba(15, 23, 42, 0.95);
+    border-color: rgba(51, 65, 85, 0.95);
+    color: #cbd5e1;
+}
+
+/* Mobile */
+
+@media (max-width: 639px) {
+    .task-companion {
+        --companion-size: 68px;
+        --companion-sprite-size: 62px;
+        --companion-stage-inset: 3px;
+    }
+
+    .task-companion__message {
+        max-width: min(9rem, calc(100vw - 24px));
+        padding: 0.35rem 0.55rem;
+        font-size: 0.68rem;
+    }
+
+    .task-companion--dragging .task-companion__pet {
+        transform: scale(1.04) rotate(2deg);
+    }
+
+    .task-companion--celebrating .task-companion__stage {
+        animation-name: companion-celebrate-mobile;
+    }
+}
+
+@keyframes companion-celebrate-mobile {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+/* Reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+    .task-companion {
+        transition: none !important;
+    }
+
+    .task-companion__stage {
+        animation: none !important;
+    }
+}

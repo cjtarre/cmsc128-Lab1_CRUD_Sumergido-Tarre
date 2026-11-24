@@ -1,0 +1,188 @@
+import { ArrowLeft, Check, Circle, Eye, EyeOff, LockKeyhole } from "lucide-react";
+import { Link } from "react-router-dom";
+
+import PasswordRequirements from "../components/PasswordRequirements";
+import { useResetPasswordForm } from "../hooks/useResetPasswordForm";
+
+function ResetPassword() {
+    const {
+        newPassword, setNewPassword, confirmPassword, setConfirmPassword,
+        showNewPassword, setShowNewPassword, showConfirmPassword, setShowConfirmPassword,
+        loading, validLink, passwordsMatch, handleSubmit,
+    } = useResetPasswordForm();
+
+    // Check recovery link.
+    if (validLink === null) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-[#f5faf7] dark:bg-slate-950">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-green-500" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex min-h-screen items-center justify-center bg-[#f5faf7] px-4 py-8 dark:bg-slate-950">
+            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-8">
+                {/* Back to login. */}
+                <Link
+                    to="/login"
+                    className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-green-600 dark:text-slate-400 dark:hover:text-green-400"
+                >
+                    <ArrowLeft size={16} />
+                    Back to login
+                </Link>
+
+                {/* Page heading. */}
+                <div className="mb-6">
+                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-green-50 text-green-500 dark:bg-green-950 dark:text-green-400">
+                        <LockKeyhole size={20} />
+                    </div>
+
+                    <h1 className="text-2xl font-semibold text-slate-800 dark:text-white">
+                        Reset password
+                    </h1>
+
+                    <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                        Choose a new password for your Takda account.
+                    </p>
+                </div>
+
+                {!validLink ? (
+                    /* Invalid or expired recovery link. */
+                    <div className="space-y-5">
+                        <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm leading-6 text-red-600 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+                            This password reset link is invalid or has expired.
+                            Request a new reset link and try again.
+                        </div>
+
+                        <Link
+                            to="/forgot-password"
+                            className="block w-full rounded-xl bg-green-500 px-4 py-2.5 text-center text-sm font-medium text-white transition hover:bg-green-600"
+                        >
+                            Request another link
+                        </Link>
+                    </div>
+                ) : (
+                    /* New password form. */
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div>
+                            <div className="space-y-1.5">
+                                <label
+                                    htmlFor="newPassword"
+                                    className="text-xs font-medium text-slate-600 dark:text-slate-300"
+                                >
+                                    New password
+                                </label>
+
+                                <div className="relative">
+                                    <input
+                                        id="newPassword"
+                                        type={showNewPassword ? "text" : "password"}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        autoComplete="new-password"
+                                        placeholder="Enter new password"
+                                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-3 pr-10 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-green-600 dark:focus:ring-green-950"
+                                    />
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowNewPassword((show) => !show)
+                                        }
+                                        aria-label={
+                                            showNewPassword
+                                                ? "Hide password"
+                                                : "Show password"
+                                        }
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
+                                    >
+                                        {showNewPassword
+                                            ? <EyeOff size={16} />
+                                            : <Eye size={16} />
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+
+                            <PasswordRequirements password={newPassword} />
+                        </div>
+
+                        <div>
+                            <div className="space-y-1.5">
+                                <label
+                                    htmlFor="confirmPassword"
+                                    className="text-xs font-medium text-slate-600 dark:text-slate-300"
+                                >
+                                    Confirm new password
+                                </label>
+
+                                <div className="relative">
+                                    <input
+                                        id="confirmPassword"
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        value={confirmPassword}
+                                        onChange={(e) =>
+                                            setConfirmPassword(e.target.value)
+                                        }
+                                        autoComplete="new-password"
+                                        placeholder="Confirm new password"
+                                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-3 pr-10 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-green-400 focus:ring-2 focus:ring-green-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-green-600 dark:focus:ring-green-950"
+                                    />
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowConfirmPassword((show) => !show)
+                                        }
+                                        aria-label={
+                                            showConfirmPassword
+                                                ? "Hide password"
+                                                : "Show password"
+                                        }
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
+                                    >
+                                        {showConfirmPassword
+                                            ? <EyeOff size={16} />
+                                            : <Eye size={16} />
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Live password match feedback. */}
+                            {confirmPassword && (
+                                <p
+                                    className={`mt-2 flex items-center gap-1.5 text-xs ${
+                                        passwordsMatch
+                                            ? "text-green-600 dark:text-green-400"
+                                            : "text-red-500 dark:text-red-400"
+                                    }`}
+                                >
+                                    {passwordsMatch
+                                        ? <Check size={13} strokeWidth={2.5} />
+                                        : <Circle size={10} />
+                                    }
+
+                                    {passwordsMatch
+                                        ? "Passwords match"
+                                        : "Passwords do not match"}
+                                </p>
+                            )}
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full rounded-xl bg-green-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {loading ? "Resetting..." : "Reset password"}
+                        </button>
+                    </form>
+                )}
+            </div>
+        </div>
+    );
+}
+
+export default ResetPassword;
