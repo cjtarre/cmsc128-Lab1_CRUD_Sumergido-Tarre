@@ -193,4 +193,4 @@ docker compose up --build -d
 
 This configuration supports **local containerization and automated build validation**. It is not a public, always-on deployment.
 
-Continuous Deployment (CD) will be configured separately after selecting and configuring a hosting provider. Until then, the GitHub Actions workflow runs CI checks only.
+The hosted application uses Render for the static frontend and Docker-based backend. This local Compose guide does not describe that hosting arrangement. See the [Deployment Guide](../deploy/README.md) for Render configuration and verification. GitHub Actions performs CI; Render automatic-deploy settings must be checked in its dashboard.

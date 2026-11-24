@@ -155,8 +155,9 @@ The categories below describe these features together with the core functionalit
 | **Containerization** | Docker | Packages the frontend and backend into separate container images |
 | | Docker Compose | Defines and manages the application services |
 | | Nginx | Serves the production frontend build and proxies API requests in the frontend container |
-| **Deployment Configuration** | Caddy | Provides HTTPS and reverse proxy support in the Docker production configuration |
-| **CI/CD** | GitHub Actions | Automates testing, linting, build validation, and configured deployment workflows |
+| **Alternative Server Configuration** | Caddy | Provides HTTPS for the optional Docker Compose deployment |
+| **Continuous Integration** | GitHub Actions | Runs tests, linting, production build checks, and Docker image build validation |
+| **Remote Hosting** | Render | Hosts the static React frontend and Docker-based Express backend |
 | | Git | Tracks source code changes and supports branch-based collaboration |
 
 ## Development and Refactoring
@@ -348,6 +349,20 @@ Takda supports Docker Compose for local containerization and GitHub Actions for 
 See the [Docker and CI Guide](docs/docker-ci.md) for setup instructions, configuration, troubleshooting, and CI details.
 
 ## Deployment
+
+**Application URL:** https://takda.smoldergs.studio/
+
+Open the application in a browser, then register or log in. No local installation is required, and access does not depend on the development laptop being online.
+
+| Component | Deployment |
+| --- | --- |
+| Frontend | React/Vite production build hosted as a Render Static Site |
+| Backend | Express API hosted as a separate Docker-based Render service |
+| Database and Authentication | Supabase PostgreSQL and Supabase Authentication |
+
+The frontend runs in the browser and sends API requests to `https://cmsc128-lab1-crud-sumergido-tarre.onrender.com`. The backend processes these requests and communicates with Supabase. Users access the application through the custom-domain URL above.
+
+GitHub Actions runs automated tests, linting, and build validation. See the [Deployment Guide](deploy/README.md) for hosting configuration and verification steps.
 
 ---
 
