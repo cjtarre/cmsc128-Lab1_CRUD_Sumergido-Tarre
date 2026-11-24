@@ -7,6 +7,7 @@ require("dotenv").config({
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const apiRateLimiter = require("./middleware/apiRateLimiter")
 
 // Routes
 const taskRoutes = require("./routes/taskRoutes");
@@ -35,6 +36,7 @@ app.use("/api", (_req, res, next) => {
 });
 
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
+app.use("/api", apiRateLimiter);
 
 // Connect CRUD route endpoints to the Express app
 app.use("/api/auth", authRoutes);
