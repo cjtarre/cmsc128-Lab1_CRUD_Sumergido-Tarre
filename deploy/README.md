@@ -1,6 +1,82 @@
-# Deploy Takda over HTTPS
+# Takda Deployment Guide
 
-The production Compose stack runs Takda on one public HTTPS hostname. Caddy obtains and renews the certificate, redirects HTTP to HTTPS, and sends `/api` requests directly to the backend. The frontend uses the same public hostname for API requests. Only Caddy publishes ports.
+## Public Application and API
+
+| Purpose | URL |
+| --- | --- |
+| Application users open | https://takda.smoldergs.studio/ |
+| Express API used by the frontend | https://cmsc128-lab1-crud-sumergido-tarre.onrender.com |
+
+Render hosts the frontend as a Static Site and the backend as a Docker-based Web Service. Supabase hosts the database and authentication. The static frontend consists of built HTML, CSS, and JavaScript; browser code calls Express for application data and authentication operations.
+
+## Render Configuration
+
+Confirm these settings against the existing services before changing them. The repository does not contain the dashboard's current settings or deployed commit IDs.
+
+### Frontend Static Site
+
+For a service with Root Directory `frontend`, use:
+
+- Build command: `npm ci && npm run build`
+- Publish directory: `dist`
+- Environment variable: `VITE_BACKEND_URL=https://cmsc128-lab1-crud-sumergido-tarre.onrender.com`
+- SPA rewrite: `/*` to `/index.html`, with action **Rewrite**, so direct React route visits work.
+
+`VITE_BACKEND_URL` is included during the Vite build. Rebuild/redeploy the frontend after changing it. Never place Supabase service-role credentials in frontend variables.
+
+Confirm which frontend service owns the custom domain. Once the custom domain works, the frontend's default Render subdomain can be disabled in that service's Custom Domains settings if only one application address is supported. Do not disable the backend's Render subdomain; the frontend calls it.
+
+### Backend Docker Service
+
+Use the repository's `backend/Dockerfile` with build context `backend` (or Root Directory `backend` and Dockerfile path `Dockerfile`, according to the existing dashboard configuration).
+
+Set backend environment variables in Render:
+
+```env
+FRONTEND_URL=https://takda.smoldergs.studio
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+Use real credentials only in the hosting dashboard. `FRONTEND_URL` must be the browser origin without a trailing slash. It configures CORS and authentication redirects. The service uses `process.env.PORT` when supplied by Render.
+
+Configure the health-check path as `/api/health`. A successful response confirms that Express is reachable; it does not independently prove database access or login correctness.
+
+### Supabase Authentication
+
+Use `https://takda.smoldergs.studio` as the production Site URL and allow the application redirects:
+
+- `https://takda.smoldergs.studio/reset-password`
+- `https://takda.smoldergs.studio/verify-email`
+
+Keep any development redirect URLs that are still required.
+
+## CI and Deployment Branches
+
+GitHub Actions runs tests, linting, frontend builds, and Docker image build validation through `.github/workflows/ci.yml`.
+
+The final deployed source must be on `main` after `act4-refactor` is merged. Confirm the repository, linked branch, and live commit for both Render services. Render settings can deploy automatically **After CI Checks Pass** when the services are connected to the Git provider and CI runs on that branch. Confirm a successful deploy in the dashboard before describing this automation as verified.
+
+The SSH/Docker Compose workflow proposed on `feature/production-deployment` targets a Linux server. It is not required for Render-managed deploys and should not be merged unchanged as the Render CD configuration.
+
+## Verification Before Submission
+
+1. Open the application URL from another device/network and confirm login.
+2. Create and edit a task, refresh, log out/in, and confirm the saved changes remain.
+3. Check a collaborative project and role restrictions with appropriate test accounts.
+4. Verify password recovery/email redirects and direct navigation to a protected route after refresh.
+5. Confirm both Render services deployed the intended final commit and record any checks not yet completed.
+
+The developer reported the custom-domain application functioning in Chrome and Edge. That report does not establish completion of every check above. The default frontend Render address currently receives a CORS failure because the backend allows the custom-domain origin.
+
+If the backend uses Render's Free instance type, it may sleep after inactivity and take about a minute to wake up. Document this if applicable; do not describe a free sleeping service as continuously running.
+
+---
+
+# Alternative: Docker Compose on a Linux Server
+
+This optional setup uses `docker-compose.production.yml` and Caddy on a Linux server. It is separate from the Render deployment described above. The Compose stack runs Takda on one public HTTPS hostname. Caddy obtains and renews the certificate, redirects HTTP to HTTPS, and sends `/api` requests directly to the backend. The frontend uses the same public hostname for API requests. Only Caddy publishes ports.
 
 The local Docker demo still uses `docker compose up --build` and opens at `http://localhost:8081`.
 

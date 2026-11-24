@@ -1,26 +1,41 @@
 # Takda
 
-Takda is a web-based task and project management application developed for **CMSC 128 – Software Engineering** at the University of the Philippines Visayas. It helps students organize schoolwork, deadlines, and everyday tasks through task management, filtering, sorting, calendar views, user accounts, and collaborative projects.
+Takda is a web-based task and project management application developed for **CMSC 128 – Software Engineering** at the University of the Philippines Visayas. It helps students organize academic responsibilities, deadlines, and everyday tasks through personal task lists, calendar views, and collaborative projects.
 
-The application integrates the CRUD task-management functionality from Laboratory Activity 1 with the authentication and account-management functionality from Laboratory Activity 2, then extends the merged system with **User-Based Access Control (UBAC)** and collaborative project features for Laboratory Activity 3.
+The application evolved across four laboratory activities. Activity 1 established task CRUD operations, and Activity 2 added authentication and account management. Activity 3 integrated these features through **User-Based Access Control (UBAC)** and collaborative projects. Activity 4 builds on this foundation through code refactoring, backend optimization, UX/UI improvements, and deployment preparation while retaining existing functionality.
 
-Takda uses a **React + Vite** frontend, a **Node.js + Express** backend, and **Supabase PostgreSQL + Supabase Authentication** for persistent application data and user sessions.
+Takda uses **React + Vite** for the frontend, **Node.js + Express** for the backend, and **Supabase PostgreSQL + Supabase Authentication** for data storage and user sessions. Automated tests, Docker containers, and GitHub Actions support validation, packaging, and deployment workflows.
 
 ---
 
 ## Features
 
+Takda combines the core and expanded features from Activities 1–3 with additional productivity tools and interface refinements.
+
+### Expanded Features from Previous Activities
+
+The following expanded features from Activities 1–3 are implemented in Takda:
+
+| Activity | Implemented Expanded Features | Feature Category |
+| --- | --- | --- |
+| Activity 1 | Task search, filtering, sorting, calendar views, and restoration of deleted tasks | Task Management |
+| Activity 2 | Profile management and email-based password recovery | Authentication & Account Management |
+| Activity 3 | Collaborative projects, invitations, and project membership with Owner, Editor, and Viewer roles | Personal & Collaborative Projects |
+
+The categories below describe these features together with the core functionality and additional productivity tools.
+
 ### Task Management
-- Create tasks with a title, description, due date and time, priority, status, and tags
+- Create tasks with a title, description, optional due date and time, priority, status, and tags
 - View and edit existing tasks
 - Soft-delete tasks with confirmation and restore recently deleted tasks
 - Mark tasks as completed and update task status
-- Search tasks
+- Search tasks by keyword
 - Filter tasks by category, status, priority, and tag
 - Sort tasks by title, priority, due date, and date added
 - Paginate task lists
 - View tasks through list and calendar interfaces, with a board view for collaborative project workspaces
 - Keep completed tasks visible with visual distinction
+- Assign tasks to members of collaborative projects
 
 ### Authentication & Account Management
 - Register a user account with form validation and password confirmation
@@ -49,6 +64,8 @@ Takda uses a **React + Vite** frontend, a **Node.js + Express** backend, and **S
 - Soft-delete and restore owned collaborative projects
 - View project overview, list, board, calendar, members, and activity views
 - Track recent project activity
+- Manage project-specific tags
+- Enforce project membership and role-based access restrictions
 
 ### Notifications
 - View task-related notifications and reminders
@@ -59,43 +76,23 @@ Takda uses a **React + Vite** frontend, a **Node.js + Express** backend, and **S
 - Dismiss notifications
 - Accept or decline pending project invitations through notification actions
 
+### Focus Mode & Productivity
+- Start adjustable focus and break timers
+- Associate focus sessions with an optional task
+- Enable an optional session lock during focus periods
+- Track completed focus time through a seven-day activity chart
+- Save and select Spotify playlists for optional playback during focus sessions
+- Display the Focus Mode timer and optional Spotify player through Picture-in-Picture
+- Use the interactive Task Companion for visual feedback during task activities
+- Retain Task Companion preferences and positioning across sessions
 
 ### Appearance & Navigation
 - Switch between light and dark themes
 - Persist the selected theme
 - Use responsive layouts across desktop, tablet, and mobile devices
 - Navigate through a desktop sidebar or mobile bottom navigation
-
----
-
-## Activity 3 Integration
-
-### Merge Strategy
-Activity 3 uses the same repository as Activities 1 and 2. The integration branch is:
-
-```text
-act3-ubac
-```
-
-The Activity 1 CRUD implementation and Activity 2 authentication and account-management implementation were brought together through Git branching and merge/pull-request workflows instead of rebuilding the application.
-
-Subsequent Activity 3 collaboration work is developed on identifiable feature branches such as:
-
-```text
-feature/project-collaboration
-```
-
-and is intended to be merged back into `act3-ubac` through a pull request so individual contributions remain visible in Git history.
-
-### Conflict Resolution Approach
-Where the CRUD and authentication features affected the same application flow, the integrated implementation reconciled their requirements by:
-
-1. preserving the Activity 1 task CRUD behavior;
-2. preserving the Activity 2 authentication and session behavior;
-3. using the authenticated backend identity (`req.user.id`) for protected operations;
-4. associating tasks with users and projects;
-5. enforcing authorization checks on the backend rather than relying only on frontend visibility; and
-6. extending the integrated data model with collaborative projects, membership roles, invitations, activity, and notifications.
+- Receive visual feedback through notifications, confirmation dialogs, and status indicators
+- Use consistent form controls, dropdown menus, and validation messages
 
 ---
 
@@ -123,48 +120,131 @@ Where the CRUD and authentication features affected the same application flow, t
   <img src="https://img.shields.io/badge/Testing_Library-E33332?style=for-the-badge&logo=testinglibrary&logoColor=white" alt="React Testing Library">
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx">
+  <img src="https://img.shields.io/badge/Caddy-1F88C0?style=for-the-badge&logo=caddy&logoColor=white" alt="Caddy">
+  <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions">
+</p>
+
 ### Technologies
 
 | Layer | Technology | Purpose |
 | --- | --- | --- |
 | **Frontend** | React | Builds the user interface using reusable components |
-| | Vite | Provides the development server and build tools |
+| | Vite | Provides development and production build tools |
 | | Tailwind CSS | Provides utility classes for styling |
 | | React Router | Handles client-side routing and navigation |
 | | Axios | Sends HTTP requests to the backend API |
 | | Lucide React | Provides interface icons |
 | | Sonner | Provides toast notifications and user feedback |
 | | Motion | Provides interface transitions and animations |
-| | TanStack Query | Caches API results, deduplicates reads, and invalidates related data after mutations |
+| | TanStack Query | Caches API results, reduces duplicate requests, and updates related data after mutations |
 | **Backend** | Node.js | Runs the server-side JavaScript application |
-| | Express.js | Handles API routes and HTTP requests |
-| | `@supabase/supabase-js` | Provides the JavaScript client for communicating with Supabase |
+| | Express.js | Handles REST API routes and HTTP requests |
+| | `@supabase/supabase-js` | Connects the backend to Supabase services |
 | | Helmet | Adds security-related HTTP headers |
-| | express-rate-limit | Limits repeated requests to protect API endpoints |
-| | CORS | Allows controlled communication between the frontend and backend |
+| | express-rate-limit | Limits repeated requests to sensitive endpoints |
+| | CORS | Restricts access to the configured frontend origin |
 | | dotenv | Loads environment variables from `.env` |
-| **Database & Authentication** | Supabase / PostgreSQL | Stores persistent application data |
+| **Database & Authentication** | Supabase PostgreSQL | Stores persistent application data |
 | | Supabase Authentication | Manages user accounts, authentication, and sessions |
-| **Testing** | Vitest | Runs automated frontend and backend tests |
-| | React Testing Library | Tests React components, hooks, and user interactions |
+| **Testing & Code Quality** | Vitest | Runs automated frontend and backend tests |
+| | React Testing Library | Tests React components and user interactions |
+| | ESLint | Checks frontend code quality and consistency |
+| **Containerization** | Docker | Packages the frontend and backend into separate container images |
+| | Docker Compose | Defines and manages the application services |
+| | Nginx | Serves the production frontend build and proxies API requests in the frontend container |
+| **Alternative Server Configuration** | Caddy | Provides HTTPS for the optional Docker Compose deployment |
+| **Continuous Integration** | GitHub Actions | Runs tests, linting, production build checks, and Docker image build validation |
+| **Remote Hosting** | Render | Hosts the static React frontend and Docker-based Express backend |
+| | Git | Tracks source code changes and supports branch-based collaboration |
+
+## Development and Refactoring
+
+Takda uses the same public GitHub repository across all four laboratory activities. Activity 3 integrated the task CRUD operations from Activity 1 with the authentication system from Activity 2 through the `act3-ubac` branch.
+
+The integration retained existing task and account features while introducing personal and collaborative projects. Tasks reference users and projects, and separate records manage memberships, invitations, activity, and notifications. Protected operations use the authenticated backend identity (`req.user.id`) and enforce ownership or project-role checks.
+
+### Activity 4 Improvements
+
+Activity 4 builds on the integrated application through code refactoring, data-access improvements, and UX/UI refinement.
+
+| Area | Changes | Reason |
+| --- | --- | --- |
+| Code Organization | Organize frontend code by feature and separate reusable components, hooks, services, and utilities | Make responsibilities clearer and reduce duplicated logic |
+| Backend Structure | Separate API routes, controllers, middleware, and shared utilities | Keep request handling, validation, and access checks easier to maintain |
+| Data Retrieval | Use dedicated resource endpoints, including `GET /api/projects/:project_id` | Retrieve the required project instead of downloading and searching the full project list |
+| Request Reuse | Use TanStack Query for shared frontend reads | Reduce duplicate API requests during navigation |
+| Data Updates | Update affected cache entries or invalidate related query keys after mutations | Keep displayed data consistent with saved changes |
+| Authorization | Retain backend identity, membership, and role checks | Preserve UBAC and prevent unauthorized resource access after refactoring |
+| UX/UI | Refine navigation, forms, spacing, responsive layouts, validation, and loading/success/error states | Apply CMSC 134 principles of consistency, feedback, error prevention, and readable presentation |
+
+### Query and Cache Behavior
+
+Takda uses **TanStack Query** to cache projects, project details, tasks, tags, members, invitations, activity, and notifications. Pages reuse cached results during navigation to reduce duplicate API requests.
+
+- Cached data remains fresh for 30 seconds. Inactive queries are garbage-collected after five minutes.
+- Returning focus to the browser window alone does not trigger a refetch.
+- Successful mutations update affected cache entries or invalidate related queries.
+- Login and logout clear the query cache to prevent reuse across accounts.
+- API responses use `Cache-Control: private, no-store` to prevent storage in shared HTTP caches.
+
+Workspace and settings pages retrieve individual projects through `GET /api/projects/:project_id` instead of downloading and searching the complete project list.
+
+Supabase PostgreSQL remains the source of persistent data. Existing database indexes support project membership lookups, task-assignee queries, notification retrieval, and recent project activity. Backend authentication and authorization continue to control access to protected resources.
+
+#### Recommended Database Indexes
+
+The following indexes are suggested for common application queries. Some query patterns are already supported by existing indexes, but this complete set has not been applied to the current database.
+
+Review existing index definitions before running these statements to avoid unnecessary overlap.
+
+```sql
+CREATE INDEX IF NOT EXISTS idx_project_user_user_project
+    ON project_user (user_id, project_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_project_deleted_created
+    ON tasks (project_id, deleted_at, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_project_assignee_deleted
+    ON tasks (project_id, assignee_id, deleted_at);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read_created
+    ON notifications (user_id, read_at, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_project_activity_project_created
+    ON project_activity (project_id, created_at DESC);
+```
+
+Apply selected indexes through the Supabase SQL editor or a database migration after reviewing the relevant queries. `IF NOT EXISTS` checks the index name; it does not detect equivalent indexes with different names.
+
+### Branches and Integration
+
+Activity 4 work is integrated through `act4-refactor`. Each partner contributes through identifiable feature branches and pull requests that document individual changes.
+
+After integration and testing, `act4-refactor` will be merged into `main` so the main branch contains the final deployed version.
 
 ---
 
 ## Project Architecture
-Takda follows a client-server architecture. The React frontend communicates with the Express backend through a REST API, while the backend uses Supabase for PostgreSQL data storage and user authentication. The frontend is organized by feature, while authentication and authorization are enforced by the backend before protected resources are accessed.
+
+Takda follows a client-server architecture. The React frontend communicates with the Express backend through a REST API. Frontend features use components, hooks, contexts, and services, while TanStack Query provides a shared cache for application reads.
+
+The backend handles request validation, authentication, and resource authorization before protected data is accessed. Supabase PostgreSQL stores application records, while Supabase Authentication manages account identities and sessions.
 
 ```mermaid
 flowchart TD
     U[User] --> F[React Frontend]
 
     %% Frontend feature flows
-    F --> TC[Task Components / Pages]
-    TC --> TH[Task Handlers / Hooks]
+    F --> TC[Task Components and Pages]
+    TC --> TH[Task Handlers and Hooks]
     TH --> TCTX[Task Context]
     TCTX --> TS[Task Services]
 
-    F --> PC[Project Components / Pages]
-    PC --> PH[Project Handlers / Hooks]
+    F --> PC[Project Components and Pages]
+    PC --> PH[Project Handlers and Hooks]
     PH --> PS[Project Services]
 
     F --> AC[Auth Context]
@@ -173,93 +253,56 @@ flowchart TD
     F --> NC[Notification Components]
     NC --> NS[Notification Service]
 
+    %% Shared frontend cache
+    TH -.->|Cached reads| Q[TanStack Query Cache]
+    PH -.->|Cached reads| Q
+    NC -.->|Cached reads| Q
+    AC -.->|Clear on logout| Q
+
     %% Shared API communication
     TS --> API[Axios API Client]
     PS --> API
     AS --> API
     NS --> API
 
-    %% Backend
+    %% Backend routing
     API --> E[Express Backend]
-    E --> R[Routes]
-    R --> AUTHZ[Authentication / Authorization]
-    AUTHZ --> C[Controllers]
+    E --> R[API Routes]
 
-    %% Supabase clients
-    C --> SA[Supabase Admin Client]
-    C --> SC[Supabase Auth Client]
-
-    SA --> DB[(PostgreSQL Database)]
+    %% Authentication operations
+    R -->|Authentication endpoints| AUTHC[Auth Controller]
+    AUTHC --> SC[Supabase Auth Client]
     SC --> AUTH[Supabase Authentication]
 
-    %% Application data
+    %% Protected application operations
+    R -->|Protected endpoints| AUTHN[Authentication Middleware]
+    AUTHN --> C[Application Controllers]
+    C --> AUTHZ[Validation and Resource Authorization]
+    AUTHZ --> SA[Supabase Admin Client]
+    SA --> DB[(Supabase PostgreSQL)]
+
+    %% Application data grouped by purpose
     DB --> PROFILES[profiles]
-    DB --> PROJECTS[projects]
-    DB --> MEMBERS[project_user]
-    DB --> TASKS[tasks]
-    DB --> TAGS[tags]
-    DB --> TASKTAG[task_tag]
-    DB --> INVITES[project_invite]
+    DB --> PROJECTS["projects / project_user"]
+    DB --> TASKS["tasks / tags / task_tag"]
+    DB --> COLLAB["project_invite / project_activity"]
     DB --> NOTIFS[notifications]
-    DB --> ACTIVITY[project_activity]
 
     %% Authentication identity
     AUTH --> USERS[auth.users]
-    USERS --> PROFILES
+    USERS -.->|Linked application profile| PROFILES
 ```
 
-### Data Flow
+Solid arrows show the main request and service paths. Dashed arrows show cache interactions and the link between authentication identities and application profiles.
 
-**Task CRUD:**  
-`User → React Components → Task Handlers / Hooks → Task Context → Task Service → Axios → Express Routes → Access Checks → Task Controller → Supabase → PostgreSQL`
-
-**Authentication:**  
-`User → Login / Signup → Auth Context → Auth Service → Axios → Express Auth Routes → Auth Controller → Supabase Authentication → Session`
-
-**Collaborative Projects:**  
-`User → Project Components → Project Handlers / Hooks → Project Service → Axios → Express Project Routes → Project Role Check → Project / Member / Invite Controller → Supabase → PostgreSQL`
-
-**Notifications:**  
-`User → Notification Components → Notification Service → Axios → Express Notification Routes → Authentication → Notification Controller → Supabase → PostgreSQL`
+Authentication requirements depend on the endpoint. Registration and login are publicly accessible. Protected application endpoints verify the authenticated user, while project operations also enforce membership and role permissions.
 
 ### Supabase Clients
 
-The backend uses two Supabase clients depending on the type of operation:
+The backend uses two Supabase clients:
 
-- **Anon-key client** (`config/supabaseClient.js`) — Uses `SUPABASE_ANON_KEY`, with `SUPABASE_KEY` supported as a fallback. It handles user-scoped Supabase Authentication operations such as login, session refresh, logout, password recovery, and email or password changes.
-
-- **Service-role client** (`config/supabaseAdmin.js`) — Handles authorized server-side database operations involving tasks, projects, memberships, invitations, notifications, tags, profiles, and related records. Because the service-role key has elevated privileges, it is kept exclusively on the backend.
-
----
-
-## Data Query and Cache Behavior
-
-The frontend uses **TanStack Query** as a shared read cache. Cached resources include projects, project details, tasks, tags, members, invitations, activities, and notifications. Query data is kept for 30 seconds, garbage-collected after 5 minutes, and is not refetched merely because the browser window regains focus.
-
-- Project and workspace pages reuse cached data during normal navigation.
-- Mutations update affected query entries locally or invalidate only their related query keys.
-- Logout clears the frontend query cache so another user's data is never reused.
-- `/api` responses use `Cache-Control: private, no-store`; application data is not stored in shared HTTP caches.
-- Supabase/PostgreSQL remains the source of truth. TanStack Query reduces duplicate API calls, but backend mutations and explicit invalidations still determine refresh correctness.
-
-Data reads use dedicated endpoints and project/task scoping. For example, workspace and settings pages use `GET /api/projects/:project_id` instead of downloading and searching the complete project list.
-
-Recommended database indexes for the main read paths are:
-
-```sql
-CREATE INDEX IF NOT EXISTS idx_project_user_user_project
-    ON project_user (user_id, project_id);
-CREATE INDEX IF NOT EXISTS idx_tasks_project_deleted_created
-    ON tasks (project_id, deleted_at, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_tasks_project_assignee_deleted
-    ON tasks (project_id, assignee_id, deleted_at);
-CREATE INDEX IF NOT EXISTS idx_notifications_user_read_created
-    ON notifications (user_id, read_at, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_project_activity_project_created
-    ON project_activity (project_id, created_at DESC);
-```
-
-Add these through the Supabase SQL editor or migrations when applying them to a production database.
+- **Auth client** (`backend/config/supabaseClient.js`) — Uses `SUPABASE_ANON_KEY`, with `SUPABASE_KEY` supported as a fallback. It handles authentication operations such as login, session refresh, logout, password recovery, and email or password changes.
+- **Admin client** (`backend/config/supabaseAdmin.js`) — Performs server-side database operations after the required application authorization checks. Its service-role key remains exclusively on the backend.
 
 ---
 
@@ -304,6 +347,22 @@ cmsc128-Lab1_CRUD_Sumergido-Tarre/
 Takda supports Docker Compose for local containerization and GitHub Actions for automated testing and build validation.
 
 See the [Docker and CI Guide](docs/docker-ci.md) for setup instructions, configuration, troubleshooting, and CI details.
+
+## Deployment
+
+**Application URL:** https://takda.smoldergs.studio/
+
+Open the application in a browser, then register or log in. No local installation is required, and access does not depend on the development laptop being online.
+
+| Component | Deployment |
+| --- | --- |
+| Frontend | React/Vite production build hosted as a Render Static Site |
+| Backend | Express API hosted as a separate Docker-based Render service |
+| Database and Authentication | Supabase PostgreSQL and Supabase Authentication |
+
+The frontend runs in the browser and sends API requests to `https://cmsc128-lab1-crud-sumergido-tarre.onrender.com`. The backend processes these requests and communicates with Supabase. Users access the application through the custom-domain URL above.
+
+GitHub Actions runs automated tests, linting, and build validation. See the [Deployment Guide](deploy/README.md) for hosting configuration and verification steps.
 
 ---
 
@@ -467,6 +526,7 @@ All protected endpoints require a valid authenticated session. Project-specific 
 | `PATCH` | `/api/projects/:project_id/members/:user_id` | Owner | Change a member's role |
 | `DELETE` | `/api/projects/:project_id/members/:user_id` | Owner | Remove a project member |
 | `POST` | `/api/projects/:project_id/leave` | Member | Leave a collaborative project |
+| `GET` | `/api/projects/:project_id` | Member | Retrieve one accessible project |
 
 Project roles follow the hierarchy:
 
@@ -509,7 +569,7 @@ Takda uses Supabase PostgreSQL for persistent application data and Supabase Auth
 
 Supabase Authentication stores account identities separately in `auth.users`, while application-specific profile information is stored in `profiles`.
 
-![Relational schema for Takda.](screenshots/database_erd_act3.png)
+![Relational schema for Takda.](screenshots/database_erd_act4.svg)
 
 ### Main Task Fields
 
@@ -528,84 +588,75 @@ Supabase Authentication stores account identities separately in `auth.users`, wh
 | `deleted_at` | Soft-delete timestamp; `null` when active |
 
 ---
-## Authentication
-Takda uses **Supabase Authentication** together with backend authorization to manage user accounts, sessions, and protected resources.
 
-### Registration
-Users can create an account using a display name, username, email address, and password. Registration validates required fields, email format, password confirmation, password strength, and duplicate account information.
+## Authentication and Access Control
 
-Passwords must contain at least 8 characters, including an uppercase letter, lowercase letter, number, and special character. Passwords are handled by Supabase Authentication and are not stored as plaintext in Takda's application database.
+Takda uses **Supabase Authentication** for user accounts and sessions. The Express backend enforces authorization for protected application resources.
 
-### Login & Session Persistence
-Users can log in using either their username or email address. Successful authentication creates a Supabase session and redirects the user to **My Tasks**.
+### Registration and Account Management
 
-The frontend stores the access and refresh tokens and restores the authenticated user state across page refreshes. Expired access tokens can be refreshed automatically; invalid session data is cleared when authentication can no longer be restored.
+Registration requires a display name, username, email address, and password. Validation checks required fields, email format, password confirmation, password strength, and duplicate account information.
 
-### Protected Routes
-Authenticated application pages are protected through `ProtectedRoute`. Users without a valid authenticated session are redirected to the login page.
+Passwords must contain at least eight characters, including an uppercase letter, lowercase letter, number, and special character. Supabase Authentication handles passwords; they are not stored as plaintext in the application database.
 
-### Account Management & Recovery
-Authenticated users can update their display name, username, email address, and password. Email and password changes are processed through Supabase Authentication and follow the application's validation requirements.
+Authenticated users can update profile information and request email or password changes. Password recovery uses an email link that opens the password-reset flow and establishes a temporary recovery session.
 
-Users who forget their password can request a recovery email. The recovery link redirects to Takda's password-reset flow, where temporary Supabase recovery tokens are used to establish a recovery session and securely update the password.
+### Sessions and Protected Routes
 
-### Project Access Control
-Collaborative project access is represented through the `project_user` table. Each membership has one of three roles:
+Users can log in with a username or email address. Successful login establishes a Supabase session and redirects to **My Tasks**.
 
-- **Owner** — full project control
-- **Editor** — can manage project work
-- **Viewer** — read-only access
+The frontend stores access and refresh tokens to restore sessions across page refreshes. Expired access tokens can be refreshed automatically. Invalid session data is cleared when authentication can no longer be restored.
 
-The backend verifies project membership and role before allowing protected project operations. 
+`ProtectedRoute` redirects unauthenticated users to login. The backend independently verifies protected API requests using the authenticated user identity.
 
-### IDOR Prevention
-Takda reduces Insecure Direct Object Reference (IDOR) risk by enforcing authorization on the backend:
+### Personal and Collaborative Project Access
 
-- Non-members cannot retrieve project data simply by changing a project ID.
-- Inaccessible project resources return `404 Project not found`.
-- Users with insufficient project roles receive `403 Insufficient permissions`.
-- Task update, delete, and restore operations validate access to the task's project before modification.
-- Invitation responses are scoped to the intended authenticated user.
+The collaborative-list functionality from Activity 3 is implemented through projects. Each user has a default personal project and may join collaborative projects.
 
-Returning `404` for inaccessible projects also helps reduce resource enumeration.
+Membership is stored in `project_user`, separately from task and profile records. Each membership has a role:
 
-### Notification Access
-Notifications are tied to the authenticated user and are retrieved and modified using the user's verified backend identity. Users can view, mark as read, or dismiss only their own notifications.
+| Role | Access |
+| --- | --- |
+| Owner | Controls project settings, membership, and project work |
+| Editor | Manages project work within the permitted actions |
+| Viewer | Has read-only access to project resources |
 
----
-## Expanded Features
+The backend checks project membership and the required role before allowing protected operations. Frontend action visibility reflects these permissions.
 
-### Lab 1 - Task Organization
-Tasks can be searched, filtered by category, status, priority, and tag, and sorted by title, priority, due date, or date added. The Calendar View organizes tasks by due date, while recently deleted tasks can be restored.
+### Resource Ownership and IDOR Prevention
 
-### Lab 2 - User Accounts and Authentication
-Takda extends the original task-management application with persistent user accounts through Supabase Authentication. Users can register, log in using either their username or email address, maintain authenticated sessions, manage their profile and account credentials, log out, and recover forgotten passwords through email.
+Backend checks restrict access even when a request contains a modified resource ID:
 
-### Lab 3 - UBAC and Collaborative Projects
-Takda extends the merged Activity 1 and Activity 2 system with **User-Based Access Control (UBAC)** and the collaborative-list functionality required for Activity 3. The collaborative-list requirement is implemented through personal/default projects and collaborative projects, allowing users to manage their own tasks while also accessing projects to which they have been added.
+- Inaccessible projects return `404 Project not found`.
+- Members without the required role receive `403 Insufficient permissions`.
+- Task updates, deletion, and restoration require access to the associated project.
+- Invitation responses are restricted to the intended authenticated invitee.
+- Notification retrieval and changes are restricted to the authenticated recipient.
 
-Users can create collaborative projects, invite other registered users by username or email, and access only the collaborative projects in which they are members. Project membership is stored separately from user and task data, while **Owner**, **Editor**, and **Viewer** roles provide additional control over what members can do within a project.
-
-Ownership and membership checks are enforced on the backend rather than relying only on frontend visibility. Task and project operations use the authenticated user's identity and project membership to prevent unauthorized access and IDOR attempts, while the existing Supabase Authentication and session flow from Activity 2 is reused for account authentication.
+Returning `404` for inaccessible projects also limits disclosure of whether a project exists.
 
 ---
 ## Data Persistence
-Takda stores persistent application data in Supabase PostgreSQL, including tasks, projects, memberships, invitations, notifications, and profile information. User accounts and sessions are managed through Supabase Authentication, allowing application data and authenticated state to persist across normal page refreshes and backend restarts.
+
+Supabase PostgreSQL stores tasks, projects, memberships, tags, invitations, activity records, notifications, and profile information. These records remain available across browser refreshes and backend restarts.
+
+Supabase Authentication manages account identities and sessions. The frontend restores authenticated state through the session flow described above.
+
+The TanStack Query cache supports temporary reuse of API results. Persistent application records remain in Supabase.
 
 ---
 ## HCI Considerations
-Takda applies HCI principles through:
 
-- Clear labels for task fields, account forms, and actions
-- Consistent navigation and layout across application pages
-- Visual distinction between task statuses and priorities
-- Toast notifications and clear feedback for successful or failed actions
-- Confirmation dialogs before destructive or session-ending actions
-- Search, filtering, sorting, pagination, and calendar views for efficient task navigation
-- Password visibility controls and understandable form-validation messages
-- Loading and disabled states during asynchronous actions
-- Responsive layouts across desktop, tablet, and mobile devices
-- Persistent light and dark theme preferences
+The interface applies CMSC 134 principles through the following design choices:
+
+| Principle | Application in Takda |
+| --- | --- |
+| Consistency | Shared navigation, layouts, form controls, spacing, and action styles |
+| Visibility of System Status | Loading indicators, disabled submission controls, status indicators, and success/error notifications |
+| Error Prevention and Recovery | Confirmation dialogs for destructive actions, form validation, password visibility controls, and task restoration |
+| Recognition Rather Than Recall | Visible labels, task statuses, priority indicators, and available filter choices |
+| Efficient Navigation | Search, filtering, sorting, pagination, and calendar views |
+| Readability and Flexibility | Readable typography, distinguishable statuses, responsive layouts, and persistent light/dark theme preferences |
 
 ---
 ## Contributors
